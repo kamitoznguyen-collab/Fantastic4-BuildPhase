@@ -1,0 +1,64 @@
+<section id="sequence" data-transition="fade" style="background:#FFFFFF; color:#14202E; font-family:'Be Vietnam Pro', Verdana, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:30px">
+  <div style="display:flex; flex-direction:column; gap:8px">
+    <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#2A4A7F; letter-spacing:2px; text-transform:uppercase">SAD · Luồng</p>
+    <h2 style="font-size:58px; font-weight:600; line-height:1.1">Một hóa đơn đi qua hệ thống</h2>
+  </div>
+  <table style="font-family:'Be Vietnam Pro', Verdana, sans-serif; font-size:26px; border:1px solid #DDE2EA; border-radius:12px">
+    <tr style="background:#14202E">
+      <th style="width:6%; text-align:center; padding:13px 14px; font-size:23px; color:#B9CCE8">#</th>
+      <th style="width:19%; text-align:left; font-size:23px; color:#B9CCE8">Module</th>
+      <th style="width:52%; text-align:left; font-size:23px; color:#B9CCE8">Làm gì</th>
+      <th style="width:23%; text-align:left; font-size:23px; color:#B9CCE8">Trạng thái sau</th>
+    </tr>
+    <tr>
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; color:#7A8699">1</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; color:#2A4A7F">invoice</td>
+      <td>Nhận nhiều file, tính sha256, lưu vào kho file, trả về ngay kèm mã lô</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px">UPLOADED</td>
+    </tr>
+    <tr style="background:#FBFCFD">
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; color:#7A8699">2</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; color:#2A4A7F">app.pipeline</td>
+      <td>Xếp hóa đơn vào hàng đợi nền, không chặn người dùng</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#7A8699">— đang chờ</td>
+    </tr>
+    <tr>
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; color:#7A8699">3</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; color:#2A4A7F">extraction</td>
+      <td>Chọn cách đọc rẻ nhất: XML trước, rồi PDF có chữ, rồi OCR. Trả trường kèm độ tin cậy và bằng chứng</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px">EXTRACTED</td>
+    </tr>
+    <tr style="background:#FBFCFD">
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; color:#7A8699">4</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; color:#2A4A7F">reconciliation</td>
+      <td>Tìm đơn hàng và phiếu nhập, khớp từng dòng, kiểm dung sai, thuế, toàn vẹn, phân loại ba mức</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px">MATCHED</td>
+    </tr>
+    <tr>
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; color:#7A8699">5</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; color:#2A4A7F">reconciliation</td>
+      <td>Kế toán chọn hướng xử lý cho từng ngoại lệ, kèm lý do nếu khác đề xuất</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px">PENDING_L1</td>
+    </tr>
+    <tr style="background:#FBFCFD">
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; color:#7A8699">6</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; color:#2A4A7F">approval</td>
+      <td>Quyết định có cần cấp 2 không, ghi số lượng đã hóa đơn vào sổ của đơn hàng</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px">PENDING_L2 / APPROVED</td>
+    </tr>
+    <tr>
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; color:#7A8699">7</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; color:#2A4A7F">ledger</td>
+      <td>Soạn bút toán đề xuất, kiểm hai vế cân, xuất file Excel — xuất là bước chốt sổ</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#16794C">POSTED</td>
+    </tr>
+    <tr style="background:#FBFCFD">
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; color:#7A8699">—</td>
+      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; color:#2A4A7F">audit</td>
+      <td>Ghi nhật ký cho <b>mọi bước ở trên</b>, trong cùng transaction với thao tác gốc</td>
+      <td style="color:#7A8699">suốt vòng đời</td>
+    </tr>
+  </table>
+  <p style="position:absolute; left:128px; bottom:64px; font-size:25px; color:#4A5468">Hai chỗ dừng chờ người ở bước 5 và 6 là điểm khác biệt lớn nhất so với một pipeline xử lý dữ liệu thông thường.</p>
+  <aside>Nếu chỉ còn thời gian cho một slide kiến trúc, dùng slide này: nó nối được phần nghiệp vụ với phần module. Đọc theo cột Module để người nghe thấy ranh giới trách nhiệm rõ ràng.</aside>
+</section>

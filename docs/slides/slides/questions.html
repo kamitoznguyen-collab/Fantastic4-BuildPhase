@@ -1,0 +1,48 @@
+<section id="questions" data-transition="fade" style="background:#F7F8FA; color:#14202E; font-family:'Be Vietnam Pro', Verdana, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:30px">
+  <div style="display:flex; justify-content:space-between; align-items:flex-end">
+    <div style="display:flex; flex-direction:column; gap:8px; width:1080px">
+      <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#2A4A7F; letter-spacing:2px; text-transform:uppercase">Còn chưa chốt</p>
+      <h2 style="font-size:58px; font-weight:600; line-height:1.1">Sáu câu hỏi PRD chưa trả lời</h2>
+    </div>
+    <p style="font-size:25px; color:#4A5468; text-align:right; width:490px; line-height:1.4">Lộ ra khi đi hết 18 tình huống nghiệp vụ trong USER_STORIES</p>
+  </div>
+  <table style="font-family:'Be Vietnam Pro', Verdana, sans-serif; font-size:25px; background:#FFFFFF; border:1px solid #DDE2EA; border-radius:12px">
+    <tr style="background:#14202E">
+      <th style="width:6%; text-align:center; padding:13px 14px; font-size:23px; color:#B9CCE8">#</th>
+      <th style="width:47%; text-align:left; font-size:23px; color:#B9CCE8">Câu hỏi</th>
+      <th style="width:47%; text-align:left; font-size:23px; color:#B9CCE8">Vì sao quan trọng</th>
+    </tr>
+    <tr>
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; font-weight:600; color:#B42318">Q1</td>
+      <td>Hóa đơn <b>đang chờ</b> — chờ hàng về, chờ hóa đơn điều chỉnh — nằm ở trạng thái nào?</td>
+      <td>Hiện nó đứng mãi ở chờ duyệt cấp 1. Thực tế đây là nhóm tốn thời gian nhất của kế toán</td>
+    </tr>
+    <tr style="background:#FBFCFD">
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; font-weight:600; color:#A16207">Q2</td>
+      <td>Import đơn hàng, phiếu nhập mới có <b>tự đối soát lại</b> các hóa đơn đang thiếu chứng từ không?</td>
+      <td>Nếu phải bấm tay thì sẽ sót. Cần hỏi Xe X: chứng từ đến tay kế toán bao lâu một lần</td>
+    </tr>
+    <tr>
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; font-weight:600; color:#B42318">Q3</td>
+      <td>Hóa đơn <b>điều chỉnh</b> ghép với hóa đơn gốc thế nào?</td>
+      <td>Yêu cầu điều chỉnh là đề xuất phổ biến nhất, mà kết quả của nó chưa có chỗ trong mô hình dữ liệu</td>
+    </tr>
+    <tr style="background:#FBFCFD">
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; font-weight:600; color:#A16207">Q4</td>
+      <td>Xuất bút toán xong mà import vào phần mềm kế toán bị lỗi thì <b>có cho xuất lại</b> không?</td>
+      <td>Hiện coi xuất file là bước chốt sổ, không quay lại được</td>
+    </tr>
+    <tr>
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; font-weight:600; color:#B42318">Q5</td>
+      <td>Tổ chức chỉ có <b>một kế toán trưởng</b> mà người đó đã duyệt cấp 1, thì ai duyệt cấp 2?</td>
+      <td>Cần luật: cấm duyệt cấp 1 hóa đơn sẽ cần cấp 2, hoặc cho phép người thứ ba</td>
+    </tr>
+    <tr style="background:#FBFCFD">
+      <td style="text-align:center; font-family:'IBM Plex Mono', 'Courier New', monospace; font-weight:600; color:#A16207">Q6</td>
+      <td>Chấp nhận <b>một phần</b>: lệch 2 dòng, đồng ý dòng 1, đòi điều chỉnh dòng 2 — hóa đơn đi đâu?</td>
+      <td>Kết cục "một nửa trả, một nửa chờ" chưa được mô tả trong PRD</td>
+    </tr>
+  </table>
+  <p style="position:absolute; left:128px; bottom:64px; font-size:25px; color:#4A5468">Ba câu <b style="color:#B42318">Q1, Q3, Q5</b> ảnh hưởng tới mô hình dữ liệu, nên phải chốt trước khi viết thêm code. Ba câu còn lại chốt được sau.</p>
+  <aside>Trình bày phần này như một điểm mạnh, không phải điểm yếu: nhóm đã đi hết 18 tình huống nghiệp vụ nên mới lộ ra sáu chỗ PRD chưa phủ. Nhóm nào chưa hỏi được câu nào là nhóm chưa đi qua tình huống thật.</aside>
+</section>

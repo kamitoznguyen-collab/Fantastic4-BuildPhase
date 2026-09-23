@@ -1,0 +1,43 @@
+{
+  "v": 4,
+  "createdOnFiles": { "v": 1, "at": "2026-09-23T11:20:00Z" },
+  "title": "Đối soát hóa đơn — PRD & SAD",
+  "order": [
+    "cover",
+    "problem",
+    "trap",
+    "outcomes",
+    "scope",
+    "flow",
+    "taxonomy",
+    "intel",
+    "approval",
+    "sad",
+    "context",
+    "container",
+    "component",
+    "sequence",
+    "ai-where",
+    "ai-hooks",
+    "status",
+    "questions",
+    "cheatsheet"
+  ],
+  "sections": {
+    "s1": { "description": "Bài toán nghiệp vụ: ba chứng từ, ba câu hỏi, và chỗ tiền chảy ra", "start": "cover" },
+    "s2": { "description": "PRD: phạm vi, luồng trạng thái, bảng mã ngoại lệ và quy tắc duyệt", "start": "scope" },
+    "s3": { "description": "SAD: kiến trúc theo bốn mức C4, từ bối cảnh tới module", "start": "sad" },
+    "s4": { "description": "AI nằm ở đâu, trạng thái thật của code và những gì còn chưa chốt", "start": "ai-where" }
+  },
+  "faces": {
+    "be-vietnam-pro": {
+      "family": "Be Vietnam Pro",
+      "href": "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
+    },
+    "ibm-plex-mono": {
+      "family": "IBM Plex Mono",
+      "href": "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    }
+  },
+  "designSystems": []
+}
