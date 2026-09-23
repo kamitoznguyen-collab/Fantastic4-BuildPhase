@@ -25,16 +25,14 @@ Trên macOS hoặc Linux thì thay `start` bằng `open` hoặc `xdg-open`.
 ### Cách 2 — chạy qua web server (khi muốn xem trên điện thoại)
 
 ```bash
-python -m http.server 8000 --directory docs/prototype
+npx --yes serve docs/prototype -l 8000
 ```
 
 Rồi mở `http://localhost:8000`. Muốn xem trên điện thoại cùng mạng LAN thì thay `localhost` bằng địa chỉ IP của máy.
 
-Không có Python thì dùng Node:
+Lần đầu chạy, npx tải `serve` về mất khoảng mười giây, chưa thấy gì ngay là bình thường.
 
-```bash
-npx --yes serve docs/prototype -l 8000
-```
+> **Máy không có sẵn Python.** Lệnh `python -m http.server` sẽ báo *Python was not found* — dùng lệnh Node ở trên. Mà thật ra cách 1 là đủ, không cần server.
 
 ### Cách 3 — bản đã deploy
 

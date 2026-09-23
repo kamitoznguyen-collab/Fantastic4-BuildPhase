@@ -563,7 +563,8 @@ var STATUS = {
 };
 var CLS = {green:{n:'Khớp',c:'green'},yellow:{n:'Cần kiểm tra',c:'yellow'},red:{n:'Lệch',c:'red'}};
 
-var S = {me:null, screen:'dashboard', inv:null, tab:'compare', vtab:'inv', field:null, invoices:seed(), activity:[], batch:null};
+function norm(a){a.forEach(function(v){v.total=v.inv.total;});return a;}
+var S = {me:null, screen:'dashboard', inv:null, tab:'compare', vtab:'inv', field:null, invoices:norm(seed()), activity:[], batch:null};
 
 /* ---------- helpers ---------- */
 function byId(id){ for(var i=0;i<S.invoices.length;i++) if(S.invoices[i].id===id) return S.invoices[i]; return null; }
@@ -1201,7 +1202,7 @@ document.addEventListener('click',function(ev){
   if((el=t.closest('[data-vendor]'))){ S.vendor=parseInt(el.dataset.vendor,10); render(); return; }
   if((el=t.closest('[data-role]'))){ S.me=USERS[el.dataset.role]; render(); return; }
   if(t.id==='fclear'){ S.filter={q:'',cls:'',st:''}; render(); return; }
-  if(t.id==='reset'){ S.invoices=seed(); S.activity=[]; S.batch=null; S.filter=null; go('dashboard'); toast('Đã đặt lại dữ liệu demo.'); return; }
+  if(t.id==='reset'){ S.invoices=norm(seed()); S.activity=[]; S.batch=null; S.filter=null; go('dashboard'); toast('Đã đặt lại dữ liệu demo.'); return; }
   if(t.id==='theme'){ toggleTheme(); return; }
   if(t.id==='simulate'){ simulate(); return; }
   if((el=t.closest('[data-import]'))){ toast('Bản demo dùng dữ liệu có sẵn — chức năng import chưa bật.'); return; }
