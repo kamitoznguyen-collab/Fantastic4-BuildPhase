@@ -1,0 +1,11 @@
+# Xem sơ đồ C4: docker compose up -d rồi mở http://localhost:8080
+# Structurizr (chế độ local) đọc workspace.dsl trong thư mục này; sửa file rồi tải lại trang là thấy.
+services:
+  structurizr:
+    image: structurizr/structurizr:latest
+    command: local
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./:/usr/local/structurizr
+    restart: unless-stopped
