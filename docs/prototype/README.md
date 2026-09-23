@@ -131,7 +131,7 @@ Bố cục màn hình bám theo `../WIREFRAME.md`: `vDetail` ứng với S5–S7
 
 - Không có backend, không có lưu trữ. Mọi thay đổi mất khi tải lại trang.
 - Không đọc file thật khi upload.
-- Mới có 6 hóa đơn mẫu, chưa phủ hết 33 mã ngoại lệ trong `../PRD.md` mục 4 — hiện có `PRC-01`, `TAX-02`, `QTY-01`, `QTY-02`, `INT-01`.
+- Mới có 6 hóa đơn mẫu, chưa phủ hết 37 mã ngoại lệ trong `../PRD.md` mục 4 — hiện có `PRC-01`, `TAX-02`, `QTY-01`, `QTY-02`, `INT-01`.
 - Chưa có màn hình quy tắc riêng từng nhà cung cấp (tab *Quy tắc riêng* ở S10 của wireframe).
 - Chưa có phím tắt như mục 8 của wireframe.
 - Trên điện thoại ưu tiên xem và duyệt; sửa trường trên màn hình nhỏ chưa được tối ưu.

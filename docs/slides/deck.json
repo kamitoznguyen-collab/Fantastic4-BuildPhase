@@ -4,6 +4,7 @@
   "title": "Đối soát hóa đơn — PRD & SAD",
   "order": [
     "cover",
+    "agenda",
     "problem",
     "trap",
     "outcomes",
@@ -24,10 +25,11 @@
     "cheatsheet"
   ],
   "sections": {
-    "s1": { "description": "Bài toán nghiệp vụ: ba chứng từ, ba câu hỏi, và chỗ tiền chảy ra", "start": "cover" },
-    "s2": { "description": "PRD: phạm vi, luồng trạng thái, bảng mã ngoại lệ và quy tắc duyệt", "start": "scope" },
-    "s3": { "description": "SAD: kiến trúc theo bốn mức C4, từ bối cảnh tới module", "start": "sad" },
-    "s4": { "description": "AI nằm ở đâu, trạng thái thật của code và những gì còn chưa chốt", "start": "ai-where" }
+    "s1": { "description": "Bài toán nghiệp vụ", "start": "problem" },
+    "s2": { "description": "Phạm vi và luồng xử lý", "start": "scope" },
+    "s3": { "description": "Kiến trúc hệ thống", "start": "sad" },
+    "s4": { "description": "Vai trò của AI", "start": "ai-where" },
+    "s5": { "description": "Trạng thái và bước tiếp theo", "start": "status" }
   },
   "faces": {
     "be-vietnam-pro": {

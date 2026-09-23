@@ -1,6 +1,6 @@
 # Slide trình bày PRD &amp; SAD
 
-Deck 19 slide dùng cho buổi trình bày nhanh PRD và SAD ngày 24/09/2026. Người trình bày được gọi ngẫu nhiên, điểm của nhóm tính theo điểm người trình bày — nên mọi thành viên cần nắm được deck này.
+Deck 20 slide dùng cho buổi trình bày nhanh PRD và SAD ngày 24/09/2026. Người trình bày được gọi ngẫu nhiên, điểm của nhóm tính theo điểm người trình bày — nên mọi thành viên cần nắm được deck này.
 
 **Không phải** pitch deck Demo Day. Pitch deck 10 slide theo cấu trúc của ban tổ chức nằm ở `P-143/presentation/`.
 
@@ -11,29 +11,39 @@ Link riêng tư — chủ sở hữu phải chia sẻ qua menu Share thì cả n
 
 ## Nội dung
 
-| # | Slide | Dùng để trả lời |
+Deck chia năm phần, mỗi phần mở đầu bằng một slide có nhãn "Phần N".
+
+| # | Đầu đề | Dùng để trả lời |
 |---:|---|---|
-| 1 | Bìa | — |
-| 2 | Ba tờ giấy, ba câu hỏi | Vì sao phải đối chiếu ba chiều, không phải hai |
-| 3 | **Tổng tiền che mất sai phạm** | Vì sao cần phần mềm, kế toán tự làm không đủ |
-| 4 | Ba kết cục của một hóa đơn | Đầu ra của agent là gì |
-| 5 | Phạm vi MVP | Cái gì làm, cái gì cố tình để ngoài |
-| 6 | Máy trạng thái | Hóa đơn đi qua những trạng thái nào |
-| 7 | **Bảng 33 mã ngoại lệ** | Lõi sản phẩm nằm ở đâu |
-| 8 | QTY-02 và QTY-01 | Khác gì so với engine khớp cứng |
-| 9 | Ai được duyệt cái gì | Kiểm soát nội bộ và tách biệt trách nhiệm |
-| 10 | Chuyển cảnh SAD | Bốn mức C4 |
-| 11 | Mức 1 — Bối cảnh | Hệ thống phục vụ ai, nối với cái gì |
-| 12 | Mức 2 — Sáu khối triển khai | Công nghệ và vai trò từng khối |
-| 13 | Mức 3 — 14 module | Ranh giới module, vì sao modular monolith |
-| 14 | Một hóa đơn đi qua hệ thống | Nối phần nghiệp vụ với phần module |
-| 15 | AI là giác quan, không phải người quyết định | AI làm gì, không làm gì, bậc thang L0–L5 |
-| 16 | Chỗ cắm AI | Phần chưa làm đã có hình dạng gì |
-| 17 | **Trạng thái thật** | Nhóm đang ở đâu, lệch gì so với PRD |
-| 18 | Sáu câu hỏi PRD chưa trả lời | Những gì còn phải chốt |
-| 19 | Mười hai con số phải thuộc | Học tối trước, phòng bị gọi ngẫu nhiên |
+| 1 | ĐỐI SOÁT HÓA ĐƠN TỰ ĐỘNG | — |
+| 2 | MỤC LỤC | Năm phần của buổi trình bày |
+| | **Phần 1 — Bài toán nghiệp vụ** | |
+| 3 | BA CHỨNG TỪ CẦN ĐỐI CHIẾU | Vì sao phải đối chiếu ba chiều, không phải hai |
+| 4 | **RỦI RO KHI CHỈ SO TỔNG TIỀN** | Vì sao cần phần mềm, kế toán tự làm không đủ |
+| 5 | BA KẾT QUẢ PHÂN LOẠI | Đầu ra của hệ thống là gì |
+| | **Phần 2 — Phạm vi và luồng xử lý** | |
+| 6 | PHẠM VI BẢN MVP | Cái gì làm, cái gì để ngoài |
+| 7 | LUỒNG XỬ LÝ DỮ LIỆU | Bảy trạng thái của một hóa đơn |
+| 8 | **CÁC LỖI THƯỜNG GẶP** | Lõi sản phẩm: bảng 37 mã ngoại lệ |
+| 9 | VÍ DỤ VỀ LỆCH BỊ CHẶN | Khác gì so với hệ thống khớp cứng |
+| 10 | QUY TẮC DUYỆT HAI CẤP | Kiểm soát nội bộ và tách biệt trách nhiệm |
+| | **Phần 3 — Kiến trúc hệ thống** | |
+| 11 | KIẾN TRÚC HỆ THỐNG | Bốn mức C4 |
+| 12 | BỐI CẢNH HỆ THỐNG | Phục vụ ai, nối với hệ thống nào |
+| 13 | SÁU KHỐI TRIỂN KHAI | Công nghệ và vai trò từng khối |
+| 14 | MƯỜI BỐN MODULE | Ranh giới module, vì sao modular monolith |
+| 15 | LUỒNG QUA CÁC MODULE | Nối phần nghiệp vụ với phần module |
+| | **Phần 4 — Vai trò của AI** | |
+| 16 | GIỚI HẠN VAI TRÒ CỦA AI | AI làm gì, không làm gì, bậc thang L0–L5 |
+| 17 | CÁC ĐIỂM CẮM AI | Phần chưa làm đã có hình dạng gì |
+| | **Phần 5 — Trạng thái và bước tiếp theo** | |
+| 18 | **TIẾN ĐỘ HIỆN TẠI** | Nhóm đang ở đâu, khác gì so với PRD |
+| 19 | SÁU VẤN ĐỀ CHƯA CHỐT | Những gì còn phải quyết |
+| 20 | MƯỜI HAI CON SỐ CẦN NHỚ | Xem lại trước buổi, phòng bị gọi ngẫu nhiên |
 
 Mỗi slide có **speaker notes**: câu nên nói, câu hay bị hỏi và cách trả lời. Xem notes trong chế độ trình bày của trang.
+
+Ba slide quan trọng nhất nếu thiếu thời gian: **4** (vì sao cần hệ thống), **8** (lõi sản phẩm), **18** (trung thực về tiến độ).
 
 ---
 
@@ -56,16 +66,23 @@ Dùng chung hệ với prototype ở [`../prototype/`](../prototype/) để ba d
 
 - Chữ: **Be Vietnam Pro** cho giao diện, **IBM Plex Mono** cho số tiền, mã chứng từ và mã ngoại lệ. Cả hai đều đủ dấu tiếng Việt.
 - Màu: nền `#F7F8FA`, mực `#14202E`, nhấn xanh thép `#2A4A7F`. Ba màu ngữ nghĩa tách riêng khỏi màu nhấn: `#16794C` khớp, `#A16207` cần kiểm tra, `#B42318` lệch.
+- Đầu đề slide: **viết hoa toàn bộ**, dạng cụm danh từ ngắn, không dùng câu hỏi. Cỡ 72px.
 - Trạng thái luôn viết bằng chữ kèm màu, **không dùng emoji** — chiếu máy nào cũng hiện đúng, và người mù màu vẫn đọc được.
 
 ---
 
-## Lưu ý về slide 17
+## Lưu ý về slide 18
 
-Slide *Trạng thái thật* viết theo những gì kiểm chứng được trong repo `P-143` nhánh `feat/iam` tại ngày 23/09/2026:
+Slide *TIẾN ĐỘ HIỆN TẠI* viết theo những gì kiểm chứng được trong repo `P-143` nhánh `feat/iam` tại ngày 23/09/2026:
 
 - Khung 14 module, `src/app`, hai migration SQL, `tests/test_architecture.py`
 - `iam` là module duy nhất đã có cài đặt thật, kèm test tích hợp trên Postgres
 - Các module khác mới có tầng `domain/contracts` và `dto`
 
-`docs/C4_DESIGN.md` đánh dấu nhiều module là đã xong và ghi nguồn là nhánh `feat/module-api` — nhánh này không có trên remote. Nếu có code chưa push thì cập nhật lại slide 17 trước khi trình bày.
+`docs/C4_DESIGN.md` đánh dấu nhiều module là đã xong và ghi nguồn là nhánh `feat/module-api` — nhánh này không có trên remote. Nếu có code chưa push thì cập nhật lại slide 18 trước khi trình bày.
+
+---
+
+## Số mã ngoại lệ: 37, không phải 33
+
+Bảng ở `../PRD.md` mục 4 có đủ 37 mã: DOC 6 · QTY 5 · PRC 4 · TAX 5 · ITM 4 · INT 6 · FRD 7. Con số 33 xuất hiện ở vài bản nháp trước là sai, đã sửa. Nếu thấy chỗ nào còn ghi 33 thì sửa thành 37.

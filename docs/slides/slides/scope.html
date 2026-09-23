@@ -1,45 +1,43 @@
-<section id="scope" data-section="PRD: phạm vi, luồng trạng thái, bảng mã ngoại lệ và quy tắc duyệt" data-transition="fade" style="background:#F7F8FA; color:#14202E; font-family:'Be Vietnam Pro', Verdana, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:36px">
+<section id="scope" data-section="Phạm vi và luồng xử lý" data-transition="fade" style="background:#F7F8FA; color:#14202E; font-family:'Be Vietnam Pro', Verdana, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:40px">
   <div style="display:flex; flex-direction:column; gap:10px">
-    <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#2A4A7F; letter-spacing:2px; text-transform:uppercase">PRD · Phạm vi</p>
-    <h2 style="font-size:68px; font-weight:600; line-height:1.1">Cái gì trong MVP, cái gì không</h2>
+    <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#2A4A7F; letter-spacing:2px; text-transform:uppercase">Phần 2 · Phạm vi</p>
+    <h2 style="font-size:72px; font-weight:600; line-height:1.1; letter-spacing:1px; text-transform:uppercase">PHẠM VI BẢN MVP</h2>
   </div>
   <div style="display:flex; gap:26px; align-items:stretch">
-    <div style="flex:1; background:#FFFFFF; border:1px solid #DDE2EA; border-radius:12px; padding:30px; display:flex; flex-direction:column; gap:16px">
-      <h3 style="font-size:30px; font-weight:600; color:#16794C">Bắt buộc — không bao giờ cắt</h3>
-      <ul style="font-size:26px; line-height:1.45; color:#14202E">
-        <li>Web deploy, đăng nhập 2 vai trò, phân quyền kiểm ở backend</li>
-        <li>Tải hóa đơn XML, PDF, ảnh; nhập đơn hàng và phiếu nhập từ Excel</li>
-        <li>Đối chiếu 3 chiều theo từng dòng, phân loại 3 mức</li>
+    <div style="flex:1; background:#FFFFFF; border:1px solid #DDE2EA; border-radius:12px; padding:32px; display:flex; flex-direction:column; gap:18px">
+      <h3 style="font-size:32px; font-weight:600; color:#16794C">Bắt buộc</h3>
+      <ul style="font-size:28px; line-height:1.5; color:#14202E">
+        <li>Đăng nhập hai vai trò, phân quyền</li>
+        <li>Tải hóa đơn XML, PDF, ảnh</li>
+        <li>Nhập đơn hàng và phiếu nhập</li>
+        <li>Đối chiếu ba chiều theo từng dòng</li>
         <li>Đề xuất xử lý cho từng chỗ lệch</li>
-        <li>Duyệt rồi sinh bút toán đề xuất, xuất file</li>
+        <li>Duyệt và sinh bút toán</li>
       </ul>
     </div>
-    <div style="flex:1; background:#FFFFFF; border:1px solid #DDE2EA; border-radius:12px; padding:30px; display:flex; flex-direction:column; gap:16px">
-      <h3 style="font-size:30px; font-weight:600; color:#A16207">Nâng cao — làm được đến đâu</h3>
-      <ul style="font-size:26px; line-height:1.45; color:#14202E">
-        <li><b>N1</b> cảnh báo tin cậy OCR</li>
-        <li><b>N3</b> tính lại thuế GTGT</li>
-        <li><b>N6</b> duyệt nhiều cấp</li>
-        <li><b>N5</b> phát hiện trùng và gian lận</li>
-        <li><b>N7</b> memory quy tắc riêng nhà cung cấp</li>
-        <li><b>N4</b> tìm chứng từ bằng vector</li>
-        <li><b>N8</b> điểm sẵn sàng tự động hóa</li>
-        <li><b>N2</b> giới hạn và ngân sách xử lý</li>
+    <div style="flex:1; background:#FFFFFF; border:1px solid #DDE2EA; border-radius:12px; padding:32px; display:flex; flex-direction:column; gap:18px">
+      <h3 style="font-size:32px; font-weight:600; color:#A16207">Nâng cao</h3>
+      <ul style="font-size:28px; line-height:1.5; color:#14202E">
+        <li>Cảnh báo độ tin cậy khi đọc ảnh</li>
+        <li>Tính lại thuế giá trị gia tăng</li>
+        <li>Duyệt nhiều cấp</li>
+        <li>Phát hiện trùng và bất thường</li>
+        <li>Ghi nhớ quy tắc từng nhà cung cấp</li>
+        <li>Tìm chứng từ theo ngữ nghĩa</li>
+        <li>Chấm điểm nhà cung cấp</li>
       </ul>
     </div>
-    <div style="flex:1; background:#EFF2F7; border:1px solid #DDE2EA; border-radius:12px; padding:30px; display:flex; flex-direction:column; gap:16px">
-      <h3 style="font-size:30px; font-weight:600; color:#4A5468">Cố tình để ngoài</h3>
-      <ul style="font-size:26px; line-height:1.45; color:#4A5468">
+    <div style="flex:1; background:#EFF2F7; border:1px solid #DDE2EA; border-radius:12px; padding:32px; display:flex; flex-direction:column; gap:18px">
+      <h3 style="font-size:32px; font-weight:600; color:#4A5468">Ngoài phạm vi</h3>
+      <ul style="font-size:28px; line-height:1.5; color:#4A5468">
         <li>Ghi thẳng vào phần mềm kế toán</li>
         <li>Thực hiện thanh toán</li>
         <li>Đối chiếu sao kê ngân hàng</li>
         <li>Hóa đơn đầu ra, công nợ phải thu</li>
-        <li>Tra cứu thật trên hệ thống thuế</li>
-        <li>Hợp đồng giá, rebate, chiết khấu sản lượng</li>
+        <li>Tra cứu trên hệ thống thuế</li>
       </ul>
-      <p style="font-size:24px; line-height:1.4; color:#7A8699">Ranh giới: hệ thống đưa hóa đơn tới trạng thái <b>sẵn sàng thanh toán</b>, rồi dừng.</p>
     </div>
   </div>
-  <p style="position:absolute; left:128px; bottom:64px; font-size:24px; color:#7A8699">Nếu trễ, thứ tự cắt đã định sẵn: VietOCR trước, rồi N8, rồi phần tự học của N7, rồi vector. Không bao giờ cắt người duyệt, N1 và N3.</p>
-  <aside>Câu hay bị hỏi: "vì sao không đẩy thẳng vào MISA cho tiện". Trả lời: MVP không có quyền ghi vào sổ của khách, và bản thân việc ghi sổ không phải chỗ khó. Chỗ khó là quyết định hóa đơn nào được ghi.</aside>
+  <p style="position:absolute; left:128px; bottom:64px; font-size:26px; color:#4A5468">Ranh giới: hệ thống đưa hóa đơn tới trạng thái <b>sẵn sàng thanh toán</b>, rồi dừng.</p>
+  <aside>Thứ tự cắt khi thiếu thời gian đã định sẵn: bỏ phương án tự host OCR trước, rồi điểm nhà cung cấp, rồi phần tự học, rồi tìm theo ngữ nghĩa. Ba thứ giữ lại đến cùng: người duyệt, cảnh báo độ tin cậy, kiểm thuế. Câu hay được hỏi: vì sao không đẩy thẳng vào MISA — vì MVP không có quyền ghi vào sổ của khách, và ghi sổ không phải phần khó; phần khó là quyết định hóa đơn nào được ghi.</aside>
 </section>

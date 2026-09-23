@@ -1,43 +1,41 @@
-<section id="status" data-transition="fade" style="background:#FFFFFF; color:#14202E; font-family:'Be Vietnam Pro', Verdana, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:30px">
-  <div style="display:flex; justify-content:space-between; align-items:flex-end">
-    <div style="display:flex; flex-direction:column; gap:8px; width:1050px">
-      <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#2A4A7F; letter-spacing:2px; text-transform:uppercase">Trạng thái thật</p>
-      <h2 style="font-size:58px; font-weight:600; line-height:1.1">Đang ở đâu, tính đến hôm nay</h2>
-    </div>
-    <p style="font-size:24px; color:#7A8699; text-align:right; width:520px; line-height:1.4">Đối chiếu với repo P-143, nhánh <span style="font-family:'IBM Plex Mono', 'Courier New', monospace">feat/iam</span></p>
+<section id="status" data-section="Trạng thái và bước tiếp theo" data-transition="fade" style="background:#FFFFFF; color:#14202E; font-family:'Be Vietnam Pro', Verdana, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:40px">
+  <div style="display:flex; flex-direction:column; gap:8px">
+    <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#2A4A7F; letter-spacing:2px; text-transform:uppercase">Phần 5 · Trạng thái</p>
+    <h2 style="font-size:72px; font-weight:600; line-height:1.1; letter-spacing:1px; text-transform:uppercase">TIẾN ĐỘ HIỆN TẠI</h2>
   </div>
   <div style="display:flex; gap:24px; align-items:stretch">
-    <div style="flex:1; background:#E7F5EE; border-radius:12px; padding:28px; display:flex; flex-direction:column; gap:12px">
-      <h3 style="font-size:28px; font-weight:600; color:#16794C">Chạy được, có test</h3>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Khung 14 module với ranh giới cứng, có test kiểm ranh giới tự động</p>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Module <b>iam</b>: đăng nhập, phiên, hồ sơ — có test tích hợp thật trên Postgres</p>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Lược đồ cơ sở dữ liệu: 2 migration SQL</p>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Tầng domain của reconciliation, approval, ledger đã có</p>
+    <div style="flex:1; background:#E7F5EE; border-radius:12px; padding:32px; display:flex; flex-direction:column; gap:16px">
+      <h3 style="font-size:30px; font-weight:600; color:#16794C">Đã chạy được</h3>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Khung 14 module, ranh giới có test kiểm</p>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Đăng nhập và phân quyền, có test tích hợp</p>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Lược đồ cơ sở dữ liệu</p>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Tầng miền của phần đối chiếu và duyệt</p>
     </div>
-    <div style="flex:1; background:#FEF6E0; border-radius:12px; padding:28px; display:flex; flex-direction:column; gap:12px">
-      <h3 style="font-size:28px; font-weight:600; color:#A16207">Đang làm</h3>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Nối các module còn lại vào API và pipeline</p>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Trích xuất: mới có XML, chưa có PDF và ảnh</p>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Gộp <span style="font-family:'IBM Plex Mono', 'Courier New', monospace">feat/base_module</span> và <span style="font-family:'IBM Plex Mono', 'Courier New', monospace">feat/iam</span> về main</p>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Giao diện: đã có prototype bấm được, chưa nối API</p>
+    <div style="flex:1; background:#FEF6E0; border-radius:12px; padding:32px; display:flex; flex-direction:column; gap:16px">
+      <h3 style="font-size:30px; font-weight:600; color:#A16207">Đang làm</h3>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Nối các module còn lại vào API</p>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Đọc PDF và ảnh</p>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Gộp các nhánh về nhánh chính</p>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Giao diện: đã có bản mô phỏng bấm được</p>
     </div>
-    <div style="flex:1; background:#EFF2F7; border-radius:12px; padding:28px; display:flex; flex-direction:column; gap:12px">
-      <h3 style="font-size:28px; font-weight:600; color:#4A5468">Chưa bắt đầu</h3>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Cài đặt thật cho gateway AI và semantic</p>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">LangGraph và checkpointer</p>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Bước kiểm gian lận FRD</p>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Bộ sinh dữ liệu mẫu và chạy đánh giá 300 hóa đơn</p>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Deploy lên Render</p>
+    <div style="flex:1; background:#EFF2F7; border-radius:12px; padding:32px; display:flex; flex-direction:column; gap:16px">
+      <h3 style="font-size:30px; font-weight:600; color:#4A5468">Chưa bắt đầu</h3>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Nối dịch vụ AI thật</p>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Cơ chế lưu điểm dừng</p>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Kiểm dấu hiệu bất thường</p>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Bộ dữ liệu mẫu và chạy đánh giá</p>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Triển khai lên Render</p>
     </div>
   </div>
-  <div style="background:#14202E; border-radius:12px; padding:26px 32px; display:flex; flex-direction:column; gap:12px">
-    <h3 style="font-size:28px; font-weight:600; color:#7EA6E0">Bốn chỗ code đang lệch so với PRD — nhóm biết và đã ghi lại</h3>
+  <div style="background:#14202E; border-radius:12px; padding:30px 34px; display:flex; flex-direction:column; gap:14px">
+    <h3 style="font-size:30px; font-weight:600; color:#7EA6E0">Bốn chỗ code đang khác PRD — nhóm đã ghi nhận</h3>
     <div style="display:flex; gap:32px">
-      <p style="flex:1; font-size:25px; line-height:1.4; color:#E6E9EF"><b>Điều phối</b> — chưa có checkpointer, nên khởi động lại giữa chừng thì hóa đơn đang chạy dở bị kẹt, phải bấm xử lý lại</p>
-      <p style="flex:1; font-size:25px; line-height:1.4; color:#E6E9EF"><b>Khớp dòng bậc 4</b> — bản hiện tại luôn từ chối, nên dòng rơi vào vùng so chuỗi mờ thành "không khớp được"</p>
-      <p style="flex:1; font-size:25px; line-height:1.4; color:#E6E9EF"><b>Trích xuất</b> — PDF và ảnh vào trạng thái lỗi với mã UNSUPPORTED_FORMAT</p>
-      <p style="flex:1; font-size:25px; line-height:1.4; color:#E6E9EF"><b>Gian lận</b> — mới chặn được trùng tuyệt đối bằng ràng buộc DB và buộc duyệt cấp 2 với nhà cung cấp mới</p>
+      <p style="flex:1; font-size:27px; line-height:1.4; color:#E6E9EF"><b>Điều phối</b><br>Khởi động lại thì hóa đơn đang chạy dở bị dừng</p>
+      <p style="flex:1; font-size:27px; line-height:1.4; color:#E6E9EF"><b>Khớp tên hàng</b><br>Trường hợp khó tạm báo là không khớp</p>
+      <p style="flex:1; font-size:27px; line-height:1.4; color:#E6E9EF"><b>Đọc file</b><br>PDF và ảnh chưa xử lý được</p>
+      <p style="flex:1; font-size:27px; line-height:1.4; color:#E6E9EF"><b>Bất thường</b><br>Mới chặn được hóa đơn trùng</p>
     </div>
   </div>
-  <aside>Đây là slide ăn điểm nếu trả lời thật. Người chấm quen với nhóm nói quá lên rồi mở repo ra thấy khác. Nói thẳng: phần nền tảng và iam chạy được có test, phần còn lại đã có hình dạng, và nhóm tự ghi lại bốn chỗ đang lệch với PRD trong tài liệu C4. Tuyệt đối không nói "đã xong hết backend".</aside>
+  <p style="position:absolute; left:128px; bottom:64px; font-size:26px; color:#7A8699">Đối chiếu với repo P-143, nhánh feat/iam, ngày 23/09/2026.</p>
+  <aside>Slide này được đánh giá cao nếu trình bày trung thực. Người chấm quen với việc nhóm nói quá lên rồi mở repo ra thấy khác. Nói thẳng: phần nền tảng và đăng nhập chạy được có test, phần còn lại đã có hình dạng, và nhóm tự ghi lại bốn chỗ đang khác PRD trong tài liệu C4. Không nói rằng backend đã xong.</aside>
 </section>

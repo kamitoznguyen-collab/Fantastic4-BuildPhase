@@ -1,57 +1,55 @@
-<section id="container" data-transition="fade" style="background:#FFFFFF; color:#14202E; font-family:'Be Vietnam Pro', Verdana, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:30px">
-  <div style="display:flex; justify-content:space-between; align-items:flex-end">
-    <div style="display:flex; flex-direction:column; gap:8px; width:1100px">
-      <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#2A4A7F; letter-spacing:2px; text-transform:uppercase">SAD · Mức 2</p>
-      <h2 style="font-size:58px; font-weight:600; line-height:1.1">Sáu khối chạy riêng</h2>
-    </div>
-    <p style="font-size:25px; color:#4A5468; text-align:right; width:470px; line-height:1.4">Mức độ hoàn thành của từng khối nằm ở slide <b>Trạng thái thật</b></p>
+<section id="container" data-transition="fade" style="background:#FFFFFF; color:#14202E; font-family:'Be Vietnam Pro', Verdana, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:40px">
+  <div style="display:flex; flex-direction:column; gap:8px">
+    <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#2A4A7F; letter-spacing:2px; text-transform:uppercase">Mức 2 · Khối triển khai</p>
+    <h2 style="font-size:72px; font-weight:600; line-height:1.1; letter-spacing:1px; text-transform:uppercase">SÁU KHỐI TRIỂN KHAI</h2>
   </div>
-  <table style="font-family:'Be Vietnam Pro', Verdana, sans-serif; font-size:26px; border:1px solid #DDE2EA; border-radius:12px">
+  <table style="font-family:'Be Vietnam Pro', Verdana, sans-serif; font-size:29px; border:1px solid #DDE2EA; border-radius:12px">
     <tr style="background:#14202E">
-      <th style="width:19%; text-align:left; padding:14px 16px; font-size:23px; color:#B9CCE8">Khối</th>
-      <th style="width:33%; text-align:left; font-size:23px; color:#B9CCE8">Công nghệ</th>
-      <th style="width:48%; text-align:left; font-size:23px; color:#B9CCE8">Vai trò trong hệ thống</th>
+      <th style="width:24%; text-align:left; padding:16px 18px; font-size:25px; color:#B9CCE8">Khối</th>
+      <th style="width:34%; text-align:left; font-size:25px; color:#B9CCE8">Công nghệ</th>
+      <th style="width:42%; text-align:left; font-size:25px; color:#B9CCE8">Vai trò</th>
     </tr>
     <tr>
       <td><b>API</b></td>
-      <td>FastAPI, uvicorn, psycopg 3 async, SQL thuần, không ORM</td>
-      <td>Toàn bộ nghiệp vụ, REST /api/v1, xác thực JWT, phân quyền. Swagger tại /docs</td>
+      <td>FastAPI, psycopg 3, SQL thuần</td>
+      <td>Toàn bộ nghiệp vụ, xác thực và phân quyền</td>
     </tr>
     <tr style="background:#FBFCFD">
       <td><b>Cơ sở dữ liệu</b></td>
-      <td>PostgreSQL 18 + pgvector</td>
-      <td>Migration SQL thuần có checksum. Mọi bảng nghiệp vụ mang org_id</td>
+      <td>PostgreSQL 18, pgvector</td>
+      <td>Mọi bảng nghiệp vụ mang mã tổ chức</td>
     </tr>
     <tr>
       <td><b>Kho file gốc</b></td>
-      <td>Ổ đĩa cục bộ hoặc S3, MinIO khi chạy máy</td>
-      <td>Khóa theo org_id/sha256. Trùng hash trong cùng tổ chức thì không lưu lại</td>
+      <td>Ổ đĩa hoặc S3</td>
+      <td>Lưu theo mã băm, trùng thì không lưu lại</td>
     </tr>
     <tr style="background:#FBFCFD">
       <td><b>Cấu hình</b></td>
-      <td>YAML đóng gói cùng API, bản mới nhất lưu trong DB</td>
-      <td>Kế toán trưởng sửa qua API thì thành một phiên bản mới. YAML hỏng thì API không khởi động</td>
+      <td>YAML và bản mới nhất trong CSDL</td>
+      <td>Dung sai, thuế suất, ngưỡng duyệt</td>
     </tr>
     <tr>
-      <td><b>Pipeline nền</b></td>
-      <td>asyncio task trong cùng tiến trình API</td>
-      <td>Trích xuất, đối chiếu, dừng chờ duyệt. Sẽ thay bằng LangGraph có checkpointer</td>
+      <td><b>Xử lý nền</b></td>
+      <td>Tác vụ chạy song song trong API</td>
+      <td>Đọc hóa đơn, đối chiếu, dừng chờ duyệt</td>
     </tr>
     <tr style="background:#FBFCFD">
       <td><b>Ứng dụng web</b></td>
-      <td>React + TypeScript, Vite</td>
-      <td>Màn hình đã chốt trong WIREFRAME và prototype bấm được</td>
+      <td>React, TypeScript</td>
+      <td>Giao diện cho hai vai trò</td>
     </tr>
   </table>
   <div style="display:flex; gap:26px; align-items:stretch">
-    <div style="flex:1; background:#EFF2F7; border-radius:12px; padding:24px 28px; display:flex; flex-direction:column; gap:8px">
-      <h3 style="font-size:26px; font-weight:600; color:#2A4A7F">Chạy và triển khai</h3>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Cục bộ: <span style="font-family:'IBM Plex Mono', 'Courier New', monospace">docker compose</span> gồm db, minio, minio-init, backend. Triển khai: Render.</p>
+    <div style="flex:1; background:#EFF2F7; border-radius:12px; padding:28px 32px; display:flex; flex-direction:column; gap:10px">
+      <h3 style="font-size:28px; font-weight:600; color:#2A4A7F">Chạy và triển khai</h3>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Máy cá nhân dùng Docker. Triển khai lên Render.</p>
     </div>
-    <div style="flex:1; background:#E8EEF7; border-radius:12px; padding:24px 28px; display:flex; flex-direction:column; gap:8px">
-      <h3 style="font-size:26px; font-weight:600; color:#2A4A7F">Đa tổ chức</h3>
-      <p style="font-size:25px; line-height:1.4; color:#14202E">Đảm bảo ở tầng API: repository nhận org_id từ token và tự thêm điều kiện lọc. Bản ghi tổ chức khác trả <b>404</b>, không bao giờ 403.</p>
+    <div style="flex:1; background:#E8EEF7; border-radius:12px; padding:28px 32px; display:flex; flex-direction:column; gap:10px">
+      <h3 style="font-size:28px; font-weight:600; color:#2A4A7F">Nhiều tổ chức trên một hệ thống</h3>
+      <p style="font-size:28px; line-height:1.4; color:#14202E">Dữ liệu của tổ chức khác trả về <b>404</b>, không bao giờ 403.</p>
     </div>
   </div>
-  <aside>Nếu bị hỏi vì sao không dùng ORM: SQL thuần cho phép kiểm soát chính xác điều kiện org_id trong mọi câu truy vấn, và migration là SQL có checksum. Vì sao 404 chứ không 403: trả 403 là thừa nhận bản ghi đó tồn tại.</aside>
+  <p style="position:absolute; left:128px; bottom:64px; font-size:26px; color:#7A8699">Mức độ hoàn thành của từng khối nằm ở phần Trạng thái.</p>
+  <aside>Nếu được hỏi vì sao không dùng ORM: SQL thuần cho phép kiểm soát chính xác điều kiện lọc theo tổ chức trong mọi câu truy vấn, và migration là SQL có mã kiểm tra. Vì sao trả 404 chứ không 403: trả 403 là gián tiếp xác nhận bản ghi đó có tồn tại.</aside>
 </section>

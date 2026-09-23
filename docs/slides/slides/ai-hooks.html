@@ -1,61 +1,50 @@
-<section id="ai-hooks" data-transition="fade" style="background:#F7F8FA; color:#14202E; font-family:'Be Vietnam Pro', Verdana, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:30px">
-  <div style="display:flex; justify-content:space-between; align-items:flex-end">
-    <div style="display:flex; flex-direction:column; gap:8px; width:1050px">
-      <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#2A4A7F; letter-spacing:2px; text-transform:uppercase">SAD · Chỗ cắm AI</p>
-      <h2 style="font-size:58px; font-weight:600; line-height:1.1">Mỗi điểm dùng AI là một interface đã có sẵn</h2>
-    </div>
-    <p style="font-size:25px; color:#4A5468; text-align:right; width:520px; line-height:1.4">Cài đặt thật chỉ là thêm một class và đăng ký trong <span style="font-family:'IBM Plex Mono', 'Courier New', monospace">wiring.py</span>, không sửa lõi</p>
+<section id="ai-hooks" data-transition="fade" style="background:#F7F8FA; color:#14202E; font-family:'Be Vietnam Pro', Verdana, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:40px">
+  <div style="display:flex; flex-direction:column; gap:8px">
+    <p style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:24px; color:#2A4A7F; letter-spacing:2px; text-transform:uppercase">Chỗ cắm AI</p>
+    <h2 style="font-size:72px; font-weight:600; line-height:1.1; letter-spacing:1px; text-transform:uppercase">CÁC ĐIỂM CẮM AI</h2>
   </div>
-  <table style="font-family:'Be Vietnam Pro', Verdana, sans-serif; font-size:25px; background:#FFFFFF; border:1px solid #DDE2EA; border-radius:12px">
+  <table style="font-family:'Be Vietnam Pro', Verdana, sans-serif; font-size:28px; background:#FFFFFF; border:1px solid #DDE2EA; border-radius:12px">
     <tr style="background:#14202E">
-      <th style="width:21%; text-align:left; padding:13px 16px; font-size:23px; color:#B9CCE8">Điểm cắm</th>
-      <th style="width:25%; text-align:left; font-size:23px; color:#B9CCE8">Interface</th>
-      <th style="width:25%; text-align:left; font-size:23px; color:#B9CCE8">Hiện tại</th>
-      <th style="width:29%; text-align:left; font-size:23px; color:#B9CCE8">Sẽ là</th>
+      <th style="width:28%; text-align:left; padding:15px 18px; font-size:25px; color:#B9CCE8">Việc</th>
+      <th style="width:30%; text-align:left; font-size:25px; color:#B9CCE8">Hiện tại</th>
+      <th style="width:42%; text-align:left; font-size:25px; color:#B9CCE8">Sẽ là</th>
     </tr>
     <tr>
       <td>Đọc file</td>
-      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:23px; color:#2A4A7F">InvoiceExtractor</td>
-      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:23px">XmlInvoiceExtractor</td>
-      <td>Thêm bản đọc PDF có chữ và bản OCR qua gateway</td>
+      <td>Mới đọc được XML</td>
+      <td>Thêm bản đọc PDF và ảnh</td>
     </tr>
     <tr style="background:#FBFCFD">
       <td>Khớp tên hàng khó</td>
-      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:23px; color:#2A4A7F">LineMatchArbiter</td>
-      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:23px">InconclusiveArbiter<br><span style="color:#7A8699">luôn từ chối</span></td>
-      <td>Bản gọi mô hình, <b>chỉ được chọn trong danh sách ứng viên</b></td>
+      <td>Trả về chưa kết luận</td>
+      <td>Mô hình chọn, <b>chỉ trong danh sách ứng viên</b></td>
     </tr>
     <tr>
       <td>Câu giải thích</td>
-      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:23px; color:#2A4A7F">Discrepancy.explanation</td>
-      <td style="color:#7A8699">để trống</td>
-      <td>Chạy <b>sau</b> khi mã ngoại lệ và số tiền đã chốt</td>
+      <td>Để trống</td>
+      <td>Viết sau khi số tiền đã chốt</td>
     </tr>
     <tr style="background:#FBFCFD">
-      <td>Tìm chứng từ bằng vector</td>
-      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:23px; color:#2A4A7F">SemanticIndex</td>
-      <td style="color:#7A8699">chưa nối</td>
-      <td>Chỉ đề xuất ứng viên, luôn để người chọn</td>
+      <td>Tìm chứng từ theo ngữ nghĩa</td>
+      <td>Chưa nối</td>
+      <td>Chỉ gợi ý, người chọn</td>
     </tr>
     <tr>
       <td>Gọi dịch vụ AI</td>
-      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:23px; color:#2A4A7F">StructuredLlm · OcrEngine<br>Embedder · BudgetGuard</td>
-      <td style="color:#7A8699">mới có interface</td>
-      <td>OpenAI, Document AI; ghi chi phí vào ai_calls, cache theo hash file</td>
+      <td>Mới có giao diện</td>
+      <td>Nối nhà cung cấp thật, ghi chi phí, lưu đệm</td>
     </tr>
     <tr style="background:#FBFCFD">
-      <td>Điều phối</td>
-      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:23px; color:#2A4A7F">ProcessingQueue</td>
-      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:23px">InProcessPipeline</td>
-      <td>LangGraph + checkpointer Postgres, chờ duyệt bằng interrupt</td>
+      <td>Điều phối quy trình</td>
+      <td>Tác vụ chạy trong API</td>
+      <td>LangGraph có lưu điểm dừng</td>
     </tr>
     <tr>
-      <td>Phần mềm kế toán</td>
-      <td style="font-family:'IBM Plex Mono', 'Courier New', monospace; font-size:23px; color:#2A4A7F">ErpConnector</td>
-      <td style="color:#7A8699">mới có interface</td>
-      <td>SeedConnector, ExcelCsvConnector, sau này MisaConnector</td>
+      <td>Nối phần mềm kế toán</td>
+      <td>Mới có giao diện</td>
+      <td>Đọc Excel, sau đó nối MISA</td>
     </tr>
   </table>
-  <p style="position:absolute; left:128px; bottom:64px; font-size:25px; color:#4A5468">Hệ quả: chậm phần AI <b>không chặn</b> phần nghiệp vụ. Nghiệp vụ chạy trước, AI cắm vào sau, thứ tự cắt khi trễ đã định sẵn.</p>
-  <aside>Đây là slide trả lời câu "nhóm đang làm đến đâu rồi" theo cách có lợi nhất mà vẫn thật: chỗ chưa làm đã có hình dạng rõ ràng, không phải vùng trắng. Nói kèm slide sau để không bị coi là né.</aside>
+  <p style="position:absolute; left:128px; bottom:64px; font-size:26px; color:#4A5468">Phần AI chậm <b>không chặn</b> phần nghiệp vụ. Nghiệp vụ chạy trước, AI cắm vào sau.</p>
+  <aside>Đây là slide trả lời câu hỏi nhóm đang làm đến đâu, theo cách có lợi nhất mà vẫn đúng: chỗ chưa làm đã có hình dạng rõ ràng, không phải vùng trắng. Cài đặt thật chỉ là thêm một lớp và đăng ký vào chỗ ráp module, không phải sửa lõi. Nói kèm slide trạng thái ngay sau để không bị hiểu là né tránh.</aside>
 </section>
