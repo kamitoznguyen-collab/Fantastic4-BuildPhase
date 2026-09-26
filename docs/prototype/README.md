@@ -42,7 +42,7 @@ Lần đầu chạy, npx tải `serve` về mất khoảng mười giây, chưa 
 
 Link này riêng tư. Muốn cả nhóm mở được thì chủ sở hữu phải chia sẻ qua menu Share trên trang.
 
-> **Cần mạng để hiển thị đúng font.** Trang tải Be Vietnam Pro và IBM Plex Mono từ Google Fonts. Mất mạng vẫn chạy được, chỉ là rơi về font hệ thống.
+> **Cần mạng để hiển thị đúng font.** Trang tải Inter và JetBrains Mono từ Google Fonts. Mất mạng vẫn chạy được, chỉ là rơi về font hệ thống.
 
 ---
 
@@ -87,7 +87,7 @@ Hộp xác nhận nêu rõ **đang chấp nhận lệch bao nhiêu tiền** và 
 
 Còn có: **Nhà cung cấp** (điểm sẵn sàng tự động hóa + khuyến nghị), **Tải lên** (bấm *Chọn file* để xem lô 6 file chạy tiến độ, có cả ca trùng và ca vượt giới hạn), **Nhật ký** và **Cấu hình** (chỉ hiện với kế toán trưởng).
 
-Nút **Đặt lại demo** ở góc dưới trái đưa dữ liệu về trạng thái ban đầu. Nút ◐ trên thanh đầu đổi giao diện sáng/tối.
+Nút **Đặt lại demo** trên dải cam *Demo* ở đầu trang đưa dữ liệu về trạng thái ban đầu. Nút hình mặt trăng trên thanh đầu đổi giao diện sáng/tối. Ô tìm kiếm trên thanh đầu (phím tắt `/`) lọc thẳng danh sách hóa đơn.
 
 ---
 
