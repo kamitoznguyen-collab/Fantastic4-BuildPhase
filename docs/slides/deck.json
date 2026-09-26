@@ -1,6 +1,9 @@
 {
   "v": 4,
-  "createdOnFiles": { "v": 1, "at": "2026-09-23T11:20:00Z" },
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-23T11:20:00Z"
+  },
   "title": "Đối soát hóa đơn — PRD & SAD",
   "order": [
     "cover",
@@ -15,6 +18,7 @@
     "approval",
     "sad",
     "context",
+    "dataflow",
     "container",
     "component",
     "sequence",
@@ -25,11 +29,26 @@
     "cheatsheet"
   ],
   "sections": {
-    "s1": { "description": "Bài toán nghiệp vụ", "start": "problem" },
-    "s2": { "description": "Phạm vi và luồng xử lý", "start": "scope" },
-    "s3": { "description": "Kiến trúc hệ thống", "start": "sad" },
-    "s4": { "description": "Vai trò của AI", "start": "ai-where" },
-    "s5": { "description": "Trạng thái và bước tiếp theo", "start": "status" }
+    "s1": {
+      "description": "Bài toán nghiệp vụ",
+      "start": "problem"
+    },
+    "s2": {
+      "description": "Phạm vi và luồng xử lý",
+      "start": "scope"
+    },
+    "s3": {
+      "description": "Kiến trúc hệ thống",
+      "start": "sad"
+    },
+    "s4": {
+      "description": "Vai trò của AI",
+      "start": "ai-where"
+    },
+    "s5": {
+      "description": "Trạng thái và bước tiếp theo",
+      "start": "status"
+    }
   },
   "faces": {
     "be-vietnam-pro": {
