@@ -126,8 +126,9 @@ Mỗi yêu cầu có tuần dự kiến và **điều kiện xong** — không �
 | F4 | Thông báo theo mã lỗi `401`, `403`, `404`, `409`, `413`, `429`; trạng thái đang tải và trạng thái rỗng | 4 | Mỗi mã lỗi có câu thông báo nói rõ chuyện gì xảy ra và làm gì tiếp |
 | F5 | Hóa đơn dài: mặc định chỉ hiện dòng lệch; chỉ tô vùng bằng chứng khi `bbox_verified` | 4 | Hóa đơn 200 dòng vẫn mở nhanh; vùng chưa xác minh không được tô — `RESEARCH.md` mục 3.5 |
 | F6 | Deploy giao diện, cấu hình CORS với API | 4 | Có live URL cho giao diện |
+| F7 | Chuyển giao diện sang React, dùng lại module gọi API và bộ màu | Sau | Chạy đủ kịch bản demo như bản HTML |
 
-Không có bước build: giao diện là file tĩnh, deploy ở đâu cũng được. Khi thêm phần gọi API, tách thành vài file bằng ES module có sẵn của trình duyệt — `<script type="module">` — vẫn không cần build, để một file không phình quá dài.
+Vì sau này chuyển sang React, viết phần nối API sao cho mang sang được nguyên vẹn: tách **lời gọi API** và **xử lý dữ liệu** thành ES module riêng — `<script type="module">`, vẫn không cần build — và **không đụng tới giao diện** trong các module đó. Khi chuyển React chỉ phải viết lại phần hiển thị; phần gọi API, làm mới token, định dạng số tiền dùng lại được. Bộ màu trong khối `:root` cũng mang sang được.
 
 **Chỉ số Huy chịu trách nhiệm:** 10/10 deliverables · báo cáo tuần đúng hạn · thời gian đối chiếu của kế toán giảm ít nhất 50% · giao diện chạy hết kịch bản demo trên API thật.
 
@@ -214,6 +215,6 @@ Mốc chung khớp với `BRIEF_v3.md` §12: deploy lần đầu ở tuần 2, x
 | # | Quyết định | Kết quả |
 |---|---|---|
 | 1 | Tech lead | **Đã chốt: Giáp** |
-| 2 | Frontend | **Đã chốt: Huy**, đi tiếp từ prototype bằng HTML + JavaScript thuần — **không dùng React** |
+| 2 | Frontend | **Đã chốt: Huy.** Trước mắt đi tiếp từ prototype bằng HTML + JavaScript thuần; **sau chuyển sang React**, thời điểm chưa chốt |
 | 3 | Nơi để code | **Linh hoạt.** Bản nộp và mọi deliverable nằm ở P-143 |
 | 4 | Dương và Hoàn nhận phần nào | Đề xuất như mục 3 — đổi cho nhau nếu thế mạnh ngược lại |

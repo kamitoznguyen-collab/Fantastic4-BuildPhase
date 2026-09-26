@@ -70,7 +70,7 @@ flowchart TB
     ktt["👤 Kế toán trưởng"]
 
     subgraph sys["Hệ thống đối soát hóa đơn"]
-        web["<b>Ứng dụng web</b> ⏳<br/><i>HTML + JavaScript thuần, không cần build</i><br/>Danh sách hóa đơn, màn so sánh 3 chiều,<br/>hàng đợi duyệt, cấu hình"]
+        web["<b>Ứng dụng web</b> ⏳<br/><i>Trước mắt HTML + JS thuần, sau chuyển React</i><br/>Danh sách hóa đơn, màn so sánh 3 chiều,<br/>hàng đợi duyệt, cấu hình"]
         api["<b>API</b> ✅<br/><i>Python 3.11, FastAPI, uvicorn</i><br/>Toàn bộ nghiệp vụ, REST /api/v1,<br/>xác thực JWT, phân quyền"]
         pipe["<b>Pipeline xử lý nền</b> 🚧<br/><i>InProcessPipeline, chạy chung tiến trình API</i><br/>trích xuất → đối chiếu → chờ duyệt<br/><i>Sẽ thay bằng LangGraph</i>"]
         db[("<b>Cơ sở dữ liệu</b> ✅<br/><i>PostgreSQL 18 + pgvector</i><br/>Dữ liệu nghiệp vụ mọi tổ chức,<br/>nhật ký, cấu hình theo phiên bản")]
@@ -103,7 +103,7 @@ flowchart TB
 
 | Khối | Công nghệ | Trạng thái | Ghi chú |
 |---|---|:-:|---|
-| Ứng dụng web | HTML + JavaScript thuần, không cần build | ⏳ | Chưa có trong repo `P-143`. Đi tiếp từ `docs/prototype/`, hiện chạy trên dữ liệu mẫu. Màn hình theo `WIREFRAME.md` |
+| Ứng dụng web | Trước mắt HTML + JavaScript thuần, không cần build; sau chuyển React | ⏳ | Chưa có trong repo `P-143`. Đi tiếp từ `docs/prototype/`, hiện chạy trên dữ liệu mẫu. Màn hình theo `WIREFRAME.md` |
 | API | FastAPI, uvicorn, psycopg 3 async, SQL thuần, không ORM | ✅ | Mọi endpoint ở `PRD.md` mục 8. Swagger tại `/docs` |
 | Pipeline xử lý nền | `asyncio` task trong cùng tiến trình | 🚧 | `PIPELINE_MODE=background` cho API, `inline` cho test, `off` để giao cho worker riêng sau này. Chưa có LangGraph, chưa có checkpointer, nên hóa đơn đang chạy dở sẽ mất nếu khởi động lại |
 | Cơ sở dữ liệu | PostgreSQL 18 (dùng `uuidv7()` sẵn có), pgvector | ✅ | Migration SQL thuần ở `migrations/`, mỗi file có checksum |

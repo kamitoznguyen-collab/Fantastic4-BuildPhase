@@ -191,7 +191,7 @@ Mọi con số LLM trả về đều bị **đối chiếu lại với text gố
 
 ```mermaid
 graph LR
-    UI[Giao diện web<br/>HTML + JS thuần] -->|REST + JWT| API[FastAPI]
+    UI[Giao diện web] -->|REST + JWT| API[FastAPI]
     API --> G[LangGraph Agent]
     API --> Q[Queue nền<br/>xử lý theo lô]
     G --> OCR[Google Document AI<br/>hoặc VietOCR]
@@ -216,7 +216,7 @@ graph LR
 | Vector DB | **pgvector** trong cùng PostgreSQL | Không phải chạy thêm service; Render Postgres hỗ trợ |
 | Backend | FastAPI + SQLAlchemy + Alembic | Có sẵn khung |
 | Auth | JWT + phân quyền theo vai trò | 2 vai trò KTV, KTT |
-| Frontend | HTML + JavaScript thuần, không cần build | Đi tiếp từ `docs/prototype/`, đã có sẵn giao diện co giãn theo màn hình và chế độ tối. Chốt 26/09, thay cho React |
+| Frontend | Trước mắt: HTML + JavaScript thuần, không cần build · Sau: React | Đi tiếp từ `docs/prototype/`, đã có sẵn giao diện co giãn theo màn hình và chế độ tối. Chuyển sang React sau, thời điểm chưa chốt |
 | Deploy | Render: Web Service (API), Static Site (giao diện), PostgreSQL | Theo đề bài |
 | Tracing / chi phí | LangSmith | Deliverable #4, đo chi phí mỗi hóa đơn |
 
@@ -254,7 +254,7 @@ eval/
 ├── generator/                # sinh XML, render PDF, ảnh scan có nhiễu
 ├── datasets/                 # bộ test có đáp án chuẩn
 └── results/report.md
-frontend/                     # giao diện HTML + JS thuần, đi tiếp từ docs/prototype/
+frontend/                     # giao diện: trước mắt HTML + JS từ docs/prototype/, sau chuyển React
 ```
 
 ### 8.2 Bảng dữ liệu chính

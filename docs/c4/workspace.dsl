@@ -50,7 +50,7 @@ workspace "Invoice Reconciliation Agent" "Đối soát hóa đơn ↔ đơn đ�
 
         p143 = softwareSystem "Hệ thống đối soát hóa đơn" "Đọc hóa đơn, tìm đơn đặt hàng và phiếu nhập kho, đối chiếu từng dòng, phân loại chỗ lệch, đề xuất cách xử lý, sinh bút toán. Không tự duyệt, không thanh toán." {
 
-            web = container "Ứng dụng web" "Danh sách hóa đơn theo màu, màn so sánh 3 chiều, hàng đợi duyệt, cấu hình. Chưa có trong repo P-143." "HTML + JavaScript thuần, không cần build" {
+            web = container "Ứng dụng web" "Danh sách hóa đơn theo màu, màn so sánh 3 chiều, hàng đợi duyệt, cấu hình. Chưa có trong repo P-143." "HTML + JavaScript thuần, sau chuyển React" {
                 tags "Web Browser" "Chưa làm"
             }
 
