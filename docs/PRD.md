@@ -108,11 +108,14 @@ Ký hiệu: **[M]** bắt buộc cho MVP · **[S]** nên có · **[H2]** để c
 
 - F2.4 PDF được thử `pdfplumber` trước; nếu tỉ lệ ký tự trích được trên mỗi trang dưới ngưỡng `min_chars_per_page` (mặc định 200) thì coi là scan và chuyển sang OCR.
 - F2.5 Trường phải trích cho **đầu hóa đơn**: `invoice_number`, `invoice_series` (ký hiệu), `invoice_date`, `vendor_name`, `vendor_tax_code`, `buyer_name`, `buyer_tax_code`, `currency`, `exchange_rate`, `subtotal`, `tax_amount`, `total_amount`, `amount_in_words`, `po_reference` (nếu có in trên hóa đơn), `payment_bank_account`.
-- F2.6 Trường phải trích cho **mỗi dòng hàng**: `line_no`, `item_code` (nếu có), `description`, `uom`, `quantity`, `unit_price`, `line_net`, `tax_rate`, `line_tax`, `line_total`.
+- F2.6 Trường phải trích cho **mỗi dòng hàng**: `line_no`, `line_kind`, `item_code` (nếu có), `description`, `uom`, `quantity`, `unit_price`, `line_net`, `tax_rate`, `line_tax`, `line_total`.
+  - `line_kind` là một trong `goods` (hàng hóa, dịch vụ), `discount` (chiết khấu, khuyến mại — `line_net` âm), `fee` (phí vận chuyển, phụ phí). Chỉ dòng `goods` đi vào khớp dòng với PO; dòng `discount` và `fee` vẫn tính vào kiểm cộng dồn F3.1. Không chắc loại dòng thì để `goods` và hạ `confidence` của trường này.
 - F2.7 Mỗi trường ghi một bản ghi `extraction_fields` gồm `value`, `confidence`, `source_type` (`xml` / `pdf_text` / `ocr` / `manual`), `evidence` (JSON: xpath, hoặc `{page, bbox}`, hoặc `{user_id}`).
 - F2.8 **Chống bịa số:** mọi giá trị số do LLM trả về phải xuất hiện trong text gốc sau khi chuẩn hóa (bỏ dấu phân cách nghìn, chuẩn hóa dấu thập phân). Không tìm thấy thì `value = null`, `confidence = 0`, và sinh ngoại lệ `INT-06`.
 - F2.9 Mọi node LLM chạy `temperature = 0` và dùng structured output theo schema Pydantic.
 - F2.10 Cache kết quả OCR và kết quả LLM map theo `sha256` file, TTL 30 ngày.
+- F2.11 **Trường ngoài schema** — thông tin in trên hóa đơn mà không thuộc F2.5, F2.6 (số hợp đồng, biển số xe, mã khách hàng, ghi chú…) **không được bỏ đi**. Lưu vào `extras` gồm `label` như in trên hóa đơn, `value` dạng chữ, `evidence`. Với XML, toàn bộ khối `TTKhac` đi vào `extras`. `extras` hiển thị trên màn hình chi tiết nhưng **không dùng để đối chiếu hay tính tiền**. Nhãn nào xuất hiện ở nhiều nhà cung cấp thì cân nhắc nâng thành trường chính thức.
+- F2.12 **Trường có trong schema mà hóa đơn không in:** `value = null`, không suy đoán. Trường tùy chọn (`po_reference`, `item_code`, `exchange_rate` khi `currency = VND`) để trống vẫn chạy tiếp. Trường bắt buộc còn lại trống thì `confidence = 0` và sinh `INT-01`.
 
 ### F3 — Kiểm tra toàn vẹn trường (N1) **[M]**
 
@@ -325,7 +328,7 @@ class ErpConnector(Protocol):
 | `PRC-01` | Giá cao hơn PO | Vượt cả `price_tolerance_pct` và `price_tolerance_abs_vnd` | BLOCK | `REQUEST_CREDIT_NOTE` |
 | `PRC-02` | Giá thấp hơn PO | Thấp hơn ngoài dung sai | INFO | Xác minh có phải chiết khấu chưa khai báo |
 | `PRC-03` | Lệch do làm tròn | `|amount_delta| ≤ số dòng × 1 đồng` | INFO | `ACCEPT` |
-| `PRC-04` | Chiết khấu không khai báo | `Σ line_total ≠ subtotal` và phần chênh âm | REVIEW | Yêu cầu NCC ghi rõ dòng chiết khấu |
+| `PRC-04` | Chiết khấu không khai báo | `Σ line_total ≠ subtotal` và phần chênh âm, sau khi đã tính các dòng `discount` (F2.6) | REVIEW | Yêu cầu NCC ghi rõ dòng chiết khấu |
 
 ### 4.4 Nhóm TAX — thuế
 
@@ -477,9 +480,11 @@ Thứ tự tính bắt buộc: **làm tròn ở cấp dòng trước, rồi mớ
 
 **`invoice_po_links`** — `id`, `org_id`, `invoice_id`, `po_id`, `link_confidence`, `linked_by` (`PO_NUMBER` / `VENDOR_DATE` / `VECTOR` / `MANUAL`) — quan hệ nhiều–nhiều, phục vụ `DOC-05`
 
-**`invoice_lines`** — `id`, `org_id`, `invoice_id`, `line_no`, `item_code`, `description`, `description_normalized`, `uom`, `quantity`, `unit_price`, `tax_rate`, `line_net`, `line_tax`, `line_total`
+**`invoice_lines`** — `id`, `org_id`, `invoice_id`, `line_no`, `line_kind` (`goods` / `discount` / `fee`), `item_code`, `description`, `description_normalized`, `uom`, `quantity`, `unit_price`, `tax_rate`, `line_net`, `line_tax`, `line_total`
 
 **`extraction_fields`** — `id`, `org_id`, `invoice_id`, `line_id` (nullable), `field_name`, `value_text`, `value_number`, `confidence`, `source_type` (`xml` / `pdf_text` / `ocr` / `manual`), `evidence` (JSONB), `superseded_by` (nullable, trỏ bản ghi sửa sau) — **chỉ thêm, không sửa đè**, để giữ lịch sử trích xuất
+
+**`invoice_extras`** — `id`, `org_id`, `invoice_id`, `label`, `value_text`, `source_type`, `evidence` (JSONB) — trường ngoài schema theo F2.11, chỉ để hiển thị
 
 **`line_matches`** — `id`, `org_id`, `invoice_line_id`, `po_line_id`, `grn_line_id`, `match_level` (`L0`…`L5`), `matched_by` (`ITEM_CODE` / `VENDOR_MEMORY` / `NORMALIZED` / `FUZZY` / `LLM` / `MANUAL`), `confidence`, `rule_id`, `qty_delta`, `price_delta`, `price_delta_pct`, `amount_delta`, `formula` (text)
 
