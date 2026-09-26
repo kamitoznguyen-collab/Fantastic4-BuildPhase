@@ -1,0 +1,17 @@
+{
+  "v": 4,
+  "createdOnFiles": { "v": 1, "at": "2026-09-26T15:00:00Z" },
+  "title": "Đối soát hóa đơn — Tổng quan",
+  "order": ["cover", "problem", "how", "principles", "edge", "ai", "legal", "data", "product", "team", "progress", "qa"],
+  "sections": {
+    "s1": { "description": "Bài toán", "start": "cover" },
+    "s2": { "description": "Giải pháp", "start": "how" },
+    "s3": { "description": "Tầm nhìn", "start": "legal" },
+    "s4": { "description": "Nhóm và tiến độ", "start": "team" }
+  },
+  "faces": {
+    "be-vietnam-pro": { "family": "Be Vietnam Pro", "href": "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" },
+    "ibm-plex-mono": { "family": "IBM Plex Mono", "href": "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" }
+  },
+  "designSystems": []
+}
