@@ -191,7 +191,7 @@ Mọi con số LLM trả về đều bị **đối chiếu lại với text gố
 
 ```mermaid
 graph LR
-    UI[React Dashboard] -->|REST + JWT| API[FastAPI]
+    UI[Giao diện web<br/>HTML + JS thuần] -->|REST + JWT| API[FastAPI]
     API --> G[LangGraph Agent]
     API --> Q[Queue nền<br/>xử lý theo lô]
     G --> OCR[Google Document AI<br/>hoặc VietOCR]
@@ -216,8 +216,8 @@ graph LR
 | Vector DB | **pgvector** trong cùng PostgreSQL | Không phải chạy thêm service; Render Postgres hỗ trợ |
 | Backend | FastAPI + SQLAlchemy + Alembic | Có sẵn khung |
 | Auth | JWT + phân quyền theo vai trò | 2 vai trò KTV, KTT |
-| Frontend | React + TypeScript (Vite) | Dashboard, responsive và dark mode |
-| Deploy | Render: Web Service (API), Static Site (React), PostgreSQL | Theo đề bài |
+| Frontend | HTML + JavaScript thuần, không cần build | Đi tiếp từ `docs/prototype/`, đã có sẵn giao diện co giãn theo màn hình và chế độ tối. Chốt 26/09, thay cho React |
+| Deploy | Render: Web Service (API), Static Site (giao diện), PostgreSQL | Theo đề bài |
 | Tracing / chi phí | LangSmith | Deliverable #4, đo chi phí mỗi hóa đơn |
 
 **Ghi chú về OCR:**
@@ -254,7 +254,7 @@ eval/
 ├── generator/                # sinh XML, render PDF, ảnh scan có nhiễu
 ├── datasets/                 # bộ test có đáp án chuẩn
 └── results/report.md
-frontend/                     # React dashboard
+frontend/                     # giao diện HTML + JS thuần, đi tiếp từ docs/prototype/
 ```
 
 ### 8.2 Bảng dữ liệu chính
@@ -316,7 +316,7 @@ Lý do đặt recall cao hơn precision: một chỗ lệch bị bỏ sót là t
 
 | Tuần | Sản phẩm | Deliverables Demo Day |
 |---|---|---|
-| **1** | Setup repo, Postgres (Docker local), schema DB + Alembic (**có `org_id`**), auth 2 vai trò, parser XML, **bộ sinh dữ liệu mẫu**. **Thử Document AI với hóa đơn tiếng Việt.** Khung React: đăng nhập, upload, danh sách hóa đơn | `ARCHITECTURE.md` + diagram, bắt đầu `JOURNAL.md` và `WORKLOG.md` |
+| **1** | Setup repo, Postgres (Docker local), schema DB + Alembic (**có `org_id`**), auth 2 vai trò, parser XML, **bộ sinh dữ liệu mẫu**. **Thử Document AI với hóa đơn tiếng Việt.** Khung giao diện: đăng nhập, upload, danh sách hóa đơn | `ARCHITECTURE.md` + diagram, bắt đầu `JOURNAL.md` và `WORKLOG.md` |
 | **2** | Trích xuất PDF/OCR + confidence + kiểm chéo (N1 bản đầu). Node `retrieve_docs` (SQL), `match_lines` (rule + fuzzy + LLM), `classify`. **Chốt bảng mã ngoại lệ.** Unit test cho parser và rule | **Deploy lần đầu lên Render** |
 | **3** | `propose_action`, `approve_L1` (interrupt), bút toán đề xuất, `tax_check` (N3). Dashboard: danh sách theo trạng thái, màn so sánh 3 chiều, duyệt. **Xong phần Cơ bản** | Live URL chạy đủ phần Cơ bản |
 | **4** | Nâng cao: duyệt nhiều cấp (N6), trùng/gian lận (N5), vector search (N4), memory NCC (N7), giới hạn (N2), readiness score (N8). Chạy eval. Cho kế toán dùng thử | Điền `eval/results/report.md` |
@@ -335,7 +335,7 @@ Lý do đặt recall cao hơn precision: một chỗ lệch bị bỏ sót là t
 - **A** — trích xuất (XML, PDF, OCR), confidence, bộ sinh dữ liệu và eval
 - **B** — agent (graph, matching, memory NCC, LLM), rule engine, taxonomy ngoại lệ
 - **C** — backend (auth, API, DB, duyệt nhiều cấp, audit log, connector interface), deploy
-- **D** — frontend React; tuần 5 phụ trách deck và video
+- **D** — frontend, đi tiếp từ prototype; tuần 5 phụ trách deck và video
 
 ---
 

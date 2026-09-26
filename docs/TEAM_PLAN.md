@@ -127,6 +127,8 @@ Mỗi yêu cầu có tuần dự kiến và **điều kiện xong** — không �
 | F5 | Hóa đơn dài: mặc định chỉ hiện dòng lệch; chỉ tô vùng bằng chứng khi `bbox_verified` | 4 | Hóa đơn 200 dòng vẫn mở nhanh; vùng chưa xác minh không được tô — `RESEARCH.md` mục 3.5 |
 | F6 | Deploy giao diện, cấu hình CORS với API | 4 | Có live URL cho giao diện |
 
+Không có bước build: giao diện là file tĩnh, deploy ở đâu cũng được. Khi thêm phần gọi API, tách thành vài file bằng ES module có sẵn của trình duyệt — `<script type="module">` — vẫn không cần build, để một file không phình quá dài.
+
 **Chỉ số Huy chịu trách nhiệm:** 10/10 deliverables · báo cáo tuần đúng hạn · thời gian đối chiếu của kế toán giảm ít nhất 50% · giao diện chạy hết kịch bản demo trên API thật.
 
 **Tải của Huy tăng vì nhận thêm frontend.** Để bù: U4 đã chuyển sang sau MVP; ở tuần 5 cả nhóm cùng quay video, Huy dựng và ghép.
@@ -212,6 +214,6 @@ Mốc chung khớp với `BRIEF_v3.md` §12: deploy lần đầu ở tuần 2, x
 | # | Quyết định | Kết quả |
 |---|---|---|
 | 1 | Tech lead | **Đã chốt: Giáp** |
-| 2 | Frontend | **Đã chốt: Huy.** Công nghệ: đề xuất đi tiếp từ prototype thay vì viết lại bằng React như BRIEF ghi — Huy quyết |
+| 2 | Frontend | **Đã chốt: Huy**, đi tiếp từ prototype bằng HTML + JavaScript thuần — **không dùng React** |
 | 3 | Nơi để code | **Linh hoạt.** Bản nộp và mọi deliverable nằm ở P-143 |
 | 4 | Dương và Hoàn nhận phần nào | Đề xuất như mục 3 — đổi cho nhau nếu thế mạnh ngược lại |
