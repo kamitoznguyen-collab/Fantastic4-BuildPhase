@@ -1,6 +1,6 @@
 # Phân công — Invoice Reconciliation Agent
 
-> Yêu cầu công việc cho từng thành viên · 26/09/2026 · Trạng thái: **đề xuất, chờ nhóm chốt**
+> Yêu cầu công việc cho từng thành viên · 26/09/2026 · Trạng thái: **đã chốt vai trò** — tech lead, frontend, nơi để code chốt ngày 26/09
 > Dựa trên: `RESEARCH.md` (nghiên cứu kỹ thuật) · `PRD.md` (yêu cầu sản phẩm) · `BRIEF_v3.md` §12 (lộ trình 5 tuần) · `C4_DESIGN.md` (module)
 > Giả định lịch: tuần 1 là 20–26/09. Nếu lịch của chương trình khác, dịch các cột tuần tương ứng.
 
@@ -10,16 +10,18 @@
 
 | Người | Vai trò | Sở hữu | Module trong code | Mục nghiên cứu |
 |---|---|---|---|---|
-| **Huy** | BA, PM | Yêu cầu, câu hỏi nghiệp vụ, kế hoạch, báo cáo tuần, deliverables, trình bày | — | Phụ lục A, Phần 7 |
+| **Huy** | BA, PM, frontend | Yêu cầu, câu hỏi nghiệp vụ, kế hoạch, báo cáo tuần, deliverables, trình bày, **giao diện** | `frontend/` — đi tiếp từ `docs/prototype/` | Phụ lục A, Phần 7, mục 3.5 |
 | **Dương** | ML — đọc hóa đơn | Biến mọi loại file thành dữ liệu đáng tin, và biết lúc nào nó không đáng tin | `extraction`, phần đọc của `eval/` | Phần 1, 2, 3 |
 | **Hoàn** | ML — đối chiếu và an toàn AI | Khớp dòng, gán mã ngoại lệ, kiểm thuế và MST, chống tấn công | `reconciliation`, `vendor`, `semantic`, phần luật của `rules` | Phần 4, 5, mục 1.5 |
-| **Giáp** | BE chính, **tech lead** (đề xuất) | Nền tảng, luồng xử lý, ngân sách, quan sát, deploy, hợp đồng giữa các phần | `core`, `app`, `iam`, `invoice`, `procurement`, `approval`, `ledger`, `audit`, `reporting`, `erp`, khung `gateway` | Phần 6 |
+| **Giáp** | BE chính, **tech lead** | Nền tảng, luồng xử lý, ngân sách, quan sát, deploy, hợp đồng giữa các phần | `core`, `app`, `iam`, `invoice`, `procurement`, `approval`, `ledger`, `audit`, `reporting`, `erp`, khung `gateway` | Phần 6 |
 
 Tương ứng với phân công A B C D trong `BRIEF_v3.md` và `RESEARCH.md`: **A = Dương · B = Hoàn · C = Giáp · D = Huy**.
 
 ---
 
-## 1. Tech lead: đề xuất Giáp
+## 1. Tech lead: Giáp
+
+Đã chốt ngày 26/09.
 
 **Vì sao Giáp:**
 - Chỗ các phần ghép vào nhau — schema bàn giao, interface `gateway`, luồng xử lý — đều nằm trong phần backend. Người giữ những chỗ đó là người phải quyết khi có tranh chấp kỹ thuật.
@@ -28,6 +30,7 @@ Tương ứng với phân công A B C D trong `BRIEF_v3.md` và `RESEARCH.md`: *
 **Tech lead chịu trách nhiệm:**
 - Chốt các hợp đồng bàn giao ở mục 2, ngay đầu tuần 2
 - Review mọi thay đổi trước khi vào nhánh chính
+- Quyết khi nào code đủ ổn để đưa lên P-143
 - Giữ `C4_DESIGN.md` khớp với code thật
 - Ghi quyết định lớn thành ADR ngắn: chọn mô hình đọc, LangGraph, Langfuse
 - Quyết khi hai người bất đồng về kỹ thuật
@@ -44,7 +47,7 @@ Tương ứng với phân công A B C D trong `BRIEF_v3.md` và `RESEARCH.md`: *
 Đây là phần quan trọng nhất của bản phân công. Chốt được định dạng dữ liệu đi qua ranh giới giữa hai người thì bốn người làm song song được, không ai phải chờ ai.
 
 ```
-Dương  ──ExtractionResult──►  Hoàn  ──ReconciliationResult──►  Giáp  ──API──►  giao diện
+Dương  ──ExtractionResult──►  Hoàn  ──ReconciliationResult──►  Giáp  ──API──►  Huy (giao diện)
   ▲                             ▲                                │
   └──────── gateway (gọi OCR, gọi mô hình, ngân sách, cache) ────┘
 ```
@@ -80,7 +83,7 @@ classification:  GREEN | YELLOW | RED
 
 Câu giải thích cho kế toán **sinh riêng, từ `discrepancies`** — không bao giờ từ chữ tự do trên hóa đơn (`RESEARCH.md` mục 5.2).
 
-**API cho giao diện** — Giáp giao cho Huy: theo `PRD.md` mục 8, phần endpoint mà prototype cần.
+**API cho giao diện** — Giáp giao cho Huy: theo `PRD.md` mục 8, phần endpoint mà giao diện cần. Trang Swagger ở `/docs` do FastAPI sinh sẵn là tài liệu API sống — có endpoint nào thì Huy nối được endpoint đó, không phải chờ viết tài liệu.
 
 **Ca test** — ai cũng dùng: một thư mục gồm file hóa đơn, PO, phiếu nhập, và đáp án đúng gồm giá trị từng trường cộng danh sách mã ngoại lệ.
 
@@ -90,7 +93,7 @@ Câu giải thích cho kế toán **sinh riêng, từ `discrepancies`** — khô
 
 Mỗi yêu cầu có tuần dự kiến và **điều kiện xong** — không đạt điều kiện thì chưa tính là xong.
 
-### 3.1 Huy — BA, PM
+### 3.1 Huy — BA, PM, frontend
 
 **Phần BA**
 
@@ -99,21 +102,34 @@ Mỗi yêu cầu có tuần dự kiến và **điều kiện xong** — không �
 | U1 | Cập nhật `PRD.md` theo 13 việc ở Phụ lục A của `RESEARCH.md` — viết yêu cầu, người làm là Dương, Hoàn, Giáp | 2 | PRD có mục đầu vào và hóa đơn dài, mã ngoại lệ mới cho MST người mua, cấu hình thuế 8% có ngày kết thúc |
 | U2 | Chốt các câu hỏi mở với mentor hoặc Xe X: Q1–Q6 trong `USER_STORIES.md`, hai câu về đầu vào (một file chứa nhiều hóa đơn? bảng kê?), dung sai, ngưỡng duyệt cấp 2, thông tư 200 hay 133 | 2 | Mỗi câu có quyết định và ngày chốt, ghi vào PRD |
 | U3 | Soạn kịch bản kiểm thử chấp nhận từ 18 tình huống trong `USER_STORIES.md`, tổ chức buổi dùng thử với kế toán | 4 | Biên bản buổi dùng thử, có số đo thời gian đối chiếu trước và sau — mục tiêu giảm 50% |
-| U4 | Định nghĩa quy trình kiểm tra ngẫu nhiên hóa đơn đã xếp Khớp | 4 | Tỉ lệ lấy mẫu, ai kiểm, ghi kết quả ở đâu |
+| U4 | Định nghĩa quy trình kiểm tra ngẫu nhiên hóa đơn đã xếp Khớp | Sau | Tỉ lệ lấy mẫu, ai kiểm, ghi kết quả ở đâu |
 
 **Phần PM**
 
 | # | Việc | Tuần | Điều kiện xong |
 |---|---|---|---|
-| P1 | Kế hoạch tuần, báo cáo tuần cho mentor (`JOURNAL.md`), nhật ký công việc (`WORKLOG.md`) | Hằng tuần | Nộp đúng hạn, **ở repo P-143** |
+| P1 | Kế hoạch tuần, báo cáo tuần cho mentor (`JOURNAL.md`), nhật ký công việc (`WORKLOG.md`) | Hằng tuần | Nộp đúng hạn, ở P-143 |
 | P2 | Theo dõi checklist 10 deliverables của Demo Day | Từ tuần 2 | Mỗi deliverable có người chịu trách nhiệm và hạn |
 | P3 | Việc với mentor và ban tổ chức: xin dữ liệu mẫu, xác nhận Langfuse đáp ứng deliverable *AI Logs*, xin credit Google Cloud nếu dùng Document AI | 2 | Có câu trả lời bằng văn bản |
 | P4 | Theo dõi bảng rủi ro trong `BRIEF_v3.md` §13; quyết thứ tự cắt khi trễ | Hằng tuần | Rủi ro cập nhật trong báo cáo tuần |
 | P5 | Pitch deck 10 slide theo cấu trúc ban tổ chức và video demo tối đa 5 phút | 5 | Nằm trong `presentation/` của P-143 |
 
-**Lưu ý quan trọng cho P1 và P5.** Theo `P-143/docs/guide/chapter-02.md`, repo nằm ngoài org của khóa **không được tính là bài nộp**. Làm việc hằng ngày ở BuildPhase vẫn được, nhưng mọi thứ cần chấm phải có mặt ở P-143.
+**Lưu ý cho P1 và P5.** Theo `docs/guide/chapter-02.md` của chương trình, chỉ repo của đội trong org của khóa được tính là bài nộp. Báo cáo tuần, pitch deck, video và mọi deliverable phải nằm ở P-143.
 
-**Chỉ số Huy chịu trách nhiệm:** 10/10 deliverables · báo cáo tuần đúng hạn · thời gian đối chiếu của kế toán giảm ít nhất 50%.
+**Phần frontend** — đi tiếp từ prototype ở `docs/prototype/`, thay dữ liệu mẫu bằng lời gọi API
+
+| # | Việc | Tuần | Điều kiện xong |
+|---|---|---|---|
+| F1 | Đăng nhập thật bằng JWT, tự làm mới token khi hết hạn | 3 | Hai vai trò đăng nhập được; token hết hạn thì tự làm mới, không đẩy người dùng ra ngoài |
+| F2 | Thay dữ liệu mẫu bằng lời gọi API theo `PRD.md` §8: danh sách, so sánh ba chiều, xử lý ngoại lệ, duyệt, trả lại, từ chối, hàng đợi duyệt, nhà cung cấp | 3 | Đi hết kịch bản demo trên dữ liệu lấy từ API; bản chạy thật không còn dữ liệu mẫu |
+| F3 | Tải lên nhiều file và theo dõi tiến độ lô | 3 | Thấy từng file đổi trạng thái; file trùng và file vượt giới hạn hiện đúng thông báo |
+| F4 | Thông báo theo mã lỗi `401`, `403`, `404`, `409`, `413`, `429`; trạng thái đang tải và trạng thái rỗng | 4 | Mỗi mã lỗi có câu thông báo nói rõ chuyện gì xảy ra và làm gì tiếp |
+| F5 | Hóa đơn dài: mặc định chỉ hiện dòng lệch; chỉ tô vùng bằng chứng khi `bbox_verified` | 4 | Hóa đơn 200 dòng vẫn mở nhanh; vùng chưa xác minh không được tô — `RESEARCH.md` mục 3.5 |
+| F6 | Deploy giao diện, cấu hình CORS với API | 4 | Có live URL cho giao diện |
+
+**Chỉ số Huy chịu trách nhiệm:** 10/10 deliverables · báo cáo tuần đúng hạn · thời gian đối chiếu của kế toán giảm ít nhất 50% · giao diện chạy hết kịch bản demo trên API thật.
+
+**Tải của Huy tăng vì nhận thêm frontend.** Để bù: U4 đã chuyển sang sau MVP; ở tuần 5 cả nhóm cùng quay video, Huy dựng và ghép.
 
 ### 3.2 Dương — ML, đọc hóa đơn
 
@@ -162,15 +178,15 @@ Mỗi yêu cầu có tuần dự kiến và **điều kiện xong** — không �
 | # | Việc | Tuần | Điều kiện xong |
 |---|---|---|---|
 | G1 | **[Tech lead]** Chốt hợp đồng bàn giao ở mục 2 thành schema Pydantic trong code | Đầu tuần 2 | Có trong code và tài liệu, ba người còn lại đồng ý |
-| G2 | Gộp `feat/base_module` và `feat/iam` về nhánh chính; chốt code chính nằm ở repo nào và cách đồng bộ sang P-143 để được chấm | 2 | Nhánh chính chạy được, CI xanh |
+| G2 | Gộp `feat/base_module` và `feat/iam` về nhánh chính | 2 | Nhánh chính chạy được, CI xanh |
 | G3 | Nối các module vào API theo `PRD.md` §8: tải lên, nhập PO và phiếu nhập từ Excel, đối chiếu, duyệt hai cấp với tách biệt trách nhiệm, bút toán và xuất file, nhật ký, báo cáo | 2–3 | Đi hết luồng bằng API với dữ liệu mẫu; test tích hợp cho tách biệt trách nhiệm (trả `409`) và cách ly tenant (trả `404`) |
 | G4 | Thay `InProcessPipeline` bằng LangGraph có Postgres checkpointer; bước chờ duyệt là điểm dừng thật | 3 | Test: khởi động lại khi hóa đơn đang chờ duyệt cấp 1, lên lại vẫn duyệt tiếp được |
 | G5 | `gateway`: ngân sách theo từng tenant theo ngày và tháng, trần mỗi hóa đơn, ngắt mạch; cache theo khóa gồm mã băm, bước, phiên bản prompt, mô hình; thử lại có giãn cách; mô hình dự phòng; mã lỗi hệ thống để chuyển người | 3 | Test: vượt ngân sách thì dừng và chuyển người; thử lại không bị tính tiền hai lần |
 | G6 | Quan sát: OpenTelemetry gửi về Langfuse tự host; một trace mỗi hóa đơn, một span mỗi bước; `trace_id` lưu trong bảng hóa đơn; che số tài khoản | 3 | Ảnh chụp trace dùng được cho deliverable *AI Logs* |
 | G7 | Khung harness đánh giá: một lệnh chạy lại bộ ca test, tính chỉ số, so với lần trước; bản 20 ca chạy trong CI | 3 | Một lệnh sinh ra `eval/results/report.md`. Dương và Hoàn viết phần chấm của mình |
-| G8 | Deploy: lần đầu ở tuần 2, bản cuối ở tuần 5 | 2, 5 | Có live URL. **Kiểm nơi deploy có PostgreSQL 18** — code đang dùng `uuidv7()` có sẵn từ bản 18. Database miễn phí của Render bị xóa sau 30 ngày |
+| G8 | Deploy API: lần đầu ở tuần 2, bản cuối ở tuần 5 | 2, 5 | Có live URL. **Kiểm nơi deploy có PostgreSQL 18** — code đang dùng `uuidv7()` có sẵn từ bản 18. Database miễn phí của Render bị xóa sau 30 ngày |
 
-**Việc thường xuyên của tech lead:** review mọi thay đổi vào nhánh chính · giữ `C4_DESIGN.md` khớp code · ghi ADR · gỡ tranh chấp kỹ thuật.
+**Việc thường xuyên của tech lead:** review mọi thay đổi vào nhánh chính · quyết thời điểm đưa code lên P-143 · giữ `C4_DESIGN.md` khớp code · ghi ADR · gỡ tranh chấp kỹ thuật.
 
 **Chỉ số Giáp chịu trách nhiệm:** test coverage ≥ 60% · p95 thời gian API · chi phí đo được theo từng tenant · cách ly tenant · live URL chạy ổn định khi demo.
 
@@ -183,19 +199,19 @@ Mỗi yêu cầu có tuần dự kiến và **điều kiện xong** — không �
 | Tuần | Huy | Dương | Hoàn | Giáp |
 |---|---|---|---|---|
 | **2** | Chốt câu hỏi mở · cập nhật PRD · xin dữ liệu, xác nhận Langfuse | So sánh hai đường đọc · bộ đọc PDF và ảnh · chuẩn hóa kiểu | Bộ sinh dữ liệu · kiểm MST · khớp L0–L3 | **Chốt hợp đồng** · gộp nhánh · nối API · deploy lần đầu |
-| **3** | Nối giao diện với API — nếu chốt phương án ở mục 5 | Tách hóa đơn · bảng nhiều trang · độ tin cậy | Khớp L4 · kiểm thuế · phân loại và giải thích | LangGraph · ngân sách `gateway` · Langfuse · khung đánh giá → **xong phần Cơ bản** |
-| **4** | Buổi dùng thử với kế toán · checklist deliverables | Hiệu chỉnh ngưỡng · xác minh bbox · chạy đánh giá phần đọc | Bất thường · bộ nhớ nhà cung cấp · chạy đánh giá phần đối chiếu | Duyệt hai cấp hoàn chỉnh · test cách ly tenant |
-| **5** | Pitch deck · video · nộp đủ 10 deliverables vào P-143 | Sửa lỗi, đo lại | Sửa lỗi, đo lại · thử mô hình gác nếu còn thời gian | Deploy bản cuối · README |
+| **3** | Đăng nhập thật · nối giao diện với API · tải lên và theo dõi lô | Tách hóa đơn · bảng nhiều trang · độ tin cậy | Khớp L4 · kiểm thuế · phân loại và giải thích | LangGraph · ngân sách `gateway` · Langfuse · khung đánh giá → **xong phần Cơ bản** |
+| **4** | Buổi dùng thử với kế toán · thông báo lỗi · hóa đơn dài · deploy giao diện | Hiệu chỉnh ngưỡng · xác minh bbox · chạy đánh giá phần đọc | Bất thường · bộ nhớ nhà cung cấp · chạy đánh giá phần đối chiếu | Duyệt hai cấp hoàn chỉnh · test cách ly tenant |
+| **5** | Pitch deck · dựng video · nộp đủ 10 deliverables vào P-143 | Sửa lỗi, đo lại · quay video | Sửa lỗi, đo lại · quay video · thử mô hình gác nếu còn thời gian | Deploy bản cuối · README · quay video |
 
 Mốc chung khớp với `BRIEF_v3.md` §12: deploy lần đầu ở tuần 2, xong phần Cơ bản ở tuần 3, chạy đánh giá ở tuần 4, deck và video ở tuần 5.
 
 ---
 
-## 5. Nhóm cần chốt
+## 5. Các quyết định
 
-| # | Quyết định | Phương án đề xuất |
+| # | Quyết định | Kết quả |
 |---|---|---|
-| 1 | Tech lead | Giáp — lý do ở mục 1 |
-| 2 | **Không ai phụ trách frontend.** BRIEF ghi React + TypeScript | Biến prototype `docs/prototype/` thành giao diện thật bằng cách thay dữ liệu mẫu bằng lời gọi API — nhẹ hơn nhiều so với viết lại bằng React, và prototype đã có sẵn giao diện sáng tối, co giãn theo màn hình. Huy làm được với API do Giáp định nghĩa. Nếu giữ React thì cần một người nhận thêm |
-| 3 | Code chính nằm ở repo nào | Làm hằng ngày ở BuildPhase, đồng bộ sang P-143 mỗi tuần vào lúc nộp báo cáo — vì chỉ P-143 được chấm |
-| 4 | Dương và Hoàn nhận phần nào | Như trên. Đổi cho nhau nếu thế mạnh ngược lại — hai phần có khối lượng tương đương |
+| 1 | Tech lead | **Đã chốt: Giáp** |
+| 2 | Frontend | **Đã chốt: Huy.** Công nghệ: đề xuất đi tiếp từ prototype thay vì viết lại bằng React như BRIEF ghi — Huy quyết |
+| 3 | Nơi để code | **Linh hoạt.** Bản nộp và mọi deliverable nằm ở P-143 |
+| 4 | Dương và Hoàn nhận phần nào | Đề xuất như mục 3 — đổi cho nhau nếu thế mạnh ngược lại |
