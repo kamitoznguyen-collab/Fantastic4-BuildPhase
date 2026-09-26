@@ -84,6 +84,18 @@ Slide *TIẾN ĐỘ HIỆN TẠI* viết theo những gì kiểm chứng đượ
 
 ---
 
+## Sửa slide 13 ngày 26/09/2026
+
+Slide *LUỒNG DỮ LIỆU QUA HỆ THỐNG* đã được sửa sau buổi trình bày, cho khớp với `../PRD.md` và `../RESEARCH.md`:
+
+- Ngân sách tính **theo từng tổ chức**, không phải một ngân sách chung (RESEARCH mục 6.6)
+- Thêm bước kiểm mã số thuế ở giai đoạn đọc (RESEARCH mục 4.1)
+- Thêm nhánh trả lại về bước đọc (PRD F11.5), và bước đề xuất quy tắc nhà cung cấp từ chỗ kế toán sửa
+- Cổng AI có thêm che số tài khoản trước khi gửi ra ngoài
+- Mũi tên khối cỡ nhỏ hiện thành thanh ngang, nên đổi sang đường nối có đầu mũi tên
+
+---
+
 ## Số mã ngoại lệ: 37, không phải 33
 
 Bảng ở `../PRD.md` mục 4 có đủ 37 mã: DOC 6 · QTY 5 · PRC 4 · TAX 5 · ITM 4 · INT 6 · FRD 7. Con số 33 xuất hiện ở vài bản nháp trước là sai, đã sửa. Nếu thấy chỗ nào còn ghi 33 thì sửa thành 37.
