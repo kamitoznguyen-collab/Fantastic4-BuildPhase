@@ -74,7 +74,7 @@ Duyệt cấp 2 cho hóa đơn lớn, chịu trách nhiệm trước ban giám �
 | Thêm / sửa / duyệt quy tắc memory NCC | ❌ | ✅ | KTV chỉ đề xuất gián tiếp qua việc sửa |
 | Xem audit log | ❌ | ✅ | |
 | Xem readiness score | ✅ | ✅ | |
-| Export bút toán | ✅ | ✅ | Chỉ hóa đơn đã `APPROVED` |
+| Xuất danh sách hóa đơn đã duyệt | ✅ | ✅ | Chỉ hóa đơn đã `APPROVED`. Không có bút toán — xem F10 |
 
 **Kiểm ở backend.** Mỗi endpoint khai báo vai trò tối thiểu; frontend ẩn nút chỉ là tiện ích, không phải cơ chế bảo vệ. Có test tự động gọi endpoint cấp 2 bằng token KTV và phải nhận `403`.
 
@@ -176,14 +176,17 @@ Bậc thang từ rẻ đến đắt. Mỗi dòng hóa đơn chỉ đi xuống b�
 - F7.3 Tổng thuế kỳ vọng = `Σ expected_line_tax`. So với `tax_amount` trên hóa đơn. Lệch trong `tax_rounding_tolerance_vnd` (mặc định `số dòng × 1`) → `TAX-03` mức INFO. Vượt → `TAX-02` mức BLOCK.
 - F7.4 Hóa đơn có nhiều thuế suất phải có bảng tổng hợp theo từng thuế suất; hệ thống kiểm từng nhóm riêng (`TAX-05`).
 - F7.5 Thuế suất trên hóa đơn khác thuế suất đã dùng trên PO cho cùng mặt hàng → `TAX-01`.
-- F7.6 Mọi thay đổi chính sách thuế được thêm vào `vat_rates.yaml` dưới dạng khoảng hiệu lực, **không sửa đè**, để hóa đơn cũ tính lại vẫn ra kết quả cũ.
+- F7.6 Mọi thay đổi chính sách thuế được thêm vào `vat_rates.yaml` dưới dạng khoảng hiệu lực, **không sửa đè**, để hóa đơn cũ tính lại vẫn ra kết quả cũ. Luật áp **theo ngày hóa đơn**, không theo ngày xử lý. Thay đổi do KTT duyệt và ghi audit.
+- F7.7 **Thuế suất theo nhóm hàng.** Mỗi mặt hàng thuộc một nhóm thuế qua `item_category` (`config/tax_groups.yaml`). Mỗi nhóm khai báo các thuế suất được phép. Thuế suất trên dòng hóa đơn có hiệu lực tại ngày hóa đơn nhưng **không được phép cho nhóm của mặt hàng đó** → `TAX-04`. Việc này bắt được lỗi mà F7.5 bỏ sót: PO và hóa đơn cùng ghi sai một thuế suất. Mặt hàng chưa có nhóm thì chỉ kiểm theo F7.1, và hiện nhắc để KTT gán nhóm.
+- F7.8 **Dòng không chịu thuế.** Dòng `0%`, `KCT`, `KKKNT` phải có `line_tax = 0`. Có tiền thuế → `TAX-02`.
+- F7.9 **Hóa đơn bán hàng** (ký hiệu bắt đầu bằng `2`, thường do hộ kinh doanh hoặc doanh nghiệp nộp thuế theo phương pháp trực tiếp xuất) không có thuế GTGT. Nhận diện qua ký hiệu và tiêu đề; bỏ qua F7.2–F7.4 và F7.7, không báo thiếu thuế.
 
 ### F8 — Trùng lặp và dấu hiệu bất thường (N5) **[S]**
 
 - F8.1 **Trùng tuyệt đối:** cùng `org_id` + `vendor_tax_code` + `invoice_series` + `invoice_number` → `FRD-01`, chặn cứng, không cho duyệt.
 - F8.2 **Gần trùng:** cùng NCC, `|total_amount|` chênh ≤ 1.000 đồng, ngày cách nhau ≤ 7 ngày, khác số hóa đơn → `FRD-02`.
 - F8.3 **Tách nhỏ để né ngưỡng:** ≥ 2 hóa đơn cùng NCC trong 7 ngày, mỗi hóa đơn dưới ngưỡng duyệt cấp 2 nhưng tổng vượt ngưỡng → `FRD-03`.
-- F8.4 **NCC mới:** NCC có dưới 3 hóa đơn đã `POSTED` trong lịch sử → `FRD-04` mức REVIEW, buộc duyệt cấp 2.
+- F8.4 **NCC mới:** NCC có dưới 3 hóa đơn đã `APPROVED` trong lịch sử → `FRD-04` mức REVIEW, buộc duyệt cấp 2.
 - F8.5 **Đổi tài khoản nhận tiền:** `payment_bank_account` trên hóa đơn khác tài khoản đã lưu ở `vendors` → `FRD-05`, mức BLOCK. Đây là dấu hiệu lừa đảo chuyển hướng thanh toán phổ biến nhất.
 - F8.6 **MST ngừng hoạt động:** gọi `tax_lookup` (mock sau interface `TaxAuthorityClient`) → trả `INACTIVE` thì `FRD-06`.
 - F8.7 **Giá vượt lịch sử:** đơn giá cao hơn giá trung vị 6 tháng gần nhất của cùng mặt hàng cùng NCC quá `price_history_threshold_pct` (mặc định 20%) → `FRD-07`.
@@ -197,21 +200,12 @@ Bậc thang từ rẻ đến đắt. Mỗi dòng hóa đơn chỉ đi xuống b�
 - F9.4 Bốn hành động chuẩn: `ACCEPT` (chấp nhận lệch), `REQUEST_CREDIT_NOTE` (yêu cầu NCC xuất hóa đơn điều chỉnh), `WAIT_GRN` (chờ nhập đủ hàng), `REJECT` (từ chối).
 - F9.5 Người dùng **luôn có thể chọn khác** với đề xuất; lựa chọn khác đề xuất phải kèm lý do và được ghi lại để phục vụ F12.
 
-### F10 — Bút toán đề xuất **[M]**
+### F10 — Xuất kết quả đối soát **[M]**
 
-- F10.1 Sinh bút toán khi hóa đơn đạt `APPROVED`:
-
-| Vế | Tài khoản | Số tiền |
-|---|---|---|
-| Nợ | `152` / `153` / `156` nếu là hàng tồn kho, theo `item_category` | `line_net` gộp theo tài khoản |
-| Nợ | `627` / `641` / `642` nếu là chi phí dịch vụ, theo `cost_center` | `line_net` gộp theo tài khoản |
-| Nợ | `1331` | `tax_amount` |
-| Có | `331` chi tiết theo NCC | `total_amount` |
-
-- F10.2 Ánh xạ `item_category → tài khoản` nằm trong `config/account_mapping.yaml`, sửa được, mặc định theo Thông tư 200. Nếu khách dùng TT133 thì thay file.
-- F10.3 Bút toán phải cân: `Σ Nợ = Σ Có`. Không cân thì không cho chuyển `POSTED` và báo lỗi hệ thống (đây là lỗi lập trình, không phải lỗi nghiệp vụ).
-- F10.4 Dòng nào không xác định được tài khoản thì để trống và bắt người dùng chọn trước khi duyệt.
-- F10.5 **MVP không ghi vào ERP.** Xuất file Excel/CSV theo mẫu ở F15.
+- F10.1 **Hệ thống không sinh bút toán, không đề xuất tài khoản, không ghi sổ.** Định khoản và ghi sổ là nghiệp vụ của kế toán, làm trong phần mềm kế toán của khách (MISA, Fast…). Hệ thống dừng ở việc trả lời *hóa đơn này có nên trả tiền không, và vì sao*. Lý do: sổ kế toán chỉ nên có một nguồn là phần mềm kế toán; và người chịu trách nhiệm về bút toán là kế toán, không phải công cụ đối soát.
+- F10.2 Khi hóa đơn đạt `APPROVED`, hệ thống lập **kết quả đối soát** của hóa đơn: thông tin hóa đơn (ký hiệu, số, ngày, MST người bán, tiền hàng, thuế theo từng thuế suất, tổng tiền), PO và phiếu nhập đã khớp, các khoản lệch đã chấp nhận kèm lý do, người duyệt cấp 1 và cấp 2, thời điểm duyệt.
+- F10.3 Kế toán xuất kết quả theo F15.1 rồi tự nhập vào phần mềm kế toán. Hóa đơn đã xuất chuyển `EXPORTED`. Xuất lại được, mỗi lần xuất ghi audit.
+- F10.4 **MVP không ghi vào ERP.** Chỉ sinh file.
 
 ### F11 — Duyệt nhiều cấp (N6) **[M]**
 
@@ -260,7 +254,7 @@ Bậc thang từ rẻ đến đắt. Mỗi dòng hóa đơn chỉ đi xuống b�
 
 ### F15 — Xuất dữ liệu **[M]**
 
-- F15.1 **Bút toán** (Excel/CSV): mỗi dòng gồm `ngày`, `số chứng từ`, `diễn giải`, `TK Nợ`, `TK Có`, `số tiền`, `mã NCC`, `MST`, `số hóa đơn`, `ký hiệu`.
+- F15.1 **Danh sách hóa đơn đã duyệt** (Excel/CSV): mỗi dòng một hóa đơn gồm `ngày hóa đơn`, `ký hiệu`, `số hóa đơn`, `mã NCC`, `MST`, `tiền hàng`, `thuế theo từng thuế suất`, `tổng tiền`, `số PO`, `số phiếu nhập`, `số khoản lệch đã chấp nhận`, `người duyệt`, `ngày duyệt`. **Không có cột tài khoản Nợ, Có.**
 - F15.2 **Báo cáo đối soát** (Excel): một sheet tổng hợp trạng thái, một sheet chi tiết từng ngoại lệ, một sheet các hóa đơn bị từ chối kèm lý do.
 - F15.3 **Nhật ký kiểm toán** (Excel) theo khoảng thời gian.
 - F15.4 Tên file có `org`, khoảng thời gian và timestamp. Mã hóa UTF-8 có BOM để Excel bản Việt mở không lỗi font.
@@ -282,14 +276,14 @@ class ErpConnector(Protocol):
     def fetch_vendors(self, org_id: UUID, since: datetime) -> list[VendorDTO]: ...
     def fetch_purchase_orders(self, org_id: UUID, since: datetime) -> list[PurchaseOrderDTO]: ...
     def fetch_goods_receipts(self, org_id: UUID, since: datetime) -> list[GoodsReceiptDTO]: ...
-    def push_journal_entries(self, org_id: UUID, entries: list[JournalEntryDTO]) -> PushResult: ...
+    def push_approved_invoices(self, org_id: UUID, invoices: list[ApprovedInvoiceDTO]) -> PushResult: ...
     @property
     def capabilities(self) -> ConnectorCapabilities: ...
 ```
 
 - F17.2 MVP có hai implementation: `SeedConnector` (đọc từ bảng seed trong DB) và `ExcelCsvConnector` (đọc file người dùng upload).
 - F17.3 `capabilities` khai báo connector hỗ trợ gì (`can_push`, `supports_incremental`, `has_grn`). UI ẩn nút "Đẩy sang ERP" khi `can_push = False`.
-- F17.4 `push_journal_entries` của MVP **chỉ sinh file**, không gọi mạng. Chữ ký hàm đã đúng để H2 chỉ cần thêm `MisaConnector`.
+- F17.4 `push_approved_invoices` của MVP **chỉ sinh file**, không gọi mạng. Ở H2, `MisaConnector` đẩy hóa đơn đã duyệt sang MISA ở dạng chứng từ chờ kế toán hạch toán — **không đẩy bút toán**.
 - F17.5 Mọi lần đồng bộ ghi `sync_runs` với số bản ghi lấy về, số lỗi, thời gian.
 
 ---
@@ -337,7 +331,7 @@ class ErpConnector(Protocol):
 | `TAX-01` | Thuế suất khác PO | `tax_rate` hóa đơn ≠ `tax_rate` PO cho cùng mặt hàng | REVIEW | Xác minh chính sách thuế tại ngày xuất hóa đơn |
 | `TAX-02` | Tiền thuế sai | `|line_tax - expected|` > 1 đồng, hoặc tổng vượt dung sai | BLOCK | `REQUEST_CREDIT_NOTE` |
 | `TAX-03` | Lệch làm tròn thuế | Trong `tax_rounding_tolerance_vnd` | INFO | `ACCEPT` |
-| `TAX-04` | Thuế suất không hiệu lực | Thuế suất không có trong `vat_rates.yaml` tại `invoice_date` | BLOCK | `REJECT`, đề nghị xuất lại |
+| `TAX-04` | Thuế suất không hiệu lực | Thuế suất không có trong `vat_rates.yaml` tại `invoice_date`, hoặc không được phép cho nhóm hàng của dòng đó (F7.7) | BLOCK | `REJECT`, đề nghị xuất lại |
 | `TAX-05` | Bảng thuế nhiều thuế suất không khớp | Tổng theo từng thuế suất ≠ tổng khai báo | BLOCK | `REQUEST_CREDIT_NOTE` |
 
 ### 4.5 Nhóm ITM — dòng hàng
@@ -367,7 +361,7 @@ class ErpConnector(Protocol):
 | `FRD-01` | Hóa đơn trùng tuyệt đối | Trùng MST + ký hiệu + số | BLOCK | `REJECT`, không cho duyệt |
 | `FRD-02` | Nghi trùng | Cùng NCC, tiền chênh ≤ 1.000đ, ngày cách ≤ 7 | REVIEW | Đối chiếu với hóa đơn nghi trùng |
 | `FRD-03` | Tách nhỏ né ngưỡng | Nhiều hóa đơn nhỏ, tổng vượt ngưỡng duyệt | REVIEW | Chuyển duyệt cấp 2 |
-| `FRD-04` | Nhà cung cấp mới | < 3 hóa đơn đã ghi sổ | REVIEW | Xác minh thông tin NCC |
+| `FRD-04` | Nhà cung cấp mới | < 3 hóa đơn đã duyệt | REVIEW | Xác minh thông tin NCC |
 | `FRD-05` | Đổi tài khoản nhận tiền | Khác tài khoản đã lưu | BLOCK | Gọi điện xác minh trực tiếp với NCC |
 | `FRD-06` | MST ngừng hoạt động | `tax_lookup` trả `INACTIVE` | BLOCK | `REJECT` |
 | `FRD-07` | Giá vượt lịch sử | > trung vị 6 tháng + 20% | REVIEW | Xác minh biến động giá |
@@ -403,8 +397,8 @@ stateDiagram-v2
     PENDING_L2 --> RETURNED: trả lại sửa
     PENDING_L2 --> REJECTED: từ chối
     RETURNED --> EXTRACTED: sửa trường, chạy lại
-    APPROVED --> POSTED: chốt bút toán
-    POSTED --> [*]
+    APPROVED --> EXPORTED: xuất kết quả cho phần mềm kế toán
+    EXPORTED --> [*]
     REJECTED --> [*]
 ```
 
@@ -423,7 +417,7 @@ Chuyển trạng thái nào không có trong sơ đồ này thì backend trả `
 
 ---
 
-## 6. Thuế và hạch toán: ví dụ đầy đủ
+## 6. Kiểm thuế: ví dụ đầy đủ
 
 Một hóa đơn 2 dòng, thuế suất khác nhau, để làm rõ thứ tự tính và làm tròn.
 
@@ -436,14 +430,9 @@ Một hóa đơn 2 dòng, thuế suất khác nhau, để làm rõ thứ tự t�
 - `tax_amount` kỳ vọng = 1.172.000
 - `total_amount` kỳ vọng = 13.062.000
 
-Bút toán đề xuất:
+Dòng 2 ghi 8%. Mức này chỉ hợp lệ khi ngày hóa đơn nằm trong 01/7/2025 – 31/12/2026 **và** dịch vụ thuộc nhóm được giảm thuế theo `tax_groups.yaml`. Cùng hóa đơn này xuất ngày 05/01/2027 mà dòng 2 vẫn ghi 8% → `TAX-04`.
 
-| Vế | TK | Số tiền | Diễn giải |
-|---|---|---:|---|
-| Nợ | 152 | 11.040.000 | Lốp xe — nhập kho |
-| Nợ | 627 | 850.000 | Dịch vụ cân chỉnh — chi phí sản xuất chung |
-| Nợ | 1331 | 1.172.000 | Thuế GTGT được khấu trừ |
-| Có | 331 | 13.062.000 | Phải trả NCC — Công ty TNHH ABC |
+Hệ thống dừng ở đây: kiểm số tiền và thuế đúng hay sai. **Không sinh bút toán** — kế toán tự hạch toán trong phần mềm kế toán (F10).
 
 Thứ tự tính bắt buộc: **làm tròn ở cấp dòng trước, rồi mới cộng**. Cộng trước rồi làm tròn sẽ lệch với cách phần lớn phần mềm xuất hóa đơn ở Việt Nam đang tính và tạo ra hàng loạt `TAX-02` giả.
 
@@ -464,7 +453,7 @@ Thứ tự tính bắt buộc: **làm tròn ở cấp dòng trước, rồi mớ
 
 **`users`** — `id`, `org_id`, `email` (unique theo org), `password_hash`, `full_name`, `role` (`ACCOUNTANT` / `CHIEF_ACCOUNTANT`), `is_active`
 
-**`vendors`** — `id`, `org_id`, `code`, `name`, `name_normalized`, `tax_code`, `bank_account`, `bank_name`, `address`, `readiness_score`, `readiness_computed_at`, `invoice_count_posted`
+**`vendors`** — `id`, `org_id`, `code`, `name`, `name_normalized`, `tax_code`, `bank_account`, `bank_name`, `address`, `readiness_score`, `readiness_computed_at`, `invoice_count_approved`
 
 **`vendor_rules`** — `id`, `org_id`, `vendor_id`, `rule_type` (`ITEM_ALIAS` / `UOM_CONVERSION` / `TOLERANCE_OVERRIDE`), `payload` (JSONB), `status` (`PROPOSED` / `ACTIVE` / `RETIRED`), `evidence_count`, `approved_by`, `approved_at`
 
@@ -492,9 +481,7 @@ Thứ tự tính bắt buộc: **làm tròn ở cấp dòng trước, rồi mớ
 
 **`approvals`** — `id`, `org_id`, `invoice_id`, `level` (1 / 2), `user_id`, `decision` (`APPROVE` / `REJECT` / `RETURN`), `reason`, `created_at`
 
-**`journal_entries`** — `id`, `org_id`, `invoice_id`, `entry_date`, `status`, `exported_at`
-
-**`journal_lines`** — `id`, `org_id`, `entry_id`, `account_debit`, `account_credit`, `amount`, `description`, `cost_center`
+**`exports`** — `id`, `org_id`, `invoice_ids` (mảng), `format` (`xlsx` / `csv`), `file_name`, `created_by`, `created_at` — mỗi lần xuất theo F10.3
 
 **`audit_logs`** — như F14.2. Chỉ `INSERT`.
 
@@ -580,7 +567,7 @@ Tiền tố `/api/v1`. Mọi endpoint trừ `/auth/*` cần `Authorization: Bear
 | PUT | `/admin/config/{name}` | KTT | Cập nhật, ghi audit, có phiên bản |
 | GET | `/admin/audit-logs` | KTT | Lọc và phân trang |
 | GET | `/admin/costs` | KTT | Chi phí theo ngày, theo loại hóa đơn |
-| POST | `/exports/journal` | mọi | Xuất bút toán |
+| POST | `/exports/approved-invoices` | mọi | Xuất danh sách hóa đơn đã duyệt (F15.1) |
 | POST | `/exports/reconciliation` | mọi | Xuất báo cáo đối soát |
 | POST | `/exports/audit` | KTT | Xuất nhật ký kiểm toán |
 
@@ -640,7 +627,9 @@ version: 1
 rates:
   - code: "0"      | value: 0.00 | from: 2020-01-01 | to: null
   - code: "5"      | value: 0.05 | from: 2020-01-01 | to: null
-  - code: "8"      | value: 0.08 | from: 2022-02-01 | to: null
+  - code: "8"      | value: 0.08 | from: 2025-07-01 | to: 2026-12-31
+                   | only_groups: [REDUCIBLE]
+                   | basis: "NQ 204/2025/QH15, hướng dẫn tại NĐ 174/2025/NĐ-CP"
   - code: "10"     | value: 0.10 | from: 2020-01-01 | to: null
   - code: "KCT"    | value: null | from: 2020-01-01 | to: null
   - code: "KKKNT"  | value: null | from: 2020-01-01 | to: null
@@ -649,7 +638,31 @@ round_to: 0            # đồng
 order: LINE_THEN_SUM   # làm tròn từng dòng rồi mới cộng
 ```
 
-*(Ghi chú: khoảng hiệu lực của thuế suất 8% thay đổi theo từng nghị quyết giảm thuế. Trước khi chạy thật phải rà lại các mốc hiệu lực với văn bản hiện hành — đây là dữ liệu cấu hình, không phải logic, nên sửa file là đủ.)*
+*(Ghi chú: mức 8% chỉ có hiệu lực trong từng đợt giảm thuế, mỗi đợt một văn bản. File trên chỉ ghi đợt hiện hành. Cần xử lý hóa đơn thuộc đợt trước thì thêm dòng cho đợt đó, không sửa dòng đang có. Hết 31/12/2026 mà có nghị quyết gia hạn thì thêm dòng mới với `from: 2027-01-01`.)*
+
+### `config/tax_groups.yaml`
+
+```yaml
+version: 1
+# item_category → nhóm thuế. Danh mục nhóm hàng KHÔNG được giảm thuế phải lấy đúng
+# theo phụ lục của nghị định hướng dẫn đợt giảm thuế hiện hành — BA rà trước khi chạy thật.
+groups:
+  REDUCIBLE:      { allowed: ["8", "10"] }  # 8% trong đợt giảm thuế, 10% ngoài đợt
+  NOT_REDUCIBLE:  { allowed: ["10"] }       # ví dụ viễn thông, tài chính, bảo hiểm, bất động sản
+  RATE_5:         { allowed: ["5"] }
+  EXEMPT:         { allowed: ["KCT"] }
+  EXPORT:         { allowed: ["0"] }
+by_category:
+  PARTS:               REDUCIBLE
+  TIRES:               REDUCIBLE
+  MAINTENANCE_SERVICE: REDUCIBLE
+  OFFICE_SUPPLIES:     REDUCIBLE
+  TELECOM:             NOT_REDUCIBLE
+  INSURANCE:           EXEMPT
+unknown_category: WARN   # chỉ kiểm theo vat_rates.yaml, nhắc KTT gán nhóm (F7.7)
+```
+
+Trong đợt giảm thuế, dòng thuộc nhóm `REDUCIBLE` mà ghi 10% cũng là sai. F7.7 kiểm cả chiều này: `allowed` được lọc thêm theo ngày hóa đơn, nên trong đợt chỉ còn `8`, ngoài đợt chỉ còn `10`.
 
 ### `config/approval_policy.yaml`
 
@@ -660,7 +673,7 @@ require_l2_when:
   - accepted_discrepancy: true
   - any_fraud_flag: true
   - new_vendor: true
-new_vendor_posted_invoice_count: 3
+new_vendor_approved_invoice_count: 3
 separation_of_duties: true
 reject_reason_min_length: 10
 ```
@@ -676,26 +689,6 @@ allowed_extensions: [xml, pdf, png, jpg, jpeg]
 daily_ocr_pages: 500
 daily_llm_usd: 5.0
 queue_when_budget_exceeded: true
-```
-
-### `config/account_mapping.yaml`
-
-```yaml
-version: 1
-standard: TT200
-by_category:
-  PARTS:     "152"
-  TIRES:     "152"
-  BATTERY:   "152"
-  TOOLS:     "153"
-  MERCHANDISE: "156"
-  MAINTENANCE_SERVICE: "627"
-  CLEANING_SERVICE:    "627"
-  UNIFORM:   "641"
-  OFFICE_SUPPLIES: "642"
-  ELECTRICITY:     "627"
-vat_input: "1331"
-payable:   "331"
 ```
 
 ---
@@ -766,13 +759,13 @@ payable:   "331"
 - [ ] Chọn hành động khác đề xuất thì bắt nhập lý do
 - [ ] Không có ngoại lệ nào hiển thị mà thiếu công thức hoặc thiếu nguồn
 
-### US-06 — Duyệt và sinh bút toán **[M]**
+### US-06 — Duyệt và xuất kết quả **[M]**
 
-> Là KTV, tôi muốn duyệt hóa đơn và có sẵn bút toán để đẩy vào phần mềm kế toán.
+> Là KTV, tôi muốn duyệt hóa đơn và xuất kết quả đối soát để tự hạch toán trong phần mềm kế toán.
 
 - [ ] Nút duyệt chỉ bật khi mọi ngoại lệ BLOCK đã được xử lý
-- [ ] Trước khi duyệt hiện bản xem trước bút toán, sửa được tài khoản
-- [ ] Bút toán không cân thì không cho duyệt
+- [ ] Trước khi duyệt hiện rõ tổng tiền và các khoản lệch đang chấp nhận
+- [ ] File xuất không có cột tài khoản Nợ, Có — hệ thống không sinh bút toán
 - [ ] Duyệt xong trạng thái đúng theo bảng định tuyến mục 5.3
 - [ ] Có `FRD-01` thì nút duyệt bị vô hiệu hóa hoàn toàn, chỉ còn `REJECT`
 
@@ -815,7 +808,7 @@ payable:   "331"
 
 > Là KTT, tôi muốn trả lời được câu hỏi của kiểm toán về bất kỳ hóa đơn nào.
 
-- [ ] Mỗi hóa đơn có tab dòng thời gian đầy đủ từ upload đến ghi sổ
+- [ ] Mỗi hóa đơn có tab dòng thời gian đầy đủ từ upload đến lúc xuất kết quả
 - [ ] Mỗi mục ghi ai, lúc nào, giá trị trước và sau
 - [ ] Không có API nào sửa hoặc xóa được nhật ký
 - [ ] Xuất được ra Excel theo khoảng thời gian
@@ -889,21 +882,22 @@ Một buổi với 2 kế toán, 20 hóa đơn, đo bằng đồng hồ: thời 
 
 ### 14.1 Ngoài phạm vi MVP
 
+- **Định khoản, sinh bút toán, ghi sổ** — kế toán làm trong phần mềm kế toán của khách (F10.1). Không chỉ ngoài MVP mà ngoài phạm vi sản phẩm
 - Ghi thẳng vào ERP, thực hiện thanh toán
 - Đối chiếu sao kê ngân hàng, công nợ phải thu, hóa đơn đầu ra
 - Tra cứu thật trên hệ thống cơ quan thuế (dùng mock sau interface `TaxAuthorityClient`)
 - Hợp đồng giá, rebate, chiết khấu theo sản lượng
-- Hóa đơn ngoại tệ có chênh lệch tỷ giá (chấp nhận hóa đơn ngoại tệ, nhưng không hạch toán chênh lệch)
+- Hóa đơn ngoại tệ có chênh lệch tỷ giá (chấp nhận hóa đơn ngoại tệ, nhưng không xử lý chênh lệch tỷ giá)
 - Quy trình phê duyệt vượt quá 2 cấp, ủy quyền khi vắng mặt
 
 ### 14.2 Câu hỏi mở còn ảnh hưởng đến yêu cầu
 
 | Câu hỏi | Ảnh hưởng đến | Cần trả lời trước |
 |---|---|---|
-| Chế độ kế toán TT200 hay TT133? | `account_mapping.yaml`, F10 | Tuần 3 |
+| Mặt hàng của Xe X thuộc nhóm thuế nào? | `tax_groups.yaml`, F7.7 | Tuần 3 |
 | Ngưỡng duyệt cấp 2 thực tế? | `approval_policy.yaml`, F11 | Tuần 3 |
 | Dung sai giá và số lượng thực tế? | `tolerances.yaml`, F6 | Tuần 3 |
 | Tỉ lệ XML so với scan trong thực tế? | Ưu tiên công sức giữa parser và OCR | Tuần 2 |
-| Có hóa đơn ngoại tệ không? | F2.5 `exchange_rate`, F10 | Tuần 3 |
+| Có hóa đơn ngoại tệ không? | F2.5 `exchange_rate` | Tuần 3 |
 | Được gửi dữ liệu ra dịch vụ ngoài không? | Toàn bộ lựa chọn OCR và LLM | **Tuần 1** |
 | Xe X có sẵn quy trình duyệt điện tử nào? | F11 có phải sống chung không | Trước buổi dùng thử |

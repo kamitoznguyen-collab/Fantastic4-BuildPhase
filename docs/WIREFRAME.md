@@ -29,14 +29,14 @@ Năm nguyên tắc, xếp theo thứ tự ưu tiên khi phải đánh đổi.
 /invoices/:id                       Chi tiết hóa đơn
     ├── ?tab=compare                  So sánh 3 chiều          ← màn hình lõi
     ├── ?tab=exceptions               Ngoại lệ và xử lý
-    ├── ?tab=journal                  Bút toán đề xuất
+    ├── ?tab=summary                  Tóm tắt duyệt (không có bút toán)
     └── ?tab=timeline                 Dòng thời gian / audit
 /approvals                          Hàng đợi chờ duyệt của tôi
 /vendors                            Danh sách NCC + readiness score
 /vendors/:id                        Chi tiết NCC: quy tắc memory + phân rã điểm
 /documents/purchase-orders          Danh sách và import PO
 /documents/goods-receipts           Danh sách và import phiếu nhập
-/exports                            Xuất bút toán và báo cáo
+/exports                            Xuất danh sách hóa đơn đã duyệt và báo cáo
 /admin/config                       Cấu hình ngưỡng           [chỉ KTT]
 /admin/audit                        Nhật ký kiểm toán         [chỉ KTT]
 /admin/costs                        Chi phí xử lý             [chỉ KTT]
@@ -70,13 +70,13 @@ graph TD
     N -->|Sai của NCC| P[REQUEST_CREDIT_NOTE]
     N -->|Chưa nhập đủ| Q[WAIT_GRN]
     N -->|Không hợp lệ| R[REJECT + lý do]
-    O --> S[Xem trước bút toán]
+    O --> S[Xem tóm tắt duyệt]
     P --> T[Hóa đơn chờ NCC xử lý]
     Q --> T
     S --> U[Duyệt cấp 1]
     U --> V{Cần cấp 2?}
     V -->|Có| W[Chuyển hàng đợi KTT]
-    V -->|Không| X[APPROVED → xuất bút toán]
+    V -->|Không| X[APPROVED → xuất kết quả]
     R --> Y[REJECTED]
 ```
 
@@ -130,8 +130,8 @@ sequenceDiagram
 | `MATCHED` | Danh sách | Đã đối chiếu | Xử lý ngoại lệ |
 | `PENDING_L1` | Danh sách + Chờ duyệt | Chờ duyệt cấp 1 | Duyệt, trả lại, từ chối |
 | `PENDING_L2` | Chờ duyệt (KTT) | Chờ duyệt cấp 2 | Duyệt cấp 2, trả lại, từ chối |
-| `APPROVED` | Danh sách | Đã duyệt | Xuất bút toán |
-| `POSTED` | Danh sách | Sẵn sàng thanh toán | Xem, xuất lại |
+| `APPROVED` | Danh sách | Sẵn sàng thanh toán | Xuất kết quả |
+| `EXPORTED` | Danh sách | Đã xuất cho kế toán | Xem, xuất lại |
 | `RETURNED` | Danh sách | Trả lại sửa | Sửa, gửi lại |
 | `REJECTED` | Danh sách (lọc riêng) | Đã từ chối | Chỉ xem |
 | `FAILED` | Danh sách (lọc riêng) | Xử lý lỗi | Xử lý lại, xóa |
@@ -280,7 +280,7 @@ Hiện **ngân sách đã dùng trong ngày** ngay trên vùng thả file — ng
 │ ‹ Danh sách   HĐ 00012457 · Lốp xe Việt      🔴 Lệch      [Trả lại] [Từ chối]     │
 │                                                            [ ✓ Duyệt cấp 1 ]      │
 ├───────────────────────────────────────────────────────────────────────────────────┤
-│ ◉ So sánh 3 chiều │ Ngoại lệ (2) │ Bút toán │ Dòng thời gian                      │
+│ ◉ So sánh 3 chiều │ Ngoại lệ (2) │ Tóm tắt duyệt │ Dòng thời gian                      │
 ├───────────────────────────────────────────────────────────────────────────────────┤
 │ ┌─── Thông tin chung ───────────────────────────────────────────────────────────┐ │
 │ │ Số HĐ    00012457 ⓘ      Ký hiệu  1C26TLV      Ngày   18/09/2026 ⓘ           │ │
@@ -334,7 +334,7 @@ Bốn điều bắt buộc ở màn này:
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│ So sánh 3 chiều │ ◉ Ngoại lệ (2) │ Bút toán │ Dòng thời gian                      │
+│ So sánh 3 chiều │ ◉ Ngoại lệ (2) │ Tóm tắt duyệt │ Dòng thời gian                      │
 ├───────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                   │
 │ ┌─ 🔴 PRC-01 · Giá cao hơn PO ─────────────────────────── lệch 560.000 đ ───────┐ │
@@ -384,29 +384,29 @@ Ba chi tiết quan trọng:
 - **Ngoại lệ INFO vẫn hiển thị** nhưng thu gọn, nền xám, không có nút. `QTY-02` xuất hiện ở đây chính là bằng chứng hệ thống hiểu giao hàng từng phần — đây là chỗ đối thủ báo lệch oan.
 - **Ngữ cảnh lịch sử** ("đã 2 lần tăng giá trong 6 tháng") giúp quyết định, và nó đến từ dữ liệu, không phải LLM suy đoán.
 
-### S7 — tab Bút toán và xác nhận duyệt
+### S7 — tab Tóm tắt duyệt và xác nhận duyệt
+
+Hệ thống **không sinh bút toán** (PRD F10). Tab này tóm tắt những gì người duyệt đang chấp nhận; kế toán tự hạch toán trong phần mềm kế toán sau khi xuất.
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│ So sánh 3 chiều │ Ngoại lệ (2) │ ◉ Bút toán │ Dòng thời gian                      │
+│ So sánh 3 chiều │ Ngoại lệ (2) │ ◉ Tóm tắt duyệt │ Dòng thời gian                 │
 ├───────────────────────────────────────────────────────────────────────────────────┤
-│ Ngày ghi sổ [18/09/2026]   Số chứng từ  PT-2026-09-0457                          │
+│ Hóa đơn   1C26TLV · 00012457 · 18/09/2026 · Cty TNHH Lốp xe Việt · 0101248141    │
+│ Khớp với  PO-2026-0412 · Phiếu nhập PN-2026-0913                                  │
 │                                                                                   │
-│ ┌──────┬─────────────────────────────────────┬─────────────┬─────────────┐        │
-│ │ TK   │ Diễn giải                           │      Nợ     │      Có     │        │
-│ ├──────┼─────────────────────────────────────┼─────────────┼─────────────┤        │
-│ │ 152▼ │ Lốp Michelin 185/65R15 — nhập kho   │  11.040.000 │             │        │
-│ │ 627▼ │ Dịch vụ cân chỉnh thước lái         │     850.000 │             │        │
-│ │ 1331 │ Thuế GTGT được khấu trừ             │   1.172.000 │             │        │
-│ │ 331▼ │ Phải trả — Cty TNHH Lốp xe Việt     │             │  13.062.000 │        │
-│ ├──────┼─────────────────────────────────────┼─────────────┼─────────────┤        │
-│ │      │ TỔNG                                │  13.062.000 │  13.062.000 │ ✓ cân  │
-│ └──────┴─────────────────────────────────────┴─────────────┴─────────────┘        │
+│ ┌─────────────────────────────────────┬──────────────┬──────────────┐             │
+│ │                                     │  Trên hóa đơn│  Theo PO+PN  │             │
+│ ├─────────────────────────────────────┼──────────────┼──────────────┤             │
+│ │ Tiền hàng                           │   12.450.000 │   11.890.000 │             │
+│ │ Thuế GTGT (10%, 8%)                 │    1.228.000 │    1.172.000 │             │
+│ │ Tổng thanh toán                     │   13.678.000 │   13.062.000 │             │
+│ └─────────────────────────────────────┴──────────────┴──────────────┘             │
 │                                                                                   │
-│ ℹ Bút toán lập theo **số liệu PO**, không theo số trên hóa đơn, vì ngoại lệ       │
-│   PRC-01 đang được xử lý theo hướng yêu cầu NCC xuất hóa đơn điều chỉnh.          │
+│ Khoản lệch đang xử lý                                                             │
+│  • PRC-01  Giá cao hơn PO  616.000 đ  → Yêu cầu NCC xuất hóa đơn điều chỉnh       │
 │                                                                                   │
-│                                      [ Xuất Excel ]    [ ✓ Duyệt cấp 1 ]         │
+│                          [ Xuất kết quả Excel ]    [ ✓ Duyệt cấp 1 ]              │
 └───────────────────────────────────────────────────────────────────────────────────┘
 
    Bấm Duyệt khi còn ngoại lệ được chấp nhận → hộp xác nhận:
@@ -544,7 +544,7 @@ Quy tắc ở trạng thái **"Chờ duyệt"** là cốt lõi của nguyên t�
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│ So sánh 3 chiều │ Ngoại lệ (2) │ Bút toán │ ◉ Dòng thời gian                    │
+│ So sánh 3 chiều │ Ngoại lệ (2) │ Tóm tắt duyệt │ ◉ Dòng thời gian                    │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  ●  18/09 09:02  Ngọc tải lên  HD_00012457.xml · 84 KB · sha256 3f9a…          │
@@ -700,7 +700,7 @@ Phím `a` **không** duyệt ngay — nó mở hộp xác nhận. Không có ph�
 | S4 Danh sách | `GET /invoices` |
 | S5 So sánh | `GET /invoices/{id}`, `GET /invoices/{id}/comparison`, `GET /invoices/{id}/file`, `PATCH /invoices/{id}/fields`, `POST /invoices/{id}/relink-po` |
 | S6 Ngoại lệ | `GET /invoices/{id}/discrepancies`, `POST /discrepancies/{id}/resolve` |
-| S7 Bút toán | `GET /invoices/{id}` (phần journal), `POST /invoices/{id}/approve`, `POST /exports/journal` |
+| S7 Tóm tắt duyệt | `GET /invoices/{id}`, `POST /invoices/{id}/approve`, `POST /exports/approved-invoices` |
 | S8 Chờ duyệt | `GET /approvals/queue`, `POST /invoices/{id}/approve|reject|return` |
 | S9 NCC | `GET /vendors` |
 | S10 Chi tiết NCC | `GET /vendors/{id}/readiness`, `GET /vendors/{id}/rules`, `PATCH /vendors/rules/{id}` |

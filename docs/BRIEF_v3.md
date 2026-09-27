@@ -23,11 +23,11 @@ v2 là một brief tốt và **toàn bộ phần nghiệp vụ, 3 nguyên tắc 
 
 ## 1. Tóm tắt
 
-Agent **đọc hóa đơn** (XML hóa đơn điện tử, PDF, ảnh), **tự tìm PO và phiếu nhập hàng liên quan**, đối chiếu 3 chiều theo từng dòng hàng, **phát hiện và phân loại chênh lệch** về giá, số lượng, thuế, chứng từ, rồi **đề xuất cách xử lý kèm lý do**. **Kế toán luôn là người duyệt** trước khi ghi sổ hoặc thanh toán.
+Agent **đọc hóa đơn** (XML hóa đơn điện tử, PDF, ảnh), **tự tìm PO và phiếu nhập hàng liên quan**, đối chiếu 3 chiều theo từng dòng hàng, **phát hiện và phân loại chênh lệch** về giá, số lượng, thuế, chứng từ, rồi **đề xuất cách xử lý kèm lý do**. **Kế toán luôn là người duyệt** trước khi hóa đơn được thanh toán. Hệ thống **không sinh bút toán**: kế toán tự hạch toán trong phần mềm kế toán của mình.
 
 Ba nguyên tắc không được phá (giữ nguyên từ v2):
 
-1. **Không có bút toán hay lệnh thanh toán nào đi qua mà không có người duyệt.** HITL bắt buộc, không có chế độ "auto-post".
+1. **Không hóa đơn nào được chuyển thanh toán mà không qua người duyệt.** HITL bắt buộc, không có chế độ tự duyệt. Hệ thống cũng không sinh bút toán và không ghi sổ — việc đó thuộc về kế toán.
 2. **LLM không bao giờ tạo ra con số.** Mọi số tiền, số lượng và tiền thuế đều lấy từ nguồn (XML, OCR) và do rule engine tính, dùng `Decimal`, không dùng `float`.
 3. **Không chắc thì phải báo.** Trường nào OCR có độ tin cậy thấp thì gắn cờ và **chặn** tự động phân loại "Khớp".
 
@@ -75,7 +75,7 @@ Ngách hẹp trước, mở rộng sau — nhưng **schema và interface của c
 |---|---|---|---|
 | Khách hàng | 1 công ty gọi xe, đội kế toán nội bộ | Công ty thương mại / dịch vụ, 200–800 hóa đơn NCC/tháng | Mid-market, nhiều ngành, và dịch vụ kế toán làm cho nhiều khách |
 | Nguồn PO/GRN | Excel/CSV hoặc seed trong DB | MISA Open API; Fast qua file trung gian hoặc DB | Nhiều ERP qua connector registry |
-| Đầu ra | File bút toán đề xuất (Excel/CSV) | Đẩy chứng từ vào MISA qua `save voucher` | Hai chiều, có đối soát công nợ |
+| Đầu ra | Danh sách hóa đơn đã duyệt kèm kết quả đối soát (Excel/CSV), không có bút toán | Đẩy hóa đơn đã duyệt vào MISA làm chứng từ chờ kế toán hạch toán | Hai chiều, có đối soát công nợ |
 | Tính năng lõi | 3-way match + exception + duyệt 2 cấp | Thêm: làm sạch vendor master, readiness score, đối soát công nợ NCC | Thêm: hợp đồng giá, rebate, đa chi nhánh |
 | Mục tiêu chứng minh | Recall chỗ lệch ≥ 98%, kế toán giảm ≥ 50% thời gian | 3 khách trả tiền, thời gian onboard < 1 tuần | Onboard tự phục vụ |
 
@@ -129,7 +129,7 @@ Ngách hẹp trước, mở rộng sau — nhưng **schema và interface của c
    - 🟡 **Cần kiểm tra** — có trường OCR tin cậy thấp, hoặc khớp mờ với độ tin cậy trung bình
    - 🔴 **Lệch** — có chênh lệch giá, số lượng hoặc thuế, kèm số tiền lệch và giải thích
 4. **Đề xuất xử lý** cho từng chỗ lệch: chấp nhận, yêu cầu NCC xuất hóa đơn điều chỉnh, chờ nhập đủ hàng, từ chối.
-5. **Duyệt hạch toán** — KTV duyệt, hệ thống sinh **bút toán đề xuất** (Nợ TK chi phí hoặc hàng tồn kho / Nợ 1331 / Có 331) và chuyển trạng thái "Sẵn sàng thanh toán". MVP **không ghi thẳng vào ERP**, chỉ xuất file.
+5. **Duyệt** — KTV duyệt, KTT duyệt cấp 2 khi cần, hóa đơn chuyển "Sẵn sàng thanh toán". Hệ thống **không sinh bút toán**: kế toán xuất danh sách hóa đơn đã duyệt rồi tự hạch toán trong phần mềm kế toán. MVP **không ghi thẳng vào ERP**, chỉ xuất file.
 
 ### 6.2 Nâng cao
 
@@ -146,7 +146,7 @@ Ngách hẹp trước, mở rộng sau — nhưng **schema và interface của c
 
 ### 6.3 Ngoài phạm vi MVP
 
-- Ghi sổ trực tiếp vào ERP hoặc phần mềm kế toán, và thực hiện thanh toán (chỉ export)
+- Định khoản, sinh bút toán, ghi sổ vào ERP hoặc phần mềm kế toán, và thực hiện thanh toán (chỉ xuất file)
 - Đối chiếu sao kê ngân hàng, công nợ phải thu, hóa đơn đầu ra
 - Tra cứu thật trên hệ thống cơ quan thuế (dùng mock sau một interface để sau này thay)
 - Hợp đồng giá, rebate, chiết khấu theo sản lượng — để H3
@@ -164,18 +164,18 @@ graph TD
     match --> tax[tax_check<br/>tính lại GTGT]
     tax --> fraud[fraud_check<br/>trùng, gần trùng, bất thường]
     fraud --> classify[classify<br/>Khớp / Cần kiểm tra / Lệch]
-    classify --> propose[propose_action<br/>LLM giải thích + đề xuất + bút toán]
+    classify --> propose[propose_action<br/>LLM giải thích + đề xuất xử lý]
     propose --> l1[approve_L1<br/>interrupt: KTV]
     l1 -->|Cần cấp 2| l2[approve_L2<br/>interrupt: KTT]
     l1 -->|Không cần| post
-    l2 --> post[post<br/>chốt bút toán, sẵn sàng thanh toán]
+    l2 --> post[export<br/>sẵn sàng thanh toán, xuất kết quả]
     post --> learn[learn<br/>cập nhật memory NCC từ các chỉnh sửa]
     learn --> END((End))
     l1 -->|Từ chối / trả lại| END
     l2 -->|Từ chối / trả lại| END
 ```
 
-**Trạng thái hóa đơn:** `UPLOADED → EXTRACTED → MATCHED → PENDING_L1 → PENDING_L2 → APPROVED → POSTED`, nhánh phụ `REJECTED` / `RETURNED`. Graph dùng checkpointer Postgres để các bước chờ duyệt (interrupt) tồn tại qua các lần restart server.
+**Trạng thái hóa đơn:** `UPLOADED → EXTRACTED → MATCHED → PENDING_L1 → PENDING_L2 → APPROVED → EXPORTED`, nhánh phụ `REJECTED` / `RETURNED`. Graph dùng checkpointer Postgres để các bước chờ duyệt (interrupt) tồn tại qua các lần restart server.
 
 **LLM chỉ được dùng ở 3 chỗ:**
 
@@ -242,7 +242,7 @@ src/
 │   ├── rules/                # tolerance.py, vat.py, approval_policy.py, exception_codes.py
 │   ├── connectors/           # base.py (Protocol), seed.py, excel_csv.py   [misa.py o H2]
 │   ├── auth.py
-│   └── export.py             # bút toán, báo cáo Excel
+│   └── export.py             # danh sách hóa đơn đã duyệt, báo cáo Excel
 ├── db/                       # SQLAlchemy models, Alembic migrations
 ├── models/schemas.py         # Pydantic: Invoice, InvoiceLine, PurchaseOrder, GoodsReceipt,
 │                             # MatchResult, Discrepancy, Approval
@@ -318,7 +318,7 @@ Lý do đặt recall cao hơn precision: một chỗ lệch bị bỏ sót là t
 |---|---|---|
 | **1** | Setup repo, Postgres (Docker local), schema DB + Alembic (**có `org_id`**), auth 2 vai trò, parser XML, **bộ sinh dữ liệu mẫu**. **Thử Document AI với hóa đơn tiếng Việt.** Khung giao diện: đăng nhập, upload, danh sách hóa đơn | `ARCHITECTURE.md` + diagram, bắt đầu `JOURNAL.md` và `WORKLOG.md` |
 | **2** | Trích xuất PDF/OCR + confidence + kiểm chéo (N1 bản đầu). Node `retrieve_docs` (SQL), `match_lines` (rule + fuzzy + LLM), `classify`. **Chốt bảng mã ngoại lệ.** Unit test cho parser và rule | **Deploy lần đầu lên Render** |
-| **3** | `propose_action`, `approve_L1` (interrupt), bút toán đề xuất, `tax_check` (N3). Dashboard: danh sách theo trạng thái, màn so sánh 3 chiều, duyệt. **Xong phần Cơ bản** | Live URL chạy đủ phần Cơ bản |
+| **3** | `propose_action`, `approve_L1` (interrupt), `tax_check` (N3). Dashboard: danh sách theo trạng thái, màn so sánh 3 chiều, duyệt. **Xong phần Cơ bản** | Live URL chạy đủ phần Cơ bản |
 | **4** | Nâng cao: duyệt nhiều cấp (N6), trùng/gian lận (N5), vector search (N4), memory NCC (N7), giới hạn (N2), readiness score (N8). Chạy eval. Cho kế toán dùng thử | Điền `eval/results/report.md` |
 | **5** | Sửa lỗi, tinh chỉnh ngưỡng và prompt, đo lại chỉ số, hoàn thiện UI | `README.md`, pitch deck 10 slide, video demo ≤ 5 phút, bản deploy cuối |
 
@@ -367,7 +367,6 @@ Chia theo mức độ chặn.
 
 - [ ] Ngưỡng tiền cần KTT duyệt cấp 2 là bao nhiêu?
 - [ ] Dung sai chấp nhận được cho giá và số lượng (theo % hay số tuyệt đối)?
-- [ ] Chế độ kế toán và hệ thống tài khoản Xe X đang dùng (TT200 hay TT133), để bút toán đề xuất đúng tài khoản?
 - [ ] Hóa đơn của Xe X có bao nhiêu phần trăm là XML, bao nhiêu là PDF scan?
 - [ ] Có hóa đơn ngoại tệ không? Nếu có, tỉ giá lấy ở đâu?
 

@@ -13,7 +13,7 @@
 | **Huy** | BA, PM, frontend | Yêu cầu, câu hỏi nghiệp vụ, kế hoạch, báo cáo tuần, deliverables, trình bày, **giao diện** | `frontend/` — đi tiếp từ `docs/prototype/` | Phụ lục A, Phần 7, mục 3.5 |
 | **Dương** | ML — đọc hóa đơn | Biến mọi loại file thành dữ liệu đáng tin, và biết lúc nào nó không đáng tin | `extraction`, phần đọc của `eval/` | Phần 1, 2, 3 |
 | **Hoàn** | ML — đối chiếu và an toàn AI | Khớp dòng, gán mã ngoại lệ, kiểm thuế và MST, chống tấn công | `reconciliation`, `vendor`, `semantic`, phần luật của `rules` | Phần 4, 5, mục 1.5 |
-| **Giáp** | BE chính, **tech lead** | Nền tảng, luồng xử lý, ngân sách, quan sát, deploy, hợp đồng giữa các phần | `core`, `app`, `iam`, `invoice`, `procurement`, `approval`, `ledger`, `audit`, `reporting`, `erp`, khung `gateway` | Phần 6 |
+| **Giáp** | BE chính, **tech lead** | Nền tảng, luồng xử lý, ngân sách, quan sát, deploy, hợp đồng giữa các phần | `core`, `app`, `iam`, `invoice`, `procurement`, `approval`, `audit`, `reporting`, `erp`, khung `gateway` | Phần 6 |
 
 Tương ứng với phân công A B C D trong `BRIEF_v3.md` và `RESEARCH.md`: **A = Dương · B = Hoàn · C = Giáp · D = Huy**.
 
@@ -106,7 +106,7 @@ Mỗi yêu cầu có tuần dự kiến và **điều kiện xong** — không �
 | # | Việc | Tuần | Điều kiện xong |
 |---|---|---|---|
 | U1 | Cập nhật `PRD.md` theo 13 việc ở Phụ lục A của `RESEARCH.md` — viết yêu cầu, người làm là Dương, Hoàn, Giáp | 2 | PRD có mục đầu vào và hóa đơn dài, mã ngoại lệ mới cho MST người mua, cấu hình thuế 8% có ngày kết thúc |
-| U2 | Chốt các câu hỏi mở với mentor hoặc Xe X: Q1–Q6 trong `USER_STORIES.md`, hai câu về đầu vào (một file chứa nhiều hóa đơn? bảng kê?), dung sai, ngưỡng duyệt cấp 2, thông tư 200 hay 133 | 2 | Mỗi câu có quyết định và ngày chốt, ghi vào PRD |
+| U2 | Chốt các câu hỏi mở với mentor hoặc Xe X: Q1–Q6 trong `USER_STORIES.md`, hai câu về đầu vào (một file chứa nhiều hóa đơn? bảng kê?), dung sai, ngưỡng duyệt cấp 2, nhóm thuế của các mặt hàng Xe X hay mua | 2 | Mỗi câu có quyết định và ngày chốt, ghi vào PRD |
 | U3 | Soạn kịch bản kiểm thử chấp nhận từ 18 tình huống trong `USER_STORIES.md`, tổ chức buổi dùng thử với kế toán | 4 | Biên bản buổi dùng thử, có số đo thời gian đối chiếu trước và sau — mục tiêu giảm 50% |
 | U4 | Định nghĩa quy trình kiểm tra ngẫu nhiên hóa đơn đã xếp Khớp | Sau | Tỉ lệ lấy mẫu, ai kiểm, ghi kết quả ở đâu |
 
@@ -170,7 +170,7 @@ Vì sau này chuyển sang React, viết phần nối API sao cho mang sang đư
 | H2 | Kiểm mã số thuế: chữ số kiểm tra cho dạng 10 và 13 số bằng `stdnum.vn.mst`; định dạng 12 số; **MST người mua bằng MST công ty**; MST người bán khớp danh mục nhà cung cấp | 2 | Test với MST công khai thật, cộng các ca sai một chữ số và đảo hai chữ số liền nhau |
 | H3 | Khớp dòng L0 đến L3: mã hàng, bộ nhớ nhà cung cấp, chuỗi chuẩn hóa — bỏ dấu, chuẩn hóa Unicode, bỏ ký tự vô hình — và so chuỗi gần đúng | 2–3 | Đo recall khớp dòng trên bộ đánh giá |
 | H4 | Khớp dòng L4: `LlmArbiter` thay cho `InconclusiveArbiter`, **chỉ được chọn trong danh sách ứng viên** | 3 | Đếm được số lần gọi mô hình mỗi hóa đơn |
-| H5 | Kiểm thuế: sửa `vat_rates.yaml` — 8% **hết hiệu lực 31/12/2026** và chỉ cho nhóm hàng đủ điều kiện; tính thuế từng dòng rồi mới cộng; các mã `TAX-01` đến `TAX-05` | 3 | Test ví dụ ở `PRD.md` §6, và các ca sát mốc 30/6/2025 – 01/7/2025, 31/12/2026 – 01/01/2027 |
+| H5 | Kiểm thuế: sửa `vat_rates.yaml` — 8% **hết hiệu lực 31/12/2026** và chỉ cho nhóm hàng đủ điều kiện; tính thuế từng dòng rồi mới cộng; các mã `TAX-01` đến `TAX-05`; bảng nhóm hàng → thuế suất `tax_groups.yaml` (PRD F7.7–F7.9: dòng KCT không có tiền thuế, hóa đơn bán hàng không có thuế GTGT) | 3 | Test ví dụ ở `PRD.md` §6, và các ca sát mốc 30/6/2025 – 01/7/2025, 31/12/2026 – 01/01/2027 |
 | H6 | Phân loại, đề xuất xử lý, viết giải thích — giải thích **chỉ từ dữ kiện có cấu trúc** | 3 | Mọi ngoại lệ có công thức và nguồn; test: chữ tự do chứa lệnh trên hóa đơn không lọt vào câu giải thích |
 | H7 | Phát hiện bất thường `FRD-01` đến `FRD-07`, cộng so lớp chữ PDF với ảnh render ở trường tiền — phối hợp với Dương | 4 | Recall các ca gian lận đã cài ≥ 95% |
 | H8 | Bộ nhớ nhà cung cấp: học alias từ lần sửa của kế toán viên, chỉ có hiệu lực khi kế toán trưởng duyệt | 4 | Hóa đơn thứ tư của cùng nhà cung cấp khớp ở bậc L1 và **không gọi mô hình** — kiểm được trong bảng ghi lời gọi |
@@ -188,7 +188,7 @@ Vì sau này chuyển sang React, viết phần nối API sao cho mang sang đư
 |---|---|---|---|
 | G1 | **[Tech lead]** Chốt hợp đồng bàn giao ở mục 2 thành schema Pydantic trong code | Đầu tuần 2 | Có trong code và tài liệu, ba người còn lại đồng ý |
 | G2 | Gộp `feat/base_module` và `feat/iam` về nhánh chính | 2 | Nhánh chính chạy được, CI xanh |
-| G3 | Nối các module vào API theo `PRD.md` §8: tải lên, nhập PO và phiếu nhập từ Excel, đối chiếu, duyệt hai cấp với tách biệt trách nhiệm, bút toán và xuất file, nhật ký, báo cáo | 2–3 | Đi hết luồng bằng API với dữ liệu mẫu; test tích hợp cho tách biệt trách nhiệm (trả `409`) và cách ly tenant (trả `404`) |
+| G3 | Nối các module vào API theo `PRD.md` §8: tải lên, nhập PO và phiếu nhập từ Excel, đối chiếu, duyệt hai cấp với tách biệt trách nhiệm, xuất danh sách hóa đơn đã duyệt (không có bút toán — PRD F10), nhật ký, báo cáo | 2–3 | Đi hết luồng bằng API với dữ liệu mẫu; test tích hợp cho tách biệt trách nhiệm (trả `409`) và cách ly tenant (trả `404`) |
 | G4 | Thay `InProcessPipeline` bằng LangGraph có Postgres checkpointer; bước chờ duyệt là điểm dừng thật | 3 | Test: khởi động lại khi hóa đơn đang chờ duyệt cấp 1, lên lại vẫn duyệt tiếp được |
 | G5 | `gateway`: ngân sách theo từng tenant theo ngày và tháng, trần mỗi hóa đơn, ngắt mạch; cache theo khóa gồm mã băm, bước, phiên bản prompt, mô hình; thử lại có giãn cách; mô hình dự phòng; mã lỗi hệ thống để chuyển người | 3 | Test: vượt ngân sách thì dừng và chuyển người; thử lại không bị tính tiền hai lần |
 | G6 | Quan sát: OpenTelemetry gửi về Langfuse tự host; một trace mỗi hóa đơn, một span mỗi bước; `trace_id` lưu trong bảng hóa đơn; che số tài khoản | 3 | Ảnh chụp trace dùng được cho deliverable *AI Logs* |
@@ -224,3 +224,4 @@ Mốc chung khớp với `BRIEF_v3.md` §12: deploy lần đầu ở tuần 2, x
 | 2 | Frontend | **Đã chốt: Huy.** Trước mắt đi tiếp từ prototype bằng HTML + JavaScript thuần; **sau chuyển sang React**, thời điểm chưa chốt |
 | 3 | Nơi để code | **Linh hoạt.** Bản nộp và mọi deliverable nằm ở P-143 |
 | 4 | Dương và Hoàn nhận phần nào | Đề xuất như mục 3 — đổi cho nhau nếu thế mạnh ngược lại |
+| 5 | Bút toán | **Đã chốt: không làm.** Hệ thống dừng ở việc duyệt và xuất danh sách hóa đơn đã duyệt; kế toán tự hạch toán trong phần mềm kế toán (PRD F10). Theo góp ý của mentor. Module `ledger` trong code không còn cần — Giáp quyết gỡ hay đổi thành phần xuất file |

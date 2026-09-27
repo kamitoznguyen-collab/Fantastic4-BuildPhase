@@ -16,7 +16,7 @@ Mục lục gồm bốn phần.
 | 1 | ĐỐI SOÁT HÓA ĐƠN TỰ ĐỘNG | AI đối chiếu, kế toán duyệt cuối |
 | 2 | TỔNG TIỀN CHE MẤT SAI LỆCH | Vì sao phải so từng dòng, không chỉ so tổng |
 | | **Giải pháp** | |
-| 3 | NĂM BƯỚC XỬ LÝ | Ý chính của luồng, từ tải hóa đơn đến bút toán |
+| 3 | NĂM BƯỚC XỬ LÝ | Ý chính của luồng, từ tải hóa đơn đến lúc kế toán duyệt |
 | 4 | LUỒNG HỆ THỐNG | Bốn giai đoạn, ai làm từng giai đoạn, ba băng chạy xuyên suốt: Cổng AI, Kiểm soát, Lưu trữ |
 | 5 | BA NGUYÊN TẮC | Luôn có người duyệt · AI không tạo ra con số · Không chắc thì phải báo |
 | 6 | ĐIỂM KHÁC BIỆT | Phân biệt lệch bình thường với lệch cần chặn |

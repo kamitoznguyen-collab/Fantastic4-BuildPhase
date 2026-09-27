@@ -93,6 +93,7 @@ Slide *LUỒNG DỮ LIỆU QUA HỆ THỐNG* đã được sửa sau buổi trì
 - Thêm nhánh trả lại về bước đọc (PRD F11.5), và bước đề xuất quy tắc nhà cung cấp từ chỗ kế toán sửa
 - Cổng AI có thêm che số tài khoản trước khi gửi ra ngoài
 - Mũi tên khối cỡ nhỏ hiện thành thanh ngang, nên đổi sang đường nối có đầu mũi tên
+- Ngày 27/09: cột 4 đổi thành *DUYỆT & XUẤT* — hệ thống không sinh bút toán (PRD F10)
 
 ---
 
