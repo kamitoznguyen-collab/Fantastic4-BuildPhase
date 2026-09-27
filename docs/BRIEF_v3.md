@@ -194,23 +194,23 @@ graph LR
     UI[Giao diện web] -->|REST + JWT| API[FastAPI]
     API --> G[LangGraph Agent]
     API --> Q[Queue nền<br/>xử lý theo lô]
-    G --> OCR[Google Document AI<br/>hoặc VietOCR]
-    G --> LLM[OpenAI gpt-4o-mini]
+    G --> OCR[Gemini API<br/>đọc ảnh, gọi thẳng]
+    G --> LLM[Gemini API<br/>khớp L4, giải thích]
     G --> R[Rule engine<br/>config YAML]
     G --> DB[(PostgreSQL<br/>+ pgvector)]
     G --> CN[ErpConnector<br/>Seed / ExcelCsv / MISA-H2]
     API --> DB
     API --> FS[File storage]
-    G -.trace.-> LS[LangSmith]
+    G -.trace.-> LS[Langfuse]
 ```
 
 | Thành phần | Công nghệ | Ghi chú |
 |---|---|---|
 | Agent | LangGraph + LangChain 0.3 | Có sẵn trong template; thêm Postgres checkpointer cho interrupt |
-| LLM | OpenAI `gpt-4o-mini` | **`temperature=0`** cho mọi node (template đang để 0.7 — phải sửa) |
+| LLM | **Gemini 3.1 Flash-Lite qua Gemini API trực tiếp**, không qua OpenRouter | **`temperature=0`** cho mọi node (template đang để 0.7 — phải sửa). Chốt 27/09/2026, PRD F2.13 |
 | Parser XML | `lxml` + schema XML hóa đơn điện tử VN | Nguồn tin cậy nhất, ưu tiên hàng đầu |
 | PDF có text | `pdfplumber` | Không tốn tiền OCR |
-| OCR | **Google Document AI** (chính), **VietOCR** (phương án tự host) | Xem ghi chú bên dưới |
+| OCR | **Gemini 3.1 Flash-Lite** đọc ảnh ra JSON (chính) + Tesseract kiểm lại vùng trường tiền · Document AI để so sánh ở D1 | Xem ghi chú bên dưới và RESEARCH 1.4 |
 | Rule engine | Python thuần + YAML | Dung sai, thuế suất, ngưỡng duyệt; có ngày hiệu lực |
 | Fuzzy | `rapidfuzz` | Lọc ứng viên trước khi gọi LLM |
 | Vector DB | **pgvector** trong cùng PostgreSQL | Không phải chạy thêm service; Render Postgres hỗ trợ |
@@ -218,9 +218,9 @@ graph LR
 | Auth | JWT + phân quyền theo vai trò | 2 vai trò KTV, KTT |
 | Frontend | Trước mắt: HTML + JavaScript thuần, không cần build · Sau: React | Đi tiếp từ `docs/prototype/`, đã có sẵn giao diện co giãn theo màn hình và chế độ tối. Chuyển sang React sau, thời điểm chưa chốt |
 | Deploy | Render: Web Service (API), Static Site (giao diện), PostgreSQL | Theo đề bài |
-| Tracing / chi phí | LangSmith | Deliverable #4, đo chi phí mỗi hóa đơn |
+| Tracing / chi phí | Langfuse qua OpenTelemetry | Deliverable #4, đo chi phí mỗi hóa đơn |
 
-**Ghi chú về OCR:**
+**Ghi chú về OCR** *(ba ý dưới viết trước khi chốt Gemini; giữ lại vì Document AI vẫn là phương án so sánh)*:
 
 - **Document AI** trả confidence cho từng token hoặc trường, đúng với yêu cầu N1. **Tuần 1 phải thử ngay** xem Invoice Parser có đọc tốt hóa đơn tiếng Việt không. Nếu không tốt thì dùng Enterprise Document OCR lấy text + confidence, rồi LLM map vào trường.
 - **VietOCR** chỉ nhận dạng từng dòng text, phải ghép với một bộ phát hiện vùng chữ (PaddleOCR detection). Giữ làm phương án khi dữ liệu không được gửi ra ngoài; không ưu tiên trong 5 tuần.
@@ -238,7 +238,7 @@ src/
 │   └── tools/                # find_po, find_grn, vector_search, vendor_memory, tax_lookup (mock)
 ├── services/
 │   ├── llm.py
-│   ├── extraction/           # xml_invoice.py, pdf_text.py, ocr_docai.py, ocr_viet.py, amount_in_words.py
+│   ├── extraction/           # xml_invoice.py, pdf_text.py, ocr_gemini.py, ocr_verify.py, amount_in_words.py
 │   ├── rules/                # tolerance.py, vat.py, approval_policy.py, exception_codes.py
 │   ├── connectors/           # base.py (Protocol), seed.py, excel_csv.py   [misa.py o H2]
 │   ├── auth.py
@@ -273,7 +273,7 @@ Mọi bảng nghiệp vụ mang `org_id`. Chi tiết trường ở `PRD.md` mụ
 4. **Cache** kết quả OCR và LLM theo hash file; upload lại cùng một file không trả tiền lần nữa.
 5. **Xử lý theo lô** bằng hàng đợi nền, không xử lý đồng bộ trong request.
 6. **Giới hạn và ngân sách** trong `config/limits.yaml` (N2).
-7. **Đo chi phí mỗi hóa đơn** theo từng dạng (XML, PDF, scan) qua LangSmith từ tuần 2, rồi mới đặt mục tiêu.
+7. **Đo chi phí mỗi hóa đơn** theo từng dạng (XML, PDF, scan) qua Langfuse từ tuần 2, rồi mới đặt mục tiêu.
 
 ---
 
@@ -284,7 +284,7 @@ Mọi bảng nghiệp vụ mang `org_id`. Chi tiết trường ở `PRD.md` mụ
 - **Audit log không sửa được** cho mọi thao tác duyệt, sửa trường và cấu hình.
 - Chỉ gửi cho LLM những trường cần thiết; **che số tài khoản ngân hàng** và thông tin không liên quan.
 - Key và secret trong `.env` hoặc biến môi trường Render, không bao giờ commit.
-- Ghi rõ trong tài liệu: dùng Document AI và OpenAI thì dữ liệu hóa đơn đi ra dịch vụ bên ngoài. Muốn giữ nội bộ thì dùng VietOCR và LLM tự host.
+- Ghi rõ trong tài liệu: dùng Gemini API thì dữ liệu hóa đơn đi ra Google. Hóa đơn thật chỉ qua gói trả phí hoặc credit Google Cloud, không qua gói miễn phí. Muốn giữ nội bộ thì dùng mô hình tự host (việc D9).
 - **Cách ly tenant** kiểm bằng test: một test tự động cố đọc dữ liệu của tenant khác qua API và phải nhận 404.
 
 ---
@@ -316,7 +316,7 @@ Lý do đặt recall cao hơn precision: một chỗ lệch bị bỏ sót là t
 
 | Tuần | Sản phẩm | Deliverables Demo Day |
 |---|---|---|
-| **1** | Setup repo, Postgres (Docker local), schema DB + Alembic (**có `org_id`**), auth 2 vai trò, parser XML, **bộ sinh dữ liệu mẫu**. **Thử Document AI với hóa đơn tiếng Việt.** Khung giao diện: đăng nhập, upload, danh sách hóa đơn | `ARCHITECTURE.md` + diagram, bắt đầu `JOURNAL.md` và `WORKLOG.md` |
+| **1** | Setup repo, Postgres (Docker local), schema DB + Alembic (**có `org_id`**), auth 2 vai trò, parser XML, **bộ sinh dữ liệu mẫu**. **Thử Gemini API trên 10 hóa đơn scan tiếng Việt.** Khung giao diện: đăng nhập, upload, danh sách hóa đơn | `ARCHITECTURE.md` + diagram, bắt đầu `JOURNAL.md` và `WORKLOG.md` |
 | **2** | Trích xuất PDF/OCR + confidence + kiểm chéo (N1 bản đầu). Node `retrieve_docs` (SQL), `match_lines` (rule + fuzzy + LLM), `classify`. **Chốt bảng mã ngoại lệ.** Unit test cho parser và rule | **Deploy lần đầu lên Render** |
 | **3** | `propose_action`, `approve_L1` (interrupt), `tax_check` (N3). Dashboard: danh sách theo trạng thái, màn so sánh 3 chiều, duyệt. **Xong phần Cơ bản** | Live URL chạy đủ phần Cơ bản |
 | **4** | Nâng cao: duyệt nhiều cấp (N6), trùng/gian lận (N5), vector search (N4), memory NCC (N7), giới hạn (N2), readiness score (N8). Chạy eval. Cho kế toán dùng thử | Điền `eval/results/report.md` |
@@ -359,7 +359,7 @@ Chia theo mức độ chặn.
 
 **Chặn việc phát triển — cần trả lời trong tuần 1:**
 
-- [ ] Có được gửi dữ liệu hóa đơn ra Google Document AI / OpenAI không, hay bắt buộc tự host?
+- [x] Gọi thẳng Gemini API (chốt 27/09/2026). Còn hỏi: Xe X có cho gửi hóa đơn thật ra Google không, hay bắt buộc tự host?
 - [ ] Nhóm có mấy người, và có credit Google Cloud để dùng Document AI không?
 - [ ] Xe X có cung cấp mẫu hóa đơn, PO, phiếu nhập thật (đã che thông tin) không? Nhóm hàng mua chính là gì?
 

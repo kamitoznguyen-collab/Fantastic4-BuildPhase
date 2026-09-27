@@ -104,7 +104,7 @@ Ký hiệu: **[M]** bắt buộc cho MVP · **[S]** nên có · **[H2]** để c
 |---|---|---|
 | `.xml` | `xml_invoice.py` — parse theo schema hóa đơn điện tử VN | `1.0` cho mọi trường |
 | `.pdf` có lớp text | `pdf_text.py` (`pdfplumber`) → LLM map trường | `0.95` cho trường trích trực tiếp bằng regex; theo LLM cho phần còn lại |
-| `.pdf` scan hoặc ảnh | `ocr_docai.py` → LLM map trường | Min confidence của các token OCR tạo nên giá trị |
+| `.pdf` scan hoặc ảnh | `ocr_gemini.py` — Gemini 3.1 Flash-Lite đọc ảnh ra JSON theo schema, mức `MEDIUM` (F2.13) | Theo F3.5; trường tiền phải qua Tesseract đọc lại vùng (RESEARCH 1.4) |
 
 - F2.4 PDF được thử `pdfplumber` trước; nếu tỉ lệ ký tự trích được trên mỗi trang dưới ngưỡng `min_chars_per_page` (mặc định 200) thì coi là scan và chuyển sang OCR.
 - F2.5 Trường phải trích cho **đầu hóa đơn**: `invoice_number`, `invoice_series` (ký hiệu), `invoice_date`, `vendor_name`, `vendor_tax_code`, `buyer_name`, `buyer_tax_code`, `currency`, `exchange_rate`, `subtotal`, `tax_amount`, `total_amount`, `amount_in_words`, `po_reference` (nếu có in trên hóa đơn), `payment_bank_account`.
@@ -116,6 +116,10 @@ Ký hiệu: **[M]** bắt buộc cho MVP · **[S]** nên có · **[H2]** để c
 - F2.10 Cache kết quả OCR và kết quả LLM map theo `sha256` file, TTL 30 ngày.
 - F2.11 **Trường ngoài schema** — thông tin in trên hóa đơn mà không thuộc F2.5, F2.6 (số hợp đồng, biển số xe, mã khách hàng, ghi chú…) **không được bỏ đi**. Lưu vào `extras` gồm `label` như in trên hóa đơn, `value` dạng chữ, `evidence`. Với XML, toàn bộ khối `TTKhac` đi vào `extras`. `extras` hiển thị trên màn hình chi tiết nhưng **không dùng để đối chiếu hay tính tiền**. Nhãn nào xuất hiện ở nhiều nhà cung cấp thì cân nhắc nâng thành trường chính thức.
 - F2.12 **Trường có trong schema mà hóa đơn không in:** `value = null`, không suy đoán. Trường tùy chọn (`po_reference`, `item_code`, `exchange_rate` khi `currency = VND`) để trống vẫn chạy tiếp. Trường bắt buộc còn lại trống thì `confidence = 0` và sinh `INT-01`.
+- F2.13 **Nhà cung cấp mô hình đọc** *(chốt 27/09/2026)*:
+  - Đường chính: **Gemini 3.1 Flash-Lite, gọi thẳng Gemini API** của Google. **Không đi qua OpenRouter** hay cổng trung gian: giá gốc, dùng được credit Google Cloud và credit của chương trình, dữ liệu chỉ đi qua một bên.
+  - **Hóa đơn thật chỉ gửi qua gói trả phí hoặc credit Google Cloud.** Gói miễn phí của AI Studio có thể dùng dữ liệu để huấn luyện, nên chỉ nhận dữ liệu tổng hợp và dữ liệu cào.
+  - Mọi lời gọi đi qua `gateway`; đổi nhà cung cấp là đổi cấu hình, không sửa code phần đọc. Document AI giữ làm phương án so sánh ở việc D1; mô hình mở (DeepSeek-OCR 2, Qwen3-VL, PaddleOCR-VL) chỉ thử ở việc D9 trên dữ liệu tổng hợp.
 
 ### F3 — Kiểm tra toàn vẹn trường (N1) **[M]**
 
@@ -870,7 +874,7 @@ Một buổi với 2 kế toán, 20 hóa đơn, đo bằng đồng hồ: thời 
 
 | Tuần | Yêu cầu hoàn thành | Định nghĩa "xong" |
 |---|---|---|
-| **1** | F1, F2 (XML), F17 interface + `SeedConnector`, schema DB đầy đủ có `org_id`, bộ sinh dữ liệu | Đăng nhập được 2 vai trò; parse 50 XML mẫu ra đúng; thử Document AI có kết luận bằng văn bản |
+| **1** | F1, F2 (XML), F17 interface + `SeedConnector`, schema DB đầy đủ có `org_id`, bộ sinh dữ liệu | Đăng nhập được 2 vai trò; parse 50 XML mẫu ra đúng; thử Gemini trên 10 file scan có số đo (chi phí, thời gian, sai mà không gắn cờ) |
 | **2** | F2 (PDF, OCR), F3, F4 bậc 1–2, F5 bậc L0–L4, **bảng mã ngoại lệ mục 4 chốt xong** | Deploy Render chạy được; một hóa đơn scan đi hết đến `MATCHED`; test parser và rule thuế ≥ 90% |
 | **3** | F6, F7, F9, F10, F11 cấp 1, F15.1 | Live URL chạy đủ phần Cơ bản; interrupt sống qua restart |
 | **4** | F8, F11 cấp 2, F12, F13, F16, F4 bậc 3, F14 | Chạy eval đủ 300 hóa đơn, điền `eval/results/report.md` |
@@ -899,5 +903,5 @@ Một buổi với 2 kế toán, 20 hóa đơn, đo bằng đồng hồ: thời 
 | Dung sai giá và số lượng thực tế? | `tolerances.yaml`, F6 | Tuần 3 |
 | Tỉ lệ XML so với scan trong thực tế? | Ưu tiên công sức giữa parser và OCR | Tuần 2 |
 | Có hóa đơn ngoại tệ không? | F2.5 `exchange_rate` | Tuần 3 |
-| Được gửi dữ liệu ra dịch vụ ngoài không? | Toàn bộ lựa chọn OCR và LLM | **Tuần 1** |
+| Được gửi dữ liệu ra dịch vụ ngoài không? | Toàn bộ lựa chọn OCR và LLM | **Đã chốt một phần (27/09/2026):** gọi thẳng Gemini API, không qua OpenRouter (F2.13). Còn chốt: hóa đơn thật dùng gói trả phí hay credit Google Cloud |
 | Xe X có sẵn quy trình duyệt điện tử nào? | F11 có phải sống chung không | Trước buổi dùng thử |

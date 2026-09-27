@@ -98,7 +98,7 @@ Mô hình suy luận tính token suy nghĩ như **token ra** — loại đắt n
 
 ### 1.6 Cần chốt
 
-- [ ] Đường chạy thật dùng Gemini Flash-Lite hay Document AI? Chạy thử cả hai trên cùng 30 hóa đơn scan rồi quyết theo chỉ số *sai mà không gắn cờ*.
+- [x] Đường chạy thật: **Gemini 3.1 Flash-Lite qua Gemini API trực tiếp** — chốt 27/09/2026, ghi ở PRD F2.13. Document AI vẫn chạy so sánh trong D1; nếu Gemini thua rõ ở chỉ số *sai mà không gắn cờ* thì xem lại.
 - [ ] Ai có máy GPU hoặc tài khoản Colab để chạy đường thử nghiệm?
 - [ ] Được gửi hóa đơn lên dịch vụ nào — xem thêm điều khoản dữ liệu ở mục 6.5.
 
