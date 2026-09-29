@@ -109,7 +109,7 @@ Ký hiệu: **[M]** bắt buộc cho MVP · **[S]** nên có · **[H2]** để c
 - F2.4 PDF được thử `pdfplumber` trước; nếu tỉ lệ ký tự trích được trên mỗi trang dưới ngưỡng `min_chars_per_page` (mặc định 200) thì coi là scan và chuyển sang OCR.
 - F2.5 Trường phải trích cho **đầu hóa đơn**: `invoice_number`, `invoice_series` (ký hiệu), `invoice_date`, `vendor_name`, `vendor_tax_code`, `buyer_name`, `buyer_tax_code`, `currency`, `exchange_rate`, `subtotal`, `tax_amount`, `total_amount`, `amount_in_words`, `po_reference` (nếu có in trên hóa đơn), `payment_bank_account`.
 - F2.6 Trường phải trích cho **mỗi dòng hàng**: `line_no`, `line_kind`, `item_code` (nếu có), `description`, `uom`, `quantity`, `unit_price`, `line_net`, `tax_rate`, `line_tax`, `line_total`.
-  - `line_kind` là một trong `goods` (hàng hóa, dịch vụ), `discount` (chiết khấu, khuyến mại — `line_net` âm), `fee` (phí vận chuyển, phụ phí). Chỉ dòng `goods` đi vào khớp dòng với PO; dòng `discount` và `fee` vẫn tính vào kiểm cộng dồn F3.1. Không chắc loại dòng thì để `goods` và hạ `confidence` của trường này.
+  - `line_kind` là một trong `goods` (hàng hóa, dịch vụ), `promo` (hàng khuyến mại không thu tiền — có số lượng, thành tiền 0), `discount` (chiết khấu thương mại — `line_net` âm), `fee` (phí vận chuyển, phụ phí), `note` (dòng chỉ có chữ, nội dung đưa vào `extras`). Chỉ dòng `goods` và `promo` đi vào khớp dòng với PO (`promo` không kiểm giá); mọi loại trừ `note` tính vào kiểm cộng dồn F3.1. Bảng đầy đủ ở §7.2.3. Không chắc loại dòng thì để `goods` và hạ `confidence` của trường này.
 - F2.7 Mỗi trường ghi một bản ghi `extraction_fields` gồm `value`, `confidence`, `source_type` (`xml` / `pdf_text` / `ocr` / `manual`), `evidence` (JSON: xpath, hoặc `{page, bbox}`, hoặc `{user_id}`).
 - F2.8 **Chống bịa số:** mọi giá trị số do LLM trả về phải xuất hiện trong text gốc sau khi chuẩn hóa (bỏ dấu phân cách nghìn, chuẩn hóa dấu thập phân). Không tìm thấy thì `value = null`, `confidence = 0`, và sinh ngoại lệ `INT-06`.
 - F2.9 Mọi node LLM chạy `temperature = 0` và dùng structured output theo schema Pydantic.
@@ -450,14 +450,135 @@ Thứ tự tính bắt buộc: **làm tròn ở cấp dòng trước, rồi mớ
 - Truy cập DB đi qua lớp repository nhận `org_id` từ token và **luôn** thêm điều kiện. Không có query thô trong tầng API.
 - Khóa chính dùng UUID v7 (sắp xếp được theo thời gian).
 - Mọi bảng có `created_at`, `updated_at`; bảng nghiệp vụ chính có `created_by`.
+- **Tiền, số lượng, đơn giá, tỉ giá: `NUMERIC(20,4)`**, không bao giờ `float`. Làm tròn theo loại tiền khi hiển thị và khi so sánh: VND làm tròn đến đồng, ngoại tệ đến 2 chữ số lẻ. Thuế suất lưu dạng mã (`"8"`, `"KCT"`), không lưu số thực.
+- **Giá trị thô và giá trị đã chuẩn hóa tách riêng.** Trường nào đọc từ chứng từ mà hệ thống có chuẩn hóa thì giữ cả hai: `*_raw` như in trên hóa đơn, cột chính là giá trị đã chuẩn hóa. Nhờ vậy truy được về nguồn khi kiểm toán.
+- Ngày nghiệp vụ (`invoice_date`, `po_date`, `receipt_date`) là `DATE`, không có giờ. Thời điểm hệ thống là `TIMESTAMPTZ`, lưu UTC.
 
-### 7.2 Bảng chính
+### 7.2 Từ điển nghiệp vụ
 
-**`orgs`** — `id`, `name`, `tax_code`, `accounting_standard` (`TT200` / `TT133`), `base_currency`, `settings` (JSONB)
+Mục này nói **mỗi thực thể là gì ngoài đời thật, cái gì định danh nó, và quy tắc nào luôn phải đúng**. Tên bảng và cột nằm ở mục 7.4.
+
+#### 7.2.1 Sơ đồ quan hệ
+
+```mermaid
+erDiagram
+    ORG ||--o{ USER : "có"
+    ORG ||--o{ VENDOR : "mua hàng của"
+    VENDOR ||--o{ VENDOR_RULE : "có quy tắc riêng"
+    VENDOR ||--o{ PURCHASE_ORDER : "nhận"
+    PURCHASE_ORDER ||--|{ PO_LINE : "gồm"
+    PURCHASE_ORDER ||--o{ GOODS_RECEIPT : "được giao theo"
+    GOODS_RECEIPT ||--|{ GRN_LINE : "gồm"
+    PO_LINE ||--o{ GRN_LINE : "được nhận qua"
+    VENDOR ||--o{ INVOICE : "xuất"
+    INVOICE ||--|{ INVOICE_LINE : "gồm"
+    INVOICE }o--o{ PURCHASE_ORDER : "đối chiếu với"
+    INVOICE_LINE ||--o| LINE_MATCH : "khớp"
+    LINE_MATCH }o--|| PO_LINE : "với dòng PO"
+    LINE_MATCH }o--o| GRN_LINE : "và dòng phiếu nhập"
+    INVOICE ||--o{ DISCREPANCY : "có ngoại lệ"
+    INVOICE ||--o{ APPROVAL : "được duyệt"
+    INVOICE ||--o{ EXTRACTION_FIELD : "bằng chứng từng trường"
+```
+
+Ba nhóm, đọc theo thứ tự:
+- **Mua hàng** — PO, phiếu nhập: dữ liệu có sẵn từ phần mềm của khách, hệ thống chỉ đọc, không sửa.
+- **Hóa đơn** — hóa đơn, dòng hóa đơn, bằng chứng từng trường: hệ thống đọc từ file.
+- **Đối chiếu và duyệt** — khớp dòng, ngoại lệ, lượt duyệt: kết quả hệ thống sinh ra và người quyết định.
+
+#### 7.2.2 Các mã có cấu trúc
+
+Không mã nào dưới đây là chuỗi ngẫu nhiên. Cấu trúc của chúng quyết định logic kiểm tra.
+
+**Mã số thuế (MST)** — Thông tư 86/2024/TT-BTC
+
+| Dạng | Ví dụ | Cấu trúc | Ai dùng |
+|---|---|---|---|
+| 10 số | `0101248141` | 2 số phân khoảng tỉnh nơi cấp · 7 số thứ tự · **1 chữ số kiểm tra** | Doanh nghiệp, tổ chức. Cũng là mã số doanh nghiệp |
+| 13 số | `0101248141-001` | 10 số của đơn vị chủ quản · `-` · 3 số thứ tự đơn vị phụ thuộc | Chi nhánh, văn phòng đại diện, địa điểm kinh doanh |
+| 12 số | *(số CCCD)* | Chính là số định danh cá nhân | Cá nhân, hộ kinh doanh, từ 01/7/2025 |
+
+Quy tắc suy ra:
+- **MST gốc** = 10 số đầu. Hóa đơn do chi nhánh `…-001` xuất mà PO đặt với đơn vị chủ quản thì **vẫn là cùng một nhà cung cấp** — khớp nhà cung cấp theo MST gốc, không theo MST đầy đủ. Lệch MST đầy đủ chỉ ghi INFO.
+- Chữ số kiểm tra của dạng 10 và 13 số bắt được mọi lỗi sai một chữ số và đảo hai chữ số liền nhau (RESEARCH §4.1). Dạng 12 số chỉ kiểm được độ dài.
+- **MST 12 số là dữ liệu cá nhân** (Nghị định 13/2023). Che khi ghi log, khi gửi cho mô hình, khi hiện trong trace.
+- **Không suy ra địa phương từ 2 số đầu.** Đó là nơi cấp lúc đăng ký, không phải địa chỉ hiện tại — nhất là sau sáp nhập tỉnh năm 2025.
+
+**Ký hiệu hóa đơn** — Thông tư 78/2021/TT-BTC. Ví dụ `1C26TLV`, lưu nguyên 7 ký tự trong `invoice_series`:
+
+| Vị trí | Ví dụ | Ý nghĩa | Hệ thống dùng để |
+|---|---|---|---|
+| 1 | `1` | Loại hóa đơn: `1` GTGT, `2` bán hàng, các số khác là loại đặc thù | `2` → bỏ qua kiểm thuế GTGT (F7.9) |
+| 2 | `C` | `C` có mã của cơ quan thuế, `K` không có mã | Hiển thị; kiểm mã cơ quan thuế ở giai đoạn sau |
+| 3–4 | `26` | Hai số cuối của năm lập | Lệch với năm của `invoice_date` → `INT-04` |
+| 5 | `T` | Loại hình hóa đơn — `T` phổ biến nhất; `M` là từ máy tính tiền | Hiển thị |
+| 6–7 | `LV` | Người bán tự đặt | Không dùng |
+
+**Số hóa đơn** — tối đa 8 chữ số, đánh lại từ 1 theo từng ký hiệu. Nên số hóa đơn **không** định danh được hóa đơn khi đứng một mình.
+
+**Khóa tự nhiên của một hóa đơn** = MST người bán + ký hiệu (7 ký tự) + số hóa đơn, trong phạm vi một tổ chức. Hai hóa đơn cùng số mà khác ký hiệu là **hai hóa đơn khác nhau**, không phải trùng (`FRD-01` dựa đúng vào khóa này).
+
+**Số PO, số phiếu nhập** — do phần mềm của khách sinh, định dạng tùy khách. Chỉ duy nhất trong một tổ chức; lưu nguyên văn, so sánh sau khi bỏ khoảng trắng và đổi về chữ hoa.
+
+#### 7.2.3 Các thực thể chính
+
+| Thực thể | Ngoài đời là gì | Định danh nghiệp vụ | Quy tắc luôn phải đúng |
+|---|---|---|---|
+| **Tổ chức** | Công ty dùng hệ thống, ví dụ Xe X. Là người mua trên hóa đơn | MST của công ty | Mọi dữ liệu thuộc đúng một tổ chức; tổ chức này không bao giờ thấy dữ liệu tổ chức khác |
+| **Nhà cung cấp (NCC)** | Bên bán hàng cho tổ chức | MST gốc, trong phạm vi tổ chức | Một MST gốc là một NCC. Chi nhánh không tách thành NCC riêng. `bank_account` là tài khoản **đã xác minh** — đổi tài khoản trên hóa đơn là `FRD-05`, không tự cập nhật |
+| **Quy tắc NCC** | Điều kế toán đã dạy hệ thống về một NCC: tên gọi khác của mặt hàng, quy đổi đơn vị, dung sai riêng | NCC + loại quy tắc + nội dung | Chỉ có hiệu lực khi KTT duyệt (`ACTIVE`). Không bao giờ xóa, chỉ `RETIRED` |
+| **Đơn đặt hàng (PO)** | Cam kết mua: mua gì, bao nhiêu, giá nào | Số PO, trong phạm vi tổ chức | Hệ thống **không sửa** PO. PO `CLOSED` hoặc `CANCELLED` mà vẫn có hóa đơn → `DOC-04` |
+| **Dòng PO** | Một mặt hàng trên PO | PO + số thứ tự dòng | `qty_invoiced_to_date ≤ qty_received_to_date` sau quy đổi đơn vị; vượt → `QTY-01`. `item_category` dùng để tra nhóm thuế (F7.7) |
+| **Phiếu nhập kho (GRN)** | Bằng chứng hàng đã về kho. Một PO có thể giao nhiều đợt, mỗi đợt một phiếu | Số phiếu, trong phạm vi tổ chức | Chỉ phiếu `CONFIRMED` được tính. Số nhận được tính là `quantity_received − quantity_rejected` |
+| **Hóa đơn (HĐ)** | Chứng từ NCC đòi tiền. Căn cứ pháp lý để trả tiền và khấu trừ thuế | Khóa tự nhiên ở 7.2.2 | Không hai hóa đơn trùng khóa tự nhiên (chặn ở DB, 7.5). Tổng `line_net` của mọi dòng = `subtotal` trong dung sai (`INT-02`) |
+| **Dòng hóa đơn** | Một dòng trên hóa đơn | Hóa đơn + STT | STT liền 1 → N. Mỗi dòng có một loại (bảng dưới). Chỉ dòng `goods` được khớp với PO |
+| **Khớp dòng** | Kết luận "dòng hóa đơn này là dòng PO kia" | Dòng hóa đơn | Một dòng hóa đơn khớp **tối đa một** dòng PO. Nhiều dòng hóa đơn có thể khớp cùng một dòng PO (giao nhiều đợt). Luôn ghi bậc khớp L0–L5 và cách khớp |
+| **Ngoại lệ** | Một chỗ lệch có mã, có số tiền, có công thức | Hóa đơn + mã + dòng (nếu có) | Có công thức và nguồn, không có thì không được hiện. Đóng khi có người chọn hành động kèm lý do |
+| **Lượt duyệt** | Chữ ký của một người ở một cấp | Hóa đơn + cấp + lần duyệt | Người duyệt cấp 2 **khác** người duyệt cấp 1. Không bao giờ sửa, chỉ thêm |
+| **Bằng chứng trường** | Một giá trị đọc được và nó lấy từ đâu | Hóa đơn + tên trường + phiên bản | Chỉ thêm. Người sửa tạo bản ghi mới trỏ về bản cũ, không ghi đè |
+
+**Loại dòng hóa đơn** (F2.6):
+
+| `line_kind` | Ngoài đời | Số tiền | Khớp với PO | Tính vào cộng dồn |
+|---|---|---|---|---|
+| `goods` | Hàng hóa, dịch vụ | Dương | Có | Có |
+| `promo` | Hàng khuyến mại không thu tiền — có số lượng, thành tiền bằng 0 | 0 | Có, để trừ số lượng đã nhận; không kiểm giá | Có |
+| `discount` | Dòng chiết khấu thương mại | Âm | Không | Có |
+| `fee` | Phí vận chuyển, phụ phí | Dương | Không | Có |
+| `note` | Dòng chỉ có chữ, chen giữa bảng: "Theo hợp đồng số…", "Hàng giao đợt 2" | Không có | Không | Không — nội dung đưa vào `extras` |
+
+**Đơn vị tính** — lưu nguyên văn trong `uom_raw` và giá trị chuẩn hóa trong `uom` theo từ điển đồng nghĩa (cái = chiếc = c = pcs). So số lượng **sau khi quy đổi về đơn vị của PO** bằng quy tắc NCC; không có quy tắc quy đổi → `QTY-04`.
+
+#### 7.2.4 Vòng đời
+
+| Thực thể | Trạng thái | Ai đổi |
+|---|---|---|
+| Hóa đơn | Máy trạng thái ở §5.2 | Máy đến `MATCHED`; từ `PENDING_L1` trở đi chỉ người |
+| PO | `OPEN` → `PARTIALLY_RECEIVED` → `CLOSED`, hoặc `CANCELLED` | Phần mềm của khách; hệ thống chỉ đồng bộ về |
+| Phiếu nhập | `CONFIRMED`, `CANCELLED` | Phần mềm của khách |
+| Quy tắc NCC | `PROPOSED` → `ACTIVE` → `RETIRED` | Máy đề xuất từ chỗ KTV sửa; KTT duyệt và gỡ |
+| Ngoại lệ | Mở → đã xử lý (`resolved_at`) | Chỉ người |
+
+#### 7.2.5 Câu hỏi còn mở cho mô hình dữ liệu
+
+- Một hóa đơn gộp nhiều phiếu nhập của cùng một PO: đã phủ (một dòng PO nhiều dòng phiếu nhập). **Một dòng hóa đơn gộp số lượng của hai dòng PO** thì sao? Hiện tại không cho, người phải tách tay.
+- Hóa đơn điều chỉnh, hóa đơn thay thế (Nghị định 123/2020 Điều 19): chưa có trong mô hình. Cần thêm quan hệ "điều chỉnh cho hóa đơn nào" trước khi nhận loại hóa đơn này.
+- Xe X có dùng mã hàng thống nhất giữa PO và phiếu nhập không? Nếu có, bậc L0 khớp được phần lớn dòng.
+
+### 7.3 Ghi chú chuyển đổi
+
+- Bỏ `orgs.accounting_standard` — hệ thống không sinh bút toán (F10) nên không cần chế độ kế toán.
+- `vendors` thêm `tax_code_root` (10 số) để khớp chi nhánh với đơn vị chủ quản, và `tax_code_kind` (`ORG` / `BRANCH` / `PERSONAL`).
+- `invoices` thêm `vendor_tax_code` đã chuẩn hóa (khóa chống trùng dùng cột này thay cho bản thô), `buyer_tax_code_raw`, `buyer_name` (để kiểm MST người mua bằng MST tổ chức — việc H2) và `invoice_type` suy từ ký tự đầu của ký hiệu.
+- Dòng hóa đơn và dòng phiếu nhập thêm `uom_raw`; dòng hóa đơn có thêm loại `promo`, `note`.
+
+### 7.4 Bảng chính
+
+**`orgs`** — `id`, `name`, `tax_code`, `base_currency`, `settings` (JSONB)
 
 **`users`** — `id`, `org_id`, `email` (unique theo org), `password_hash`, `full_name`, `role` (`ACCOUNTANT` / `CHIEF_ACCOUNTANT`), `is_active`
 
-**`vendors`** — `id`, `org_id`, `code`, `name`, `name_normalized`, `tax_code`, `bank_account`, `bank_name`, `address`, `readiness_score`, `readiness_computed_at`, `invoice_count_approved`
+**`vendors`** — `id`, `org_id`, `code`, `name`, `name_normalized`, `tax_code`, `tax_code_root`, `tax_code_kind` (`ORG` / `BRANCH` / `PERSONAL`), `bank_account`, `bank_name`, `address`, `readiness_score`, `readiness_computed_at`, `invoice_count_approved`
 
 **`vendor_rules`** — `id`, `org_id`, `vendor_id`, `rule_type` (`ITEM_ALIAS` / `UOM_CONVERSION` / `TOLERANCE_OVERRIDE`), `payload` (JSONB), `status` (`PROPOSED` / `ACTIVE` / `RETIRED`), `evidence_count`, `approved_by`, `approved_at`
 
@@ -465,15 +586,15 @@ Thứ tự tính bắt buộc: **làm tròn ở cấp dòng trước, rồi mớ
 
 **`po_lines`** — `id`, `org_id`, `po_id`, `line_no`, `item_code`, `description`, `description_normalized`, `uom`, `quantity`, `unit_price`, `tax_rate`, `line_net`, `item_category`, `cost_center`, `qty_received_to_date`, `qty_invoiced_to_date`
 
-**`goods_receipts`** — `id`, `org_id`, `grn_number`, `po_id`, `vendor_id`, `receipt_date`, `status`, `warehouse`, `source`, `external_id`
+**`goods_receipts`** — `id`, `org_id`, `grn_number`, `po_id`, `vendor_id`, `receipt_date`, `status` (`CONFIRMED` / `CANCELLED`), `warehouse`, `source`, `external_id`
 
-**`grn_lines`** — `id`, `org_id`, `grn_id`, `po_line_id`, `line_no`, `item_code`, `description`, `uom`, `quantity_received`, `quantity_rejected`
+**`grn_lines`** — `id`, `org_id`, `grn_id`, `po_line_id`, `line_no`, `item_code`, `description`, `uom_raw`, `uom`, `quantity_received`, `quantity_rejected`
 
-**`invoices`** — `id`, `org_id`, `file_id`, `file_sha256`, `source_format` (`XML` / `PDF_TEXT` / `SCAN`), `invoice_number`, `invoice_series`, `invoice_date`, `vendor_id`, `vendor_tax_code_raw`, `currency`, `exchange_rate`, `subtotal`, `tax_amount`, `total_amount`, `amount_in_words`, `po_reference_raw`, `payment_bank_account`, `status`, `classification` (`GREEN` / `YELLOW` / `RED`), `graph_thread_id`, `processing_cost_usd`
+**`invoices`** — `id`, `org_id`, `file_id`, `file_sha256`, `source_format` (`XML` / `PDF_TEXT` / `SCAN`), `invoice_number`, `invoice_series` (7 ký tự, §7.2.2), `invoice_type` (suy từ ký tự đầu), `invoice_date`, `vendor_id`, `vendor_tax_code_raw`, `vendor_tax_code` (MST đầy đủ đã chuẩn hóa — bỏ khoảng trắng, đúng dạng `##########-###`), `buyer_tax_code_raw`, `buyer_name`, `currency`, `exchange_rate`, `subtotal`, `tax_amount`, `total_amount`, `amount_in_words`, `po_reference_raw`, `payment_bank_account`, `status`, `classification` (`GREEN` / `YELLOW` / `RED`), `graph_thread_id`, `processing_cost_usd`
 
 **`invoice_po_links`** — `id`, `org_id`, `invoice_id`, `po_id`, `link_confidence`, `linked_by` (`PO_NUMBER` / `VENDOR_DATE` / `VECTOR` / `MANUAL`) — quan hệ nhiều–nhiều, phục vụ `DOC-05`
 
-**`invoice_lines`** — `id`, `org_id`, `invoice_id`, `line_no`, `line_kind` (`goods` / `discount` / `fee`), `item_code`, `description`, `description_normalized`, `uom`, `quantity`, `unit_price`, `tax_rate`, `line_net`, `line_tax`, `line_total`
+**`invoice_lines`** — `id`, `org_id`, `invoice_id`, `line_no`, `line_kind` (`goods` / `promo` / `discount` / `fee` / `note`), `item_code`, `description`, `description_normalized`, `uom_raw`, `uom`, `quantity`, `unit_price`, `tax_rate`, `line_net`, `line_tax`, `line_total`
 
 **`extraction_fields`** — `id`, `org_id`, `invoice_id`, `line_id` (nullable), `field_name`, `value_text`, `value_number`, `confidence`, `source_type` (`xml` / `pdf_text` / `ocr` / `manual`), `evidence` (JSONB), `superseded_by` (nullable, trỏ bản ghi sửa sau) — **chỉ thêm, không sửa đè**, để giữ lịch sử trích xuất
 
@@ -495,14 +616,15 @@ Thứ tự tính bắt buộc: **làm tròn ở cấp dòng trước, rồi mớ
 
 **`sync_runs`** — `id`, `org_id`, `connector`, `started_at`, `finished_at`, `records_fetched`, `errors`, `status`
 
-### 7.3 Index cần có ngay
+### 7.5 Index cần có ngay
 
 ```sql
 CREATE UNIQUE INDEX ix_invoice_natural_key
-  ON invoices (org_id, vendor_tax_code_raw, invoice_series, invoice_number);   -- chặn FRD-01 ở tầng DB
+  ON invoices (org_id, vendor_tax_code, invoice_series, invoice_number);   -- chặn FRD-01 ở tầng DB. Dùng MST đầy đủ đã chuẩn hóa, không dùng bản thô: cùng một MST mà OCR đọc khác khoảng trắng vẫn phải bị chặn
 
 CREATE INDEX ix_invoices_status      ON invoices (org_id, status, invoice_date DESC);
 CREATE INDEX ix_po_lookup            ON purchase_orders (org_id, vendor_id, po_date DESC);
+CREATE UNIQUE INDEX ix_vendor_tax_root    ON vendors (org_id, tax_code_root);                 -- một MST gốc là một NCC, §7.2.2
 CREATE INDEX ix_po_number            ON purchase_orders (org_id, po_number);
 CREATE INDEX ix_discrepancies_open   ON discrepancies (org_id, invoice_id) WHERE resolved_at IS NULL;
 CREATE INDEX ix_vendor_rules_active  ON vendor_rules (org_id, vendor_id, rule_type) WHERE status = 'ACTIVE';

@@ -58,7 +58,7 @@ Dương  ──ExtractionResult──►  Hoàn  ──ReconciliationResult─�
 source_format:  XML | PDF_TEXT | SCAN
 segments:       [ { pages: [1, 2, 3], kind: invoice | attachment } ]
 header:         { tên_trường → FieldValue }
-lines:          [ { line_no, kind: goods | discount | fee, fields: { tên_trường → FieldValue } } ]
+lines:          [ { line_no, kind: goods | promo | discount | fee | note, fields: { tên_trường → FieldValue } } ]
 totals:         { subtotal, tax_by_rate, total, amount_in_words }   — đều là FieldValue
 extras:         [ { label, value, evidence } ]   — trường in trên hóa đơn nhưng ngoài schema
 checks:         { sum_ok, words_ok, stt_continuous, ... }
@@ -74,7 +74,7 @@ FieldValue = {
 
 Ba quy tắc cho trường không nằm sẵn trong luật (PRD F2.6, F2.11, F2.12):
 - **Trường ngoài schema** đi vào `extras`, không bỏ đi. Hoàn không dùng `extras` để đối chiếu; giao diện chỉ hiển thị.
-- **Dòng chiết khấu, dòng phí** có `kind` riêng. Hoàn chỉ khớp dòng `goods` với PO; mọi loại dòng đều tính vào kiểm cộng dồn.
+- **Dòng khuyến mại, chiết khấu, phí, ghi chú** có `kind` riêng (PRD §7.2.3). Hoàn chỉ khớp dòng `goods` và `promo` với PO; mọi loại trừ `note` tính vào kiểm cộng dồn.
 - **Trường hóa đơn không in** thì `value = null`, không đoán. Trường bắt buộc mà trống thì `confidence = 0`.
 
 **`ReconciliationResult`** — Hoàn giao cho Giáp
