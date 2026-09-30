@@ -127,7 +127,12 @@ Chạy ngay sau trích xuất, trước khi khớp.
 
 - F3.1 **Kiểm chéo cộng dồn:** `Σ line_net` = `subtotal`; `subtotal + tax_amount` = `total_amount`. Sai lệch vượt `sum_tolerance_vnd` thì sinh `INT-02`.
 - F3.2 **Kiểm tiền bằng chữ:** chuyển `total_amount` sang chữ tiếng Việt và so khớp `amount_in_words` sau khi chuẩn hóa (bỏ dấu, lowercase, bỏ khoảng trắng thừa). Lệch thì sinh `INT-03`. Đây là lưới an toàn mạnh nhất với OCR sai chữ số.
-- F3.3 **Kiểm mã số thuế:** đúng 10 hoặc 13 chữ số, và với 13 chữ số thì định dạng `##########-###`. Sai thì `INT-05`.
+- F3.3 **Kiểm mã số thuế** (RESEARCH §4.1, cấu trúc ở §7.2.2):
+  - Nhận **ba dạng**: 10 số, 13 số dạng `##########-###`, và **12 số** (số CCCD của cá nhân, hộ kinh doanh, từ 01/7/2025 theo TT 86/2024). Chuẩn hóa trước khi kiểm: bỏ khoảng trắng, đổi các dấu gạch khác về `-`.
+  - **Chữ số kiểm tra là chữ số thứ 10** (với dạng 13 số cũng là chữ số thứ 10; 3 số cuối là số thứ tự đơn vị phụ thuộc, không có chữ số kiểm tra riêng). Công thức: nhân chữ số 1–9 với trọng số `31, 29, 23, 19, 17, 13, 7, 5, 3`, cộng lại, chữ số kiểm tra = `10 − (tổng mod 11)`; ra 10 thì mã không hợp lệ. Dùng `stdnum.vn.mst`, không tự viết.
+  - Dạng 12 số không có chữ số kiểm tra công khai: chỉ kiểm độ dài và toàn chữ số.
+  - Sai định dạng hoặc sai chữ số kiểm tra thì `INT-05`, và trường MST có `confidence = 0`.
+  - Áp dụng cho **cả MST người bán lẫn MST người mua**. MST người mua phải bằng MST của tổ chức — mã ngoại lệ riêng cho trường hợp này chưa chốt (việc U1).
 - F3.4 **Kiểm ngày:** `invoice_date` không ở tương lai, không quá `max_invoice_age_days` (mặc định 400). Sai thì `INT-04`.
 - F3.5 **Ngưỡng confidence:** trường nào có `confidence < field_confidence_threshold` (mặc định 0.85, riêng trường tiền 0.95) thì sinh `INT-01` và **chặn hóa đơn đạt trạng thái 🟢** dù mọi thứ khác khớp.
 - F3.6 Người dùng sửa trường thì `source_type = manual`, `confidence = 1.0`, ngoại lệ `INT-01` tương ứng đóng lại, và pipeline chạy lại từ node `retrieve_docs`.
@@ -355,7 +360,7 @@ class ErpConnector(Protocol):
 | `INT-02` | Cộng dồn không khớp | `Σ line_net ≠ subtotal`, hoặc `subtotal + tax ≠ total` | BLOCK | Kiểm tra lại trích xuất |
 | `INT-03` | Tiền bằng chữ không khớp tiền bằng số | So sánh chuỗi đã chuẩn hóa | BLOCK | Kiểm tra lại — dấu hiệu OCR sai chữ số |
 | `INT-04` | Ngày không hợp lệ | Tương lai, hoặc quá cũ | REVIEW | Sửa tay |
-| `INT-05` | Mã số thuế sai định dạng | Không phải 10 hoặc 13 chữ số | REVIEW | Sửa tay |
+| `INT-05` | Mã số thuế sai định dạng | Không phải dạng 10, 13 hoặc 12 số; hoặc sai chữ số kiểm tra (F3.3) | REVIEW | Sửa tay — thường do OCR đọc sai một chữ số |
 | `INT-06` | Giá trị không tìm thấy trong nguồn | LLM trả số không có trong text gốc | BLOCK | Nhập tay — **không bao giờ dùng số của LLM** |
 
 ### 4.7 Nhóm FRD — trùng lặp và bất thường
