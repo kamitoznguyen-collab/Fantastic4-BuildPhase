@@ -598,6 +598,22 @@ Với nhóm, "không phải xử lý tay" nghĩa là **chỉ cần một cú b�
 | 6 | **Kiểm trạng thái hóa đơn và người bán trên hệ thống cơ quan thuế**: đã bị thay thế hay điều chỉnh chưa, người bán còn hoạt động không | MISA | F8.6, §7.2.5 | Sau |
 | 7 | **Định vị bổ trợ cho MISA**: MISA kiểm hợp lệ và hạch toán, nhóm kiểm "có nên trả số tiền này không". Chặng tiếp theo đẩy hóa đơn đã duyệt sang MISA | MISA | BRIEF | Sau |
 
+### 8.4 Các vấn đề trên hóa đơn — thị trường và luật trả lời thế nào
+
+| Vấn đề | Thị trường hoặc luật | Vào PRD |
+|---|---|---|
+| Dịch vụ không có phiếu nhập kho | SAP dùng phiếu xác nhận dịch vụ (Service Entry Sheet) thay cho phiếu nhập; nơi khác đối chiếu hai chiều cộng một bước duyệt riêng | F4.9 — xác nhận hoàn thành dịch vụ |
+| Một dòng hóa đơn gộp nhiều lần giao | Hóa đơn gộp cuối kỳ là chuyện phổ biến; Business Central ghép nhiều phiếu nhập vào một hóa đơn | F5.7 |
+| Đơn giá đã gồm thuế | ERP có cờ "giá đã gồm thuế" theo chứng từ hoặc NCC | F6.6 — nhận ra bằng số học, cờ theo NCC |
+| Ngày hóa đơn là ngày nào | Nghị định 123/2020: ký số khác ngày lập thì khai thuế theo **ngày lập** | F2.5, F3.4 |
+| Thanh toán tiền mặt | Luật Thuế GTGT 2024 Điều 14 khoản 2, Nghị định 181/2025 Điều 26: từ 01/7/2025, từ 5 triệu đồng (đã gồm thuế) phải thanh toán không dùng tiền mặt mới được khấu trừ | F7.10 |
+| Bảng kê kèm hóa đơn | Luật cho phép lập bảng kê kèm theo hóa đơn | F5.8 |
+| Hóa đơn điều chỉnh, thay thế | Nghị định 70/2025 (sửa Nghị định 123): ghi "Điều chỉnh cho hóa đơn Mẫu số… ký hiệu… số…"; một hóa đơn được điều chỉnh cho nhiều hóa đơn trong cùng tháng của cùng người mua | F4.10 |
+| Hóa đơn chờ, chưa trả được | SAP, Oracle có trạng thái tạm giữ kèm lý do, tự gỡ khi hết lý do | §5.2 — `ON_HOLD` |
+| Chỉ có một người duyệt | Doanh nghiệp nhỏ dùng biện pháp kiểm soát bù đắp: người ngoài phòng kế toán duyệt khoản trên ngưỡng | Chờ Q5 |
+| Chấp nhận một phần | Trả trước phần không tranh chấp, giữ phần tranh chấp | Chờ Q6 |
+| **Thuế GTGT xăng dầu** | Không kê khai, tính nộp thuế đến hết 30/9/2026 (Nghị quyết 34/2026/NQ-CP kéo dài Nghị quyết 19/2026); 8% từ 01/10/2026 đến hết 2026 — theo bài tổng hợp, **phải đối chiếu văn bản gốc** | F7.11, `tax_groups.yaml` |
+
 **Không học theo:** AI tự học quy tắc mà không ai duyệt. Nhóm giữ nguyên tắc quy tắc học được chỉ có hiệu lực khi KTT duyệt — an toàn hơn với bài toán liên quan tới tiền, và là điểm khác biệt khi trình bày.
 
 ---
@@ -653,6 +669,15 @@ Kiểm chứng ngày 26/09/2026.
 - [Hypatos — Tipalti, Coupa, Stampli](https://hypatos.ai/knowledge-base/tipalti-vs-coupa-vs-stampli)
 - [Precoro — AP internal controls](https://precoro.com/blog/accounts-payable-internal-controls-guide/) · [Ramp — Invoice fraud](https://ramp.com/blog/accounts-payable/invoice-fraud) · [Docsumo — Duplicate invoice detection](https://www.docsumo.com/blog/duplicate-invoice-detection)
 - [MISA — Hóa đơn điện tử đầu vào](https://amis.misa.vn/17697/hoa-don-dien-tu-dau-vao/) · [MISA — Hóa đơn đầu vào báo không hợp lệ](https://helpact.misa.vn/kb/lam-the-nao-khi-lay-hoa-don-dau-vao-ve-amis-ke-toan-thi-phan-mem-bao-hoa-don-khong-hop-le/) · [MISA meInvoice — Xử lý hóa đơn đầu vào](https://www.meinvoice.vn/xu-ly-hoa-don-dau-vao/)
+
+**Các vấn đề trên hóa đơn** (Phần 8.4, kiểm ngày 30/09/2026)
+- [SAP Ariba — Two-way invoice matching](https://help.sap.com/docs/buying-invoicing/invoicing-and-payment-process-guide/two-way-invoice-matching-in-sap-ariba-invoice-management) · [Peeriosity — Receipt verification for services](https://www.peeriosity.com/shared-services/articles/2013/12/receipt-verification-for-services-purchased-using-a-purchase-order/)
+- [Microsoft Learn — Combine receipts on a single invoice](https://learn.microsoft.com/en-us/dynamics365/business-central/purchasing-how-to-combine-receipts)
+- [Thư viện Pháp luật — Khấu trừ thuế GTGT từ 01/7/2025](https://thuvienphapluat.vn/chinh-sach-phap-luat-moi/vn/ho-tro-phap-luat/chinh-sach-moi/83531/tu-01-07-2025-khau-tru-thue-gtgt-cho-hoa-don-bao-nhieu-phai-co-chung-tu-thanh-toan-khong-dung-tien-mat) · [ihoadon — Nghị định 181/2025](https://ihoadon.vn/hddt/thanh-toan-khong-dung-tien-mat-tu-01-7-2025-tai-nghi-dinh-181-2025-nd-cp.html)
+- [MISA meInvoice — Hóa đơn điện tử xăng dầu, thời điểm lập](https://www.meinvoice.vn/tin-tuc/13180/hoa-don-dien-tu-xang-dau/)
+- [Chính phủ — Nghị định 70/2025/NĐ-CP](https://vanban.chinhphu.vn/?pageid=27160&docid=213179) · [Luật Minh Khuê — Hóa đơn điều chỉnh, thay thế](https://luatminhkhue.vn/hoa-don-dieu-chinh-thay-the-2026.aspx)
+- Xăng dầu: [Thư viện Pháp luật — không kê khai đến 30/09/2026](https://thuvienphapluat.vn/ma-so-thue/phap-luat-thue/tiep-tuc-khong-ke-khai-thue-gtgt-xang-dau-den-30092026-theo-nghi-quyet-34-2026-227420.html) · [Thư viện Pháp luật — từ tháng 10/2026](https://thuvienphapluat.vn/phap-luat/ho-tro-phap-luat/thue-gtgt-xang-dau-tu-thang-102026-thoi-han-giam-thue-xuat-hoa-don-xang-dau-nhu-the-nao-291260.html)
+- [Ramp — Segregation of duties in AP](https://ramp.com/blog/accounts-payable/segregation-of-duties-in-accounts-payable)
 
 **Vận hành**
 - [Langfuse — tích hợp OpenTelemetry](https://langfuse.com/integrations/native/opentelemetry) · [Langfuse trên GitHub](https://github.com/langfuse/langfuse)

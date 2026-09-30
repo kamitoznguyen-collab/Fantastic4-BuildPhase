@@ -423,6 +423,22 @@ Chị Hà gửi đề nghị cho garage. Tháng sau phần lớn hóa đơn củ
 | **Q4** | Xuất bút toán xong mà import vào phần mềm kế toán bị lỗi thì sao? Có cho xuất lại hóa đơn đã `POSTED` không? | TH-16 | Hiện ta coi export là bước chốt sổ |
 | **Q5** | Tổ chức chỉ có **một** KTT mà KTT đó đã duyệt cấp 1, thì ai duyệt cấp 2? | TH-10 | Cần luật: cấm KTT duyệt cấp 1 hóa đơn cần cấp 2, hoặc cho phép người thứ ba |
 | **Q6** | Chấp nhận **một phần**: lệch 2 dòng, đồng ý dòng 1, đòi điều chỉnh dòng 2. Hóa đơn đi đâu? | TH-03 | Kết cục "một nửa trả, một nửa chờ" chưa được mô tả |
+| **Q7** | Hóa đơn **dịch vụ** (sửa xe, rửa xe, bảo dưỡng) không có phiếu nhập kho: **ai xác nhận** dịch vụ đã làm xong? Có biên bản nghiệm thu không? Dịch vụ có PO, hay chỉ có hợp đồng khung? | NCC `NCC-BD` Garage Thành Công | Chưa có câu trả lời thì mọi hóa đơn dịch vụ đều bị chặn `DOC-02`. PRD F4.9 đã có chỗ cho xác nhận dịch vụ, chỉ thiếu ai được xác nhận |
+| **Q8** | PO của Xe X ghi **giá chưa thuế hay đã gồm thuế**? NCC nào hay ghi giá đã gồm thuế (cây xăng, bán lẻ)? | TH-03 | Lệch cách ghi giá là báo lệch oan 8–10% trên mọi dòng. PRD F6.6 tự nhận ra được, nhưng cần biết PO ghi thế nào |
+| **Q9** | Xe X có **chi nhánh có MST riêng** không? Hóa đơn có đứng tên chi nhánh không? | — | PRD F3.3 đã chấp nhận MST chi nhánh của người mua; cần biết có thật để tạo dữ liệu thử |
+| **Q10** | NCC nào hay xuất **hóa đơn gộp cuối tháng**, hoặc **kèm bảng kê**? Khoảng bao nhiêu phần trăm hóa đơn? | TH-08 | Quyết định ưu tiên làm PRD F5.7, F5.8 sớm hay muộn |
+
+**Tình trạng các câu hỏi — cập nhật 30/09/2026**
+
+| # | Tình trạng |
+|---|---|
+| Q1 | **Đề xuất:** trạng thái `ON_HOLD` kèm lý do giữ, máy tự gỡ khi hết lý do — PRD §5.2. Nhóm chốt, không cần hỏi Xe X |
+| Q2 | **Đã giải quyết:** tự đối chiếu lại khi có phiếu nhập mới — PRD F4.8 |
+| Q3 | **Đã giải quyết:** đọc dòng "Điều chỉnh cho hóa đơn…", nối về hóa đơn gốc theo Nghị định 70/2025 — PRD F4.10 |
+| Q4 | **Không còn cần:** hệ thống không sinh bút toán (PRD F10), trạng thái cuối là `EXPORTED`, xuất lại được |
+| Q5 | **Cần hỏi Xe X:** người duyệt thứ hai là ai. Cách thị trường làm: người ngoài phòng kế toán (giám đốc) duyệt khoản trên ngưỡng — RESEARCH §8.4 |
+| Q6 | **Cần hỏi Xe X:** trả trước phần đúng hay chờ cả hóa đơn. Nếu trả trước thì phần lệch vào `ON_HOLD` |
+| Q7–Q10 | **Cần hỏi Xe X.** Nên hỏi Q7 và Q8 trước — ảnh hưởng luồng chính |
 
 ---
 
