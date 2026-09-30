@@ -10,7 +10,7 @@
 
 | Người | Vai trò | Sở hữu | Module trong code | Mục nghiên cứu |
 |---|---|---|---|---|
-| **Huy** | BA, PM, frontend | Yêu cầu, câu hỏi nghiệp vụ, kế hoạch, báo cáo tuần, deliverables, trình bày, **giao diện** | `frontend/` — đi tiếp từ `docs/prototype/` | Phụ lục A, Phần 7, mục 3.5 |
+| **Huy** | BA, PM, frontend | Yêu cầu, câu hỏi nghiệp vụ, kế hoạch, báo cáo tuần, deliverables, trình bày, **giao diện** | `frontend/` — React + TypeScript (Vite); `docs/prototype/` là bản mẫu giao diện | Phụ lục A, Phần 7, mục 3.5 |
 | **Dương** | ML — đọc hóa đơn | Biến mọi loại file thành dữ liệu đáng tin, và biết lúc nào nó không đáng tin | `extraction`, phần đọc của `eval/` | Phần 1, 2, 3 |
 | **Hoàn** | ML — đối chiếu và an toàn AI | Khớp dòng, gán mã ngoại lệ, kiểm thuế và MST, chống tấn công | `reconciliation`, `vendor`, `semantic`, phần luật của `rules` | Phần 4, 5, mục 1.5 |
 | **Giáp** | BE chính, **tech lead** | Nền tảng, luồng xử lý, ngân sách, quan sát, deploy, hợp đồng giữa các phần | `core`, `app`, `iam`, `invoice`, `procurement`, `approval`, `audit`, `reporting`, `erp`, khung `gateway` | Phần 6 |
@@ -122,19 +122,20 @@ Mỗi yêu cầu có tuần dự kiến và **điều kiện xong** — không �
 
 **Lưu ý cho P1 và P5.** Theo `docs/guide/chapter-02.md` của chương trình, chỉ repo của đội trong org của khóa được tính là bài nộp. Báo cáo tuần, pitch deck, video và mọi deliverable phải nằm ở P-143.
 
-**Phần frontend** — đi tiếp từ prototype ở `docs/prototype/`, thay dữ liệu mẫu bằng lời gọi API
+**Phần frontend** — React + TypeScript, dựng bằng Vite, ở `frontend/` của P-143. Prototype `docs/prototype/` là **bản mẫu giao diện**: bố cục, luồng, bộ màu lấy từ đó
 
 | # | Việc | Tuần | Điều kiện xong |
 |---|---|---|---|
+| F0 | Dựng khung React: đăng nhập, dashboard, danh sách hóa đơn | 2 | **Đã có** trên nhánh `feat/frontend-react` (30/09/2026); còn chờ gộp vào nhánh chính sau `integ/mvp-rules` |
 | F1 | Đăng nhập thật bằng JWT, tự làm mới token khi hết hạn | 3 | Hai vai trò đăng nhập được; token hết hạn thì tự làm mới, không đẩy người dùng ra ngoài |
 | F2 | Thay dữ liệu mẫu bằng lời gọi API theo `PRD.md` §8: danh sách, so sánh ba chiều, xử lý ngoại lệ, duyệt, trả lại, từ chối, hàng đợi duyệt, nhà cung cấp | 3 | Đi hết kịch bản demo trên dữ liệu lấy từ API; bản chạy thật không còn dữ liệu mẫu |
 | F3 | Tải lên nhiều file và theo dõi tiến độ lô | 3 | Thấy từng file đổi trạng thái; file trùng và file vượt giới hạn hiện đúng thông báo |
 | F4 | Thông báo theo mã lỗi `401`, `403`, `404`, `409`, `413`, `429`; trạng thái đang tải và trạng thái rỗng | 4 | Mỗi mã lỗi có câu thông báo nói rõ chuyện gì xảy ra và làm gì tiếp |
 | F5 | Hóa đơn dài: mặc định chỉ hiện dòng lệch; chỉ tô vùng bằng chứng khi `bbox_verified` | 4 | Hóa đơn 200 dòng vẫn mở nhanh; vùng chưa xác minh không được tô — `RESEARCH.md` mục 3.5 |
 | F6 | Deploy giao diện, cấu hình CORS với API | 4 | Có live URL cho giao diện |
-| F7 | Chuyển giao diện sang React, dùng lại module gọi API và bộ màu | Sau | Chạy đủ kịch bản demo như bản HTML |
+| F7 | Chuyển nốt các màn hình còn lại từ prototype sang React: so sánh ba chiều, ngoại lệ, tóm tắt duyệt, hàng đợi duyệt, nhà cung cấp, cấu hình | 3–4 | Chạy đủ kịch bản demo 5 phút như bản prototype |
 
-Vì sau này chuyển sang React, viết phần nối API sao cho mang sang được nguyên vẹn: tách **lời gọi API** và **xử lý dữ liệu** thành ES module riêng — `<script type="module">`, vẫn không cần build — và **không đụng tới giao diện** trong các module đó. Khi chuyển React chỉ phải viết lại phần hiển thị; phần gọi API, làm mới token, định dạng số tiền dùng lại được. Bộ màu trong khối `:root` cũng mang sang được.
+Tách **lời gọi API**, **làm mới token** và **định dạng tiền** thành module riêng, không trộn vào component — để đổi API không phải sửa giao diện. Kiểu dữ liệu TypeScript lấy từ `openapi.json` của backend, không tự đặt tên trường riêng. Bộ màu lấy từ khối `:root` của prototype. Tiền nhận dạng chuỗi từ API, chỉ định dạng để hiển thị, không tính toán ở giao diện.
 
 **Chỉ số Huy chịu trách nhiệm:** 10/10 deliverables · báo cáo tuần đúng hạn · thời gian đối chiếu của kế toán giảm ít nhất 50% · giao diện chạy hết kịch bản demo trên API thật.
 
@@ -221,7 +222,7 @@ Mốc chung khớp với `BRIEF_v3.md` §12: deploy lần đầu ở tuần 2, x
 | # | Quyết định | Kết quả |
 |---|---|---|
 | 1 | Tech lead | **Đã chốt: Giáp** |
-| 2 | Frontend | **Đã chốt: Huy.** Trước mắt đi tiếp từ prototype bằng HTML + JavaScript thuần; **sau chuyển sang React**, thời điểm chưa chốt |
+| 2 | Frontend | **Đã chốt: Huy, dùng React + TypeScript (Vite)** — đổi ngày 30/09/2026, bỏ bước HTML trung gian. Prototype HTML giữ làm bản mẫu giao diện và bản demo không cần cài đặt |
 | 3 | Nơi để code | **Linh hoạt.** Bản nộp và mọi deliverable nằm ở P-143 |
 | 4 | Dương và Hoàn nhận phần nào | Đề xuất như mục 3 — đổi cho nhau nếu thế mạnh ngược lại |
 | 5 | Bút toán | **Đã chốt: không làm.** Hệ thống dừng ở việc duyệt và xuất danh sách hóa đơn đã duyệt; kế toán tự hạch toán trong phần mềm kế toán (PRD F10). Theo góp ý của mentor. Module `ledger` trong code không còn cần — Giáp quyết gỡ hay đổi thành phần xuất file |

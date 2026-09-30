@@ -4,7 +4,7 @@ Bản mô phỏng bấm được của luồng nghiệp vụ đầy đủ: đọ
 
 Dùng để chốt luồng và giao diện với nhóm và với kế toán **trước khi** viết backend. Đây là bản mô phỏng, không phải ứng dụng thật — xem mục [Cái gì thật, cái gì mô phỏng](#cái-gì-thật-cái-gì-mô-phỏng).
 
-**Đây cũng là điểm xuất phát của giao diện thật.** Trước mắt nhóm đi tiếp từ file này bằng HTML + JavaScript thuần, sau mới chuyển sang React. Các bước nối API là F1–F6 trong [`../TEAM_PLAN.md`](../TEAM_PLAN.md).
+**Đây là bản mẫu của giao diện thật.** Giao diện thật viết bằng React + TypeScript ở `frontend/` của repo P-143 (quyết định 30/09/2026). Bố cục, luồng và bộ màu lấy từ file này; các bước làm là F0–F7 trong [`../TEAM_PLAN.md`](../TEAM_PLAN.md). File này vẫn giữ làm bản demo mở được không cần cài đặt.
 
 Tài liệu liên quan: [`../BRIEF_v3.md`](../BRIEF_v3.md) · [`../PRD.md`](../PRD.md) · [`../WIREFRAME.md`](../WIREFRAME.md)
 

@@ -216,7 +216,7 @@ graph LR
 | Vector DB | **pgvector** trong cùng PostgreSQL | Không phải chạy thêm service; Render Postgres hỗ trợ |
 | Backend | FastAPI + SQLAlchemy + Alembic | Có sẵn khung |
 | Auth | JWT + phân quyền theo vai trò | 2 vai trò KTV, KTT |
-| Frontend | Trước mắt: HTML + JavaScript thuần, không cần build · Sau: React | Đi tiếp từ `docs/prototype/`, đã có sẵn giao diện co giãn theo màn hình và chế độ tối. Chuyển sang React sau, thời điểm chưa chốt |
+| Frontend | **React + TypeScript (Vite)** — chốt 30/09/2026 | Đi tiếp từ `docs/prototype/`, đã có sẵn giao diện co giãn theo màn hình và chế độ tối. Chuyển sang React sau, thời điểm chưa chốt |
 | Deploy | Render: Web Service (API), Static Site (giao diện), PostgreSQL | Theo đề bài |
 | Tracing / chi phí | Langfuse qua OpenTelemetry | Deliverable #4, đo chi phí mỗi hóa đơn |
 
@@ -254,7 +254,7 @@ eval/
 ├── generator/                # sinh XML, render PDF, ảnh scan có nhiễu
 ├── datasets/                 # bộ test có đáp án chuẩn
 └── results/report.md
-frontend/                     # giao diện: trước mắt HTML + JS từ docs/prototype/, sau chuyển React
+frontend/                     # giao diện React + TypeScript (Vite); docs/prototype/ là bản mẫu
 ```
 
 ### 8.2 Bảng dữ liệu chính
