@@ -144,10 +144,11 @@ Bậc thang, dừng ngay khi tìm đủ chứng từ tin cậy:
 - F4.1 **Bậc 1 — theo số PO.** Nếu `po_reference` có giá trị, tìm PO trùng số trong cùng tenant. Trúng một PO → confidence `1.0`.
 - F4.2 **Bậc 2 — theo NCC và thời gian.** Tìm PO của NCC có `vendor_tax_code` trùng, trạng thái `OPEN` hoặc `PARTIALLY_RECEIVED`, ngày PO trong khoảng `[invoice_date - lookback_days, invoice_date]` (mặc định 120 ngày). Chấm điểm ứng viên theo mức trùng tổng tiền và mức trùng danh mục hàng.
 - F4.3 **Bậc 3 — tìm ngữ nghĩa** **[S]**. Embedding của `vendor_name + Σ description` so với embedding của các PO bằng pgvector, lấy top 5 theo cosine.
-- F4.4 **GRN** luôn tìm theo PO đã xác định, lọc trạng thái `RECEIVED`, và chỉ lấy GRN có ngày ≤ `invoice_date + grn_late_days` (mặc định 30).
+- F4.4 **GRN** luôn tìm theo PO đã xác định, lọc trạng thái `CONFIRMED` (§7.2.3), và chỉ lấy GRN có ngày ≤ `invoice_date + grn_late_days` (mặc định 30).
 - F4.5 Hóa đơn có thể tham chiếu **nhiều PO** (`MULTI_PO`). Mô hình dữ liệu phải hỗ trợ quan hệ nhiều–nhiều giữa `invoices` và `purchase_orders`.
 - F4.6 Không tìm thấy PO → `DOC-01`. Tìm thấy PO nhưng không có GRN → `DOC-02`. Nhiều ứng viên PO điểm gần nhau (chênh < 10%) → `DOC-06`, hỏi người dùng chọn.
 - F4.7 **PO mềm:** hệ thống **không** yêu cầu `po_reference` khớp tuyệt đối mới cho đi tiếp. Thiếu số PO là một ngoại lệ có thể xử lý, không phải lỗi chặn.
+- F4.8 **Tự đối chiếu lại khi có phiếu nhập mới** (RESEARCH §8.3). Mỗi lần nhập hoặc đồng bộ phiếu nhập, hệ thống tìm hóa đơn chưa duyệt có `DOC-02` hoặc có ngoại lệ chọn `WAIT_GRN` trên cùng PO, rồi chạy lại từ bước khớp dòng. Ngoại lệ không còn đúng thì **máy đóng**, ghi audit "đóng tự động do phiếu nhập …". Hóa đơn **không tự chuyển trạng thái duyệt** — người vẫn phải bấm. Người đang xem hóa đơn đó được báo có kết quả mới.
 
 ### F5 — Khớp dòng hàng **[M]**
 
@@ -177,6 +178,7 @@ Bậc thang từ rẻ đến đắt. Mỗi dòng hóa đơn chỉ đi xuống b�
 - F6.2 **Số lượng lũy kế:** `qty_invoiced_to_date ≤ qty_received_to_date × (1 + qty_tolerance_pct)` (mặc định 0%). Vượt → `QTY-01`.
 - F6.3 **Ngày:** `invoice_date` phải ≥ ngày GRN sớm nhất tương ứng, trừ dung sai `date_tolerance_days` (mặc định 3, để xử lý trường hợp hóa đơn xuất trước khi nhập kho ghi sổ).
 - F6.4 Giá hóa đơn **thấp hơn** PO không được tự động cho qua im lặng: sinh `PRC-02` mức INFO, vì thường là chiết khấu chưa khai báo hoặc nhầm dòng.
+- F6.5 **Dung sai nhiều tầng** (RESEARCH §8.3). Mỗi tham số trong `tolerances.yaml` lấy theo thứ tự ưu tiên, gặp tầng nào có thì dừng: `by_vendor_item` (MST gốc + mã hàng) → `by_vendor` (MST gốc) → `by_item` (mã hàng) → `by_category` → `defaults`. Mỗi ngoại lệ ghi rõ **dung sai lấy từ tầng nào**, để kế toán biết vì sao lệch này cho qua.
 
 ### F7 — Kiểm thuế GTGT (N3) **[M]**
 
@@ -193,10 +195,10 @@ Bậc thang từ rẻ đến đắt. Mỗi dòng hóa đơn chỉ đi xuống b�
 ### F8 — Trùng lặp và dấu hiệu bất thường (N5) **[S]**
 
 - F8.1 **Trùng tuyệt đối:** cùng `org_id` + `vendor_tax_code` + `invoice_series` + `invoice_number` → `FRD-01`, chặn cứng, không cho duyệt.
-- F8.2 **Gần trùng:** cùng NCC, `|total_amount|` chênh ≤ 1.000 đồng, ngày cách nhau ≤ 7 ngày, khác số hóa đơn → `FRD-02`.
+- F8.2 **Gần trùng:** cùng NCC, và thỏa **một trong hai**: (a) `|total_amount|` chênh ≤ 1.000 đồng, ngày cách nhau ≤ 7 ngày, khác số hóa đơn; (b) cùng ký hiệu và **số hóa đơn đã chuẩn hóa trùng nhau** dù bản thô khác — chuẩn hóa là bỏ số 0 ở đầu, bỏ khoảng trắng và ký tự không phải chữ số, ví dụ `00012457` và `12457`. Không so khi khác ký hiệu, vì số hóa đơn đánh lại theo từng ký hiệu (§7.2.2). → `FRD-02`.
 - F8.3 **Tách nhỏ để né ngưỡng:** ≥ 2 hóa đơn cùng NCC trong 7 ngày, mỗi hóa đơn dưới ngưỡng duyệt cấp 2 nhưng tổng vượt ngưỡng → `FRD-03`.
 - F8.4 **NCC mới:** NCC có dưới 3 hóa đơn đã `APPROVED` trong lịch sử → `FRD-04` mức REVIEW, buộc duyệt cấp 2.
-- F8.5 **Đổi tài khoản nhận tiền:** `payment_bank_account` trên hóa đơn khác tài khoản đã lưu ở `vendors` → `FRD-05`, mức BLOCK. Đây là dấu hiệu lừa đảo chuyển hướng thanh toán phổ biến nhất.
+- F8.5 **Đổi tài khoản nhận tiền:** `payment_bank_account` trên hóa đơn khác tài khoản đã lưu ở `vendors` → `FRD-05`, mức BLOCK. Đây là dấu hiệu lừa đảo chuyển hướng thanh toán phổ biến nhất. Muốn cập nhật tài khoản mới phải có **bản ghi xác minh**: người gọi, số điện thoại **lấy từ danh mục NCC** (không dùng số trên hóa đơn hay trong email yêu cầu đổi), thời điểm, kết quả. KTT duyệt bản ghi này; không có thì không đổi được. Không nhận thay đổi tài khoản chỉ qua email (RESEARCH §8.3).
 - F8.6 **MST ngừng hoạt động:** gọi `tax_lookup` (mock sau interface `TaxAuthorityClient`) → trả `INACTIVE` thì `FRD-06`.
 - F8.7 **Giá vượt lịch sử:** đơn giá cao hơn giá trung vị 6 tháng gần nhất của cùng mặt hàng cùng NCC quá `price_history_threshold_pct` (mặc định 20%) → `FRD-07`.
 - F8.8 Mọi cờ `FRD-*` đều buộc duyệt cấp 2, bất kể số tiền.
@@ -583,7 +585,9 @@ Quy tắc suy ra:
 
 **`users`** — `id`, `org_id`, `email` (unique theo org), `password_hash`, `full_name`, `role` (`ACCOUNTANT` / `CHIEF_ACCOUNTANT`), `is_active`
 
-**`vendors`** — `id`, `org_id`, `code`, `name`, `name_normalized`, `tax_code`, `tax_code_root`, `tax_code_kind` (`ORG` / `BRANCH` / `PERSONAL`), `bank_account`, `bank_name`, `address`, `readiness_score`, `readiness_computed_at`, `invoice_count_approved`
+**`vendors`** — `id`, `org_id`, `code`, `name`, `name_normalized`, `tax_code`, `tax_code_root`, `tax_code_kind` (`ORG` / `BRANCH` / `PERSONAL`), `bank_account`, `bank_name`, `address`, `readiness_score`, `readiness_computed_at`, `invoice_count_approved`, `contact_phone_verified` (số điện thoại đã xác minh, dùng cho F8.5)
+
+**`vendor_bank_verifications`** — `id`, `org_id`, `vendor_id`, `old_account`, `new_account`, `called_by`, `phone_called` (phải bằng `vendors.contact_phone_verified`), `called_at`, `result` (`CONFIRMED` / `DENIED`), `approved_by` (KTT) — F8.5, chỉ thêm
 
 **`vendor_rules`** — `id`, `org_id`, `vendor_id`, `rule_type` (`ITEM_ALIAS` / `UOM_CONVERSION` / `TOLERANCE_OVERRIDE`), `payload` (JSONB), `status` (`PROPOSED` / `ACTIVE` / `RETIRED`), `evidence_count`, `approved_by`, `approved_at`
 
@@ -742,10 +746,19 @@ defaults:
   fuzzy_candidate_floor: 75
   llm_match_accept: 0.80
   price_history_threshold_pct: 20.0
+# Thứ tự ưu tiên (F6.5): by_vendor_item → by_vendor → by_item → by_category → defaults
+by_vendor_item:
+  # "MST gốc/mã hàng": ghi đè cho đúng một mặt hàng của đúng một NCC
+  "0101234567/DO-0.05S":
+    price_tolerance_pct: 6.0      # dầu diesel của NCC này, giá điều chỉnh theo kỳ
 by_vendor:
-  # MST: ghi đè
+  # MST gốc (10 số): ghi đè cho mọi mặt hàng của NCC
   "0101234567":
     price_tolerance_pct: 5.0      # NCC xăng dầu, giá biến động theo ngày
+by_item:
+  # mã hàng: ghi đè cho mặt hàng này dù mua của NCC nào
+  "LOP-205-55R16":
+    price_tolerance_pct: 0.0      # lốp mua theo giá hợp đồng cố định
 by_category:
   FUEL:
     price_tolerance_pct: 8.0
@@ -986,6 +999,9 @@ Sinh tổng hợp, có đáp án chuẩn vì mọi ảnh đều dựng từ XML 
 | **Tỉ lệ báo động giả trên QTY-02** | QTY-02 bị xếp BLOCK / tổng QTY-02 | ≤ 5% — chỉ số riêng cho ca hay sai nhất |
 | Recall gian lận | phát hiện / đã cài | ≥ 95% |
 | Độ chính xác phân loại 🟢 | 🟢 đúng / tổng 🟢 | ≥ 70% và **không có 🟢 nào thực sự có lệch** |
+| **Tỉ lệ một cú bấm** | hóa đơn duyệt mà không phải xử lý ngoại lệ nào / tổng hóa đơn duyệt | Đo trên dùng thử. Để so: trung bình ngành 32,6%, nhóm tốt nhất 49,2% (RESEARCH §8.2) |
+| **Tỉ lệ hóa đơn có ngoại lệ** | hóa đơn có ít nhất một ngoại lệ BLOCK hoặc REVIEW / tổng | Để so: trung bình ngành 14%, nhóm tốt nhất 9% |
+| **Thời gian nhận đến duyệt** | từ lúc tải lên đến lúc duyệt cuối, trung vị | Đo trên dùng thử. Nhóm tốt nhất của ngành 3,1 ngày |
 | Chi phí mỗi hóa đơn | `Σ cost_usd / số hóa đơn`, tách theo loại nguồn | Đo tuần 2, đặt mục tiêu sau |
 | Thời gian xử lý | p50 và p95 theo loại nguồn | XML < 3s, scan < 15s |
 

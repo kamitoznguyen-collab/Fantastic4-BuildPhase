@@ -29,6 +29,7 @@ Ký hiệu ưu tiên: **[MVP]** làm trong 5 tuần · **[Sau]** để sau MVP.
 | 13 | Chi phí | Khoảng 0,15 cent một hóa đơn scan một trang; ngân sách theo từng tenant | MVP | C |
 | 14 | Giới hạn mỗi tác vụ | Trần token, số lần gọi, thời gian; vượt thì dừng và chuyển người | MVP | C |
 | 15 | Con người trong vòng lặp | Chỉ đưa trường đáng ngờ cho người; lấy lần sửa làm dữ liệu | MVP | D, A |
+| 16 | Thị trường đang làm gì | Tự đối chiếu lại khi phiếu nhập về; dung sai nhiều tầng; xác minh khi NCC đổi tài khoản; định vị bổ trợ cho MISA | MVP / Sau | D |
 
 Người: **A** Dương — đọc hóa đơn và dữ liệu · **B** Hoàn — đối chiếu và luật · **C** Giáp — nền tảng · **D** Huy — nghiệp vụ, điều phối, giao diện. Yêu cầu chi tiết cho từng người ở `TEAM_PLAN.md`.
 
@@ -557,6 +558,50 @@ Có người duyệt đã là nguyên tắc cứng số một của nhóm. Nghi�
 
 ---
 
+## Phần 8 — Thị trường đang đối soát hóa đơn mua vào thế nào
+
+*Bổ sung ngày 30/09/2026.*
+
+### 8.1 Bốn nhóm cách làm
+
+| Nhóm | Cách làm | Rút ra cho nhóm |
+|---|---|---|
+| **ERP lớn — SAP, Oracle** | Chặn hóa đơn khi lệch vượt dung sai, mỗi loại lệch một mã chặn. SAP có mã chặn riêng khi dòng PO chưa có phiếu nhập, và một tác vụ chạy định kỳ **tự gỡ chặn** khi lý do không còn — ví dụ phiếu nhập đã về. Oracle cũng tự gỡ khi ngoại lệ đã được sửa | Hóa đơn chờ phiếu nhập không nên nằm im chờ người nhớ ra |
+| **Phần mềm AP nước ngoài — Sage Intacct, Stampli, Tipalti, Coupa** | Dung sai đặt theo công ty, NCC, mặt hàng, và từng cặp NCC–mặt hàng. Đưa ngoại lệ đến đúng người duyệt. AI học từ những lần người sửa | Dung sai nhiều tầng. Học từ chỗ sửa |
+| **Thực hành chống gian lận** | NCC đổi tài khoản thì gọi lại **số điện thoại đã lưu từ trước**, không dùng số trong yêu cầu đổi; không nhận thay đổi thanh toán chỉ qua email. Phát hiện trùng bằng so gần đúng, vì hóa đơn gửi lại thường chỉ khác chút ít ở số hoặc định dạng | FRD-05 cần quy trình xác minh; FRD-02 cần so số hóa đơn đã chuẩn hóa |
+| **Việt Nam — MISA meInvoice, AMIS Kế toán** | Tự nhận hóa đơn đầu vào, kiểm **tính hợp lệ**: so thông tin người bán với trang tra cứu của cơ quan thuế, khác cả khoảng trắng cũng cảnh báo. Có AI Agent làm chuỗi tiếp nhận → kiểm tra → tổng hợp → báo cáo. Trợ lý AVA tự hạch toán | MISA kiểm **hóa đơn có hợp lệ về thuế không**, **không đối chiếu với PO và phiếu nhập** — chỗ trống của nhóm |
+
+Cách **trả tiền theo phiếu nhập, không cần hóa đơn** (Evaluated Receipt Settlement của SAP) **không áp dụng được ở Việt Nam**, vì cần hóa đơn để khấu trừ thuế GTGT.
+
+### 8.2 Số liệu thị trường để so
+
+Theo khảo sát của Ardent Partners và APQC:
+
+| Chỉ số | Trung bình | Nhóm tốt nhất | Chưa tự động hóa |
+|---|---:|---:|---:|
+| Tỉ lệ hóa đơn không phải xử lý tay | 32,6% | 49,2% | — |
+| Tỉ lệ hóa đơn có ngoại lệ | 14% | 9% | 22% |
+| Chi phí xử lý mỗi hóa đơn | $9,40 | $2,78 | — |
+| Thời gian từ nhận đến duyệt | — | 3,1 ngày | — |
+
+Với nhóm, "không phải xử lý tay" nghĩa là **chỉ cần một cú bấm duyệt, không có ngoại lệ nào phải xử lý** — vì hóa đơn nào cũng có người duyệt.
+
+### 8.3 Áp dụng
+
+| # | Đề xuất | Học từ | Vào PRD | Ưu tiên |
+|---|---|---|---|---|
+| 1 | **Tự đối chiếu lại khi có phiếu nhập mới** cho hóa đơn đang chờ phiếu nhập. Máy đóng ngoại lệ, người vẫn bấm duyệt | SAP, Oracle | F4.8 | MVP |
+| 2 | **Dung sai nhiều tầng**, ưu tiên từ cụ thể nhất: NCC + mặt hàng → NCC → mặt hàng → nhóm hàng → mặc định | Sage Intacct | F6.5, `tolerances.yaml` | MVP |
+| 3 | **Xác minh khi NCC đổi tài khoản**: ghi ai gọi, số điện thoại lấy từ danh mục NCC, lúc nào. Có bản ghi mới được đổi tài khoản | Thực hành chống gian lận | F8.5, `vendors` | MVP |
+| 4 | **So trùng bằng số hóa đơn đã chuẩn hóa** — bỏ số 0 đầu và ký tự thừa | Thực hành chống gian lận | F8.2 | MVP |
+| 5 | **Đo đúng chỉ số thị trường dùng**: tỉ lệ một cú bấm, tỉ lệ ngoại lệ, thời gian nhận đến duyệt — để so được với mục 8.2 | Ardent, APQC | §12.2 | MVP |
+| 6 | **Kiểm trạng thái hóa đơn và người bán trên hệ thống cơ quan thuế**: đã bị thay thế hay điều chỉnh chưa, người bán còn hoạt động không | MISA | F8.6, §7.2.5 | Sau |
+| 7 | **Định vị bổ trợ cho MISA**: MISA kiểm hợp lệ và hạch toán, nhóm kiểm "có nên trả số tiền này không". Chặng tiếp theo đẩy hóa đơn đã duyệt sang MISA | MISA | BRIEF | Sau |
+
+**Không học theo:** AI tự học quy tắc mà không ai duyệt. Nhóm giữ nguyên tắc quy tắc học được chỉ có hiệu lực khi KTT duyệt — an toàn hơn với bài toán liên quan tới tiền, và là điểm khác biệt khi trình bày.
+
+---
+
 ## Phụ lục A — Mười ba việc cần thêm hoặc sửa trong PRD
 
 | # | Việc | Mục | Ưu tiên |
@@ -599,6 +644,15 @@ Kiểm chứng ngày 26/09/2026.
 - [PhantomLint — phát hiện prompt ẩn trong tài liệu có cấu trúc, arXiv 2508.17884](https://arxiv.org/pdf/2508.17884)
 - [Phòng thủ bằng OCR vòng lại](https://dev.to/morfasco/how-i-built-an-ocr-based-defense-against-prompt-injection-for-local-llm-search-1mnl)
 - [Llama Prompt Guard 2](https://huggingface.co/meta-llama/Llama-Prompt-Guard-2-86M) · [Báo cáo tỉ lệ bỏ sót](https://github.com/Shadow-LLM/failure-cases/issues/205) · [LlamaFirewall, arXiv 2505.03574](https://arxiv.org/pdf/2505.03574)
+
+**Thị trường** (Phần 8, kiểm ngày 30/09/2026)
+- [Sage Intacct — Intelligent 3-way matching, 2026 R2](https://www.intacct.com/ia/docs/en_US/releasenotes/2026/2026_Release_2/Purchasing/2026-R2-intelligent-3-way-matching-automation.htm) · [Emburse — 3-way matching](https://www.emburse.com/resources/how-to-implement-3-way-matching-in-accounts-payable)
+- [SAP Community — Invoice Tolerance Keys](https://community.sap.com/t5/enterprise-resource-planning-blog-posts-by-members/invoice-tolerance-keys-an-insight-part-1/ba-p/13085884) · [Convergentis — 3-Way Match Processing](https://blog.convergentis.com/3-way-match-processing) · [SAP Help — Evaluated Receipt Settlement](https://help.sap.com/docs/buying-invoicing/invoicing-and-payment-process-guide/2e2fdf0472b94be08c08c0bb226df320.html)
+- [Oracle Payables — Releasing Holds](https://docs.oracle.com/cd/A60725_05/html/comnls/us/ap/holdap02.htm)
+- [Corpay — AP productivity benchmarks](https://www.corpay.com/resources/blog/ap-team-productivity-benchmarks) · [Medius — Ardent Partners AP Metrics that Matter](https://www.medius.com/resources/guides-reports/ardent-partners-accounts-payable-metrics-that-matter/)
+- [Hypatos — Tipalti, Coupa, Stampli](https://hypatos.ai/knowledge-base/tipalti-vs-coupa-vs-stampli)
+- [Precoro — AP internal controls](https://precoro.com/blog/accounts-payable-internal-controls-guide/) · [Ramp — Invoice fraud](https://ramp.com/blog/accounts-payable/invoice-fraud) · [Docsumo — Duplicate invoice detection](https://www.docsumo.com/blog/duplicate-invoice-detection)
+- [MISA — Hóa đơn điện tử đầu vào](https://amis.misa.vn/17697/hoa-don-dien-tu-dau-vao/) · [MISA — Hóa đơn đầu vào báo không hợp lệ](https://helpact.misa.vn/kb/lam-the-nao-khi-lay-hoa-don-dau-vao-ve-amis-ke-toan-thi-phan-mem-bao-hoa-don-khong-hop-le/) · [MISA meInvoice — Xử lý hóa đơn đầu vào](https://www.meinvoice.vn/xu-ly-hoa-don-dau-vao/)
 
 **Vận hành**
 - [Langfuse — tích hợp OpenTelemetry](https://langfuse.com/integrations/native/opentelemetry) · [Langfuse trên GitHub](https://github.com/langfuse/langfuse)
