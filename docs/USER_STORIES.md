@@ -12,14 +12,14 @@ PRD trả lời *hệ thống phải làm gì*. Tài liệu này trả lời *v�
 
 ### 1.1 Ba tờ giấy, hai bên
 
-Một tổ chức (ở đây là Xe X) mua hàng của nhà cung cấp (NCC). Mỗi lần mua đẻ ra ba chứng từ:
+Một tổ chức (ở đây là Doanh nghiệp X) mua hàng của nhà cung cấp (NCC). Mỗi lần mua đẻ ra ba chứng từ:
 
 ```mermaid
 sequenceDiagram
-    participant MH as Phòng mua hàng (Xe X)
-    participant K as Kho (Xe X)
+    participant MH as Phòng mua hàng (Doanh nghiệp X)
+    participant K as Kho (Doanh nghiệp X)
     participant NCC as Nhà cung cấp
-    participant KT as Kế toán (Xe X)
+    participant KT as Kế toán (Doanh nghiệp X)
 
     MH->>NCC: PO — "đặt 8 lốp, 1.380.000đ/cái"
     NCC->>K: Giao hàng
@@ -30,8 +30,8 @@ sequenceDiagram
 
 | Chứng từ | Ai lập | Nói gì | Vai trò khi đối soát |
 |---|---|---|---|
-| **PO** (đơn đặt hàng) | Xe X | Mình đã **đặt** gì, giá bao nhiêu | Mốc so — nội bộ |
-| **GRN** (phiếu nhập kho) | Xe X | Mình đã **nhận** gì, bao nhiêu | Mốc so — nội bộ |
+| **PO** (đơn đặt hàng) | Doanh nghiệp X | Mình đã **đặt** gì, giá bao nhiêu | Mốc so — nội bộ |
+| **GRN** (phiếu nhập kho) | Doanh nghiệp X | Mình đã **nhận** gì, bao nhiêu | Mốc so — nội bộ |
 | **Hóa đơn** | NCC | NCC **đòi** mình bao nhiêu tiền | **Thứ bị kiểm** — từ bên ngoài |
 
 Ba tờ giấy này không ngang hàng nhau. **Đối soát = kiểm lời đòi tiền của NCC bằng giấy tờ của chính mình.** Quy tắc vàng: chỉ trả cho hàng *đã đặt*, *đã nhận*, *đúng giá đã thỏa thuận*.
@@ -289,7 +289,7 @@ Hai điểm chênh nhau dưới 10% → `DOC-06` (**🟡**, PO nhập nhằng) �
 
 **Biến thể — tách biệt trách nhiệm.** Hôm Tuấn nghỉ, chị Hà tự duyệt cấp 1 hóa đơn này. Sau đó chị bấm duyệt cấp 2 → backend trả **`409`**: *"Người duyệt cấp 2 phải khác người duyệt cấp 1"*. Ẩn nút ở frontend thôi là không đủ; backend phải chặn.
 
-> Xem Q5: nếu Xe X chỉ có **một** KTT mà chị Hà đã duyệt cấp 1, thì ai duyệt cấp 2?
+> Xem Q5: nếu Doanh nghiệp X chỉ có **một** KTT mà chị Hà đã duyệt cấp 1, thì ai duyệt cấp 2?
 
 *PRD: F11.1–F11.3, mục 2.2, mục 5.3*
 
@@ -413,32 +413,32 @@ Chị Hà gửi đề nghị cho garage. Tháng sau phần lớn hóa đơn củ
 
 ## 4. Những chỗ chưa rõ
 
-Đi hết các tình huống thì thấy PRD chưa trả lời mấy câu dưới đây. Cần chốt trong nhóm, và hỏi Xe X nếu được.
+Đi hết các tình huống thì thấy PRD chưa trả lời mấy câu dưới đây. Cần chốt trong nhóm, và hỏi Doanh nghiệp X nếu được.
 
 | # | Câu hỏi | Lộ ra ở | Vì sao quan trọng |
 |---|---|---|---|
 | **Q1** | Hóa đơn ở nhóm ⏸ **"Chưa trả"** (chờ GRN, chờ hóa đơn điều chỉnh, chờ xác minh NCC) nằm ở trạng thái nào? Hiện nó chỉ có thể đứng mãi ở `PENDING_L1` với ngoại lệ BLOCK chưa xử lý | TH-03a, TH-08, TH-09 | Kế toán cần một danh sách "đang chờ gì, chờ ai, từ bao giờ". Trong thực tế đây là nhóm tốn thời gian nhất |
-| **Q2** | Import PO/GRN mới có **tự đối soát lại** các hóa đơn đang mắc `DOC-01` / `DOC-02` không? | TH-08 | Nếu phải bấm tay thì sẽ sót. Hỏi Xe X: PO/GRN đến tay kế toán bằng cách nào, bao lâu một lần? |
+| **Q2** | Import PO/GRN mới có **tự đối soát lại** các hóa đơn đang mắc `DOC-01` / `DOC-02` không? | TH-08 | Nếu phải bấm tay thì sẽ sót. Hỏi Doanh nghiệp X: PO/GRN đến tay kế toán bằng cách nào, bao lâu một lần? |
 | **Q3** | Hóa đơn **điều chỉnh** (giảm / tăng / thay thế) được ghép với hóa đơn gốc thế nào? | TH-03a, TH-09, TH-15 | `REQUEST_CREDIT_NOTE` là đề xuất phổ biến nhất, mà kết quả của nó chưa có chỗ đứng trong mô hình dữ liệu |
 | **Q4** | Xuất bút toán xong mà import vào phần mềm kế toán bị lỗi thì sao? Có cho xuất lại hóa đơn đã `POSTED` không? | TH-16 | Hiện ta coi export là bước chốt sổ |
 | **Q5** | Tổ chức chỉ có **một** KTT mà KTT đó đã duyệt cấp 1, thì ai duyệt cấp 2? | TH-10 | Cần luật: cấm KTT duyệt cấp 1 hóa đơn cần cấp 2, hoặc cho phép người thứ ba |
 | **Q6** | Chấp nhận **một phần**: lệch 2 dòng, đồng ý dòng 1, đòi điều chỉnh dòng 2. Hóa đơn đi đâu? | TH-03 | Kết cục "một nửa trả, một nửa chờ" chưa được mô tả |
 | **Q7** | Hóa đơn **dịch vụ** (sửa xe, rửa xe, bảo dưỡng) không có phiếu nhập kho: **ai xác nhận** dịch vụ đã làm xong? Có biên bản nghiệm thu không? Dịch vụ có PO, hay chỉ có hợp đồng khung? | NCC `NCC-BD` Garage Thành Công | Chưa có câu trả lời thì mọi hóa đơn dịch vụ đều bị chặn `DOC-02`. PRD F4.9 đã có chỗ cho xác nhận dịch vụ, chỉ thiếu ai được xác nhận |
-| **Q8** | PO của Xe X ghi **giá chưa thuế hay đã gồm thuế**? NCC nào hay ghi giá đã gồm thuế (cây xăng, bán lẻ)? | TH-03 | Lệch cách ghi giá là báo lệch oan 8–10% trên mọi dòng. PRD F6.6 tự nhận ra được, nhưng cần biết PO ghi thế nào |
-| **Q9** | Xe X có **chi nhánh có MST riêng** không? Hóa đơn có đứng tên chi nhánh không? | — | PRD F3.3 đã chấp nhận MST chi nhánh của người mua; cần biết có thật để tạo dữ liệu thử |
+| **Q8** | PO của Doanh nghiệp X ghi **giá chưa thuế hay đã gồm thuế**? NCC nào hay ghi giá đã gồm thuế (cây xăng, bán lẻ)? | TH-03 | Lệch cách ghi giá là báo lệch oan 8–10% trên mọi dòng. PRD F6.6 tự nhận ra được, nhưng cần biết PO ghi thế nào |
+| **Q9** | Doanh nghiệp X có **chi nhánh có MST riêng** không? Hóa đơn có đứng tên chi nhánh không? | — | PRD F3.3 đã chấp nhận MST chi nhánh của người mua; cần biết có thật để tạo dữ liệu thử |
 | **Q10** | NCC nào hay xuất **hóa đơn gộp cuối tháng**, hoặc **kèm bảng kê**? Khoảng bao nhiêu phần trăm hóa đơn? | TH-08 | Quyết định ưu tiên làm PRD F5.7, F5.8 sớm hay muộn |
 
 **Tình trạng các câu hỏi — cập nhật 30/09/2026**
 
 | # | Tình trạng |
 |---|---|
-| Q1 | **Đề xuất:** trạng thái `ON_HOLD` kèm lý do giữ, máy tự gỡ khi hết lý do — PRD §5.2. Nhóm chốt, không cần hỏi Xe X |
+| Q1 | **Đề xuất:** trạng thái `ON_HOLD` kèm lý do giữ, máy tự gỡ khi hết lý do — PRD §5.2. Nhóm chốt, không cần hỏi Doanh nghiệp X |
 | Q2 | **Đã giải quyết:** tự đối chiếu lại khi có phiếu nhập mới — PRD F4.8 |
 | Q3 | **Đã giải quyết:** đọc dòng "Điều chỉnh cho hóa đơn…", nối về hóa đơn gốc theo Nghị định 70/2025 — PRD F4.10 |
 | Q4 | **Không còn cần:** hệ thống không sinh bút toán (PRD F10), trạng thái cuối là `EXPORTED`, xuất lại được |
-| Q5 | **Cần hỏi Xe X:** người duyệt thứ hai là ai. Cách thị trường làm: người ngoài phòng kế toán (giám đốc) duyệt khoản trên ngưỡng — RESEARCH §8.4 |
-| Q6 | **Cần hỏi Xe X:** trả trước phần đúng hay chờ cả hóa đơn. Nếu trả trước thì phần lệch vào `ON_HOLD` |
-| Q7–Q10 | **Cần hỏi Xe X.** Nên hỏi Q7 và Q8 trước — ảnh hưởng luồng chính |
+| Q5 | **Cần hỏi Doanh nghiệp X:** người duyệt thứ hai là ai. Cách thị trường làm: người ngoài phòng kế toán (giám đốc) duyệt khoản trên ngưỡng — RESEARCH §8.4 |
+| Q6 | **Cần hỏi Doanh nghiệp X:** trả trước phần đúng hay chờ cả hóa đơn. Nếu trả trước thì phần lệch vào `ON_HOLD` |
+| Q7–Q10 | **Cần hỏi Doanh nghiệp X.** Nên hỏi Q7 và Q8 trước — ảnh hưởng luồng chính |
 
 ---
 

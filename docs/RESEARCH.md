@@ -269,7 +269,7 @@ Qwen3-VL dùng tọa độ chuẩn hóa trên thang 0–1000, phải đổi sang
 | **13 số** | 10 số trên · `-` · 3 số chi nhánh | Chi nhánh, đơn vị phụ thuộc | **Có**, ở 10 số đầu |
 | **12 số** | Số định danh cá nhân, tức số CCCD | **Cá nhân, hộ kinh doanh — từ 01/7/2025** | Không |
 
-Dạng thứ ba là chỗ dễ sót nhất. Theo Thông tư 86/2024/TT-BTC, từ 01/7/2025 số định danh cá nhân thay cho mã số thuế của cá nhân, hộ gia đình và **hộ kinh doanh**. Với Xe X, những nhà cung cấp nhỏ như tiệm rửa xe, sửa chữa, vệ sinh rất có thể là hộ kinh doanh. Bộ kiểm chỉ nhận 10 và 13 số sẽ **từ chối nhầm hóa đơn hợp lệ** của họ — và PRD mục F3.3 hiện đang đúng là như vậy.
+Dạng thứ ba là chỗ dễ sót nhất. Theo Thông tư 86/2024/TT-BTC, từ 01/7/2025 số định danh cá nhân thay cho mã số thuế của cá nhân, hộ gia đình và **hộ kinh doanh**. Với Doanh nghiệp X, những nhà cung cấp nhỏ như tiệm rửa xe, sửa chữa, vệ sinh rất có thể là hộ kinh doanh. Bộ kiểm chỉ nhận 10 và 13 số sẽ **từ chối nhầm hóa đơn hợp lệ** của họ — và PRD mục F3.3 hiện đang đúng là như vậy.
 
 **Thuật toán chữ số kiểm tra** (chữ số thứ 10), theo thư viện `python-stdnum`:
 
@@ -307,7 +307,7 @@ Về tầng 2: cổng tra cứu công khai của cơ quan thuế có CAPTCHA, kh
 
 Mỗi nước một định dạng, nhiều nước có chữ số kiểm tra riêng. `python-stdnum` có module cho rất nhiều nước — xem danh sách trong README của thư viện trước khi dùng.
 
-Với Xe X, hóa đơn nước ngoài chủ yếu là phí phần mềm và dịch vụ đám mây, cách hạch toán và thuế khác hẳn hóa đơn trong nước. **Khuyến nghị cho MVP: nhận diện được đây là hóa đơn nước ngoài, rồi chuyển thẳng cho người**, không cố xử lý.
+Với Doanh nghiệp X, hóa đơn nước ngoài chủ yếu là phí phần mềm và dịch vụ đám mây, cách hạch toán và thuế khác hẳn hóa đơn trong nước. **Khuyến nghị cho MVP: nhận diện được đây là hóa đơn nước ngoài, rồi chuyển thẳng cho người**, không cố xử lý.
 
 ### 4.4 Luật thuế: cấu hình có ngày hiệu lực, RAG chỉ để trích dẫn [MVP / Sau]
 
