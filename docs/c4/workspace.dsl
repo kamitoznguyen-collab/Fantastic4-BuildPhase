@@ -14,7 +14,7 @@
  * Tag trạng thái: "Đang làm" = có interface hoặc khung, chưa chạy thật; "Chưa làm" = chưa có.
  * Không gắn tag = đã chạy được, có test.
  */
-workspace "Invoice Reconciliation Agent" "Đối soát hóa đơn ↔ đơn đặt hàng ↔ phiếu nhập kho cho kế toán phải trả. Pilot: Doanh nghiệp X." {
+workspace "Invoice Reconciliation Agent" "Đối soát hóa đơn ↔ đơn đặt hàng ↔ phiếu nhập kho cho kế toán phải trả. Pilot: Công ty X." {
 
     model {
 

@@ -106,7 +106,7 @@ Mỗi yêu cầu có tuần dự kiến và **điều kiện xong** — không �
 | # | Việc | Tuần | Điều kiện xong |
 |---|---|---|---|
 | U1 | Cập nhật `PRD.md` theo 13 việc ở Phụ lục A của `RESEARCH.md` — viết yêu cầu, người làm là Dương, Hoàn, Giáp | 2 | PRD có mục đầu vào và hóa đơn dài, mã ngoại lệ mới cho MST người mua, cấu hình thuế 8% có ngày kết thúc |
-| U2 | Chốt các câu hỏi mở với mentor hoặc Doanh nghiệp X: Q1–Q6 trong `USER_STORIES.md`, hai câu về đầu vào (một file chứa nhiều hóa đơn? bảng kê?), dung sai, ngưỡng duyệt cấp 2, nhóm thuế của các mặt hàng Doanh nghiệp X hay mua | 2 | Mỗi câu có quyết định và ngày chốt, ghi vào PRD |
+| U2 | Chốt các câu hỏi mở với mentor hoặc Công ty X: Q1–Q6 trong `USER_STORIES.md`, hai câu về đầu vào (một file chứa nhiều hóa đơn? bảng kê?), dung sai, ngưỡng duyệt cấp 2, nhóm thuế của các mặt hàng Công ty X hay mua | 2 | Mỗi câu có quyết định và ngày chốt, ghi vào PRD |
 | U3 | Soạn kịch bản kiểm thử chấp nhận từ 18 tình huống trong `USER_STORIES.md`, tổ chức buổi dùng thử với kế toán | 4 | Biên bản buổi dùng thử, có số đo thời gian đối chiếu trước và sau — mục tiêu giảm 50% |
 | U4 | Định nghĩa quy trình kiểm tra ngẫu nhiên hóa đơn đã xếp Khớp | Sau | Tỉ lệ lấy mẫu, ai kiểm, ghi kết quả ở đâu |
 

@@ -1,7 +1,7 @@
 # PRD — Invoice Reconciliation Agent
 
 > Tài liệu yêu cầu sản phẩm · Phiên bản 1.0 · Ngày 20/09/2026
-> Pilot: Doanh nghiệp X · Repo `AI20K-Build-Phase-Cohort-4/P-143`
+> Pilot: Công ty X · Repo `AI20K-Build-Phase-Cohort-4/P-143`
 > Tài liệu liên quan: `BRIEF_v3.md` (định vị, lộ trình, rủi ro) · `WIREFRAME.md` (màn hình và luồng người dùng)
 > Đối tượng đọc: kỹ sư trong nhóm, người chấm Demo Day, khách hàng pilot
 
@@ -548,7 +548,7 @@ Quy tắc suy ra:
 
 | Thực thể | Ngoài đời là gì | Định danh nghiệp vụ | Quy tắc luôn phải đúng |
 |---|---|---|---|
-| **Tổ chức** | Công ty dùng hệ thống, ví dụ Doanh nghiệp X. Là người mua trên hóa đơn | MST của công ty | Mọi dữ liệu thuộc đúng một tổ chức; tổ chức này không bao giờ thấy dữ liệu tổ chức khác |
+| **Tổ chức** | Công ty dùng hệ thống, ví dụ Công ty X. Là người mua trên hóa đơn | MST của công ty | Mọi dữ liệu thuộc đúng một tổ chức; tổ chức này không bao giờ thấy dữ liệu tổ chức khác |
 | **Nhà cung cấp (NCC)** | Bên bán hàng cho tổ chức | MST gốc, trong phạm vi tổ chức | Một MST gốc là một NCC. Chi nhánh không tách thành NCC riêng. `bank_account` là tài khoản **đã xác minh** — đổi tài khoản trên hóa đơn là `FRD-05`, không tự cập nhật |
 | **Quy tắc NCC** | Điều kế toán đã dạy hệ thống về một NCC: tên gọi khác của mặt hàng, quy đổi đơn vị, dung sai riêng | NCC + loại quy tắc + nội dung | Chỉ có hiệu lực khi KTT duyệt (`ACTIVE`). Không bao giờ xóa, chỉ `RETIRED` |
 | **Đơn đặt hàng (PO)** | Cam kết mua: mua gì, bao nhiêu, giá nào | Số PO, trong phạm vi tổ chức | Hệ thống **không sửa** PO. PO `CLOSED` hoặc `CANCELLED` mà vẫn có hóa đơn → `DOC-04` |
@@ -588,7 +588,7 @@ Quy tắc suy ra:
 - Một hóa đơn gộp nhiều phiếu nhập của cùng một PO: đã phủ (một dòng PO nhiều dòng phiếu nhập). **Một dòng hóa đơn gộp số lượng của hai dòng PO** thì sao? Hiện tại không cho, người phải tách tay.
 - ~~Hóa đơn điều chỉnh, hóa đơn thay thế~~ — đã có ở F4.10 và bảng `invoice_adjustments`.
 - Dịch vụ: ai được xác nhận hoàn thành, có biên bản nghiệm thu không (Q7). PO ghi giá trước hay sau thuế (Q8).
-- Doanh nghiệp X có dùng mã hàng thống nhất giữa PO và phiếu nhập không? Nếu có, bậc L0 khớp được phần lớn dòng.
+- Công ty X có dùng mã hàng thống nhất giữa PO và phiếu nhập không? Nếu có, bậc L0 khớp được phần lớn dòng.
 
 ### 7.3 Ghi chú chuyển đổi
 
@@ -1072,10 +1072,10 @@ Một buổi với 2 kế toán, 20 hóa đơn, đo bằng đồng hồ: thời 
 
 | Câu hỏi | Ảnh hưởng đến | Cần trả lời trước |
 |---|---|---|
-| Mặt hàng của Doanh nghiệp X thuộc nhóm thuế nào? | `tax_groups.yaml`, F7.7 | Tuần 3 |
+| Mặt hàng của Công ty X thuộc nhóm thuế nào? | `tax_groups.yaml`, F7.7 | Tuần 3 |
 | Ngưỡng duyệt cấp 2 thực tế? | `approval_policy.yaml`, F11 | Tuần 3 |
 | Dung sai giá và số lượng thực tế? | `tolerances.yaml`, F6 | Tuần 3 |
 | Tỉ lệ XML so với scan trong thực tế? | Ưu tiên công sức giữa parser và OCR | Tuần 2 |
 | Có hóa đơn ngoại tệ không? | F2.5 `exchange_rate` | Tuần 3 |
 | Được gửi dữ liệu ra dịch vụ ngoài không? | Toàn bộ lựa chọn OCR và LLM | **Đã chốt một phần (27/09/2026):** gọi thẳng Gemini API, không qua OpenRouter (F2.13). Còn chốt: hóa đơn thật dùng gói trả phí hay credit Google Cloud |
-| Doanh nghiệp X có sẵn quy trình duyệt điện tử nào? | F11 có phải sống chung không | Trước buổi dùng thử |
+| Công ty X có sẵn quy trình duyệt điện tử nào? | F11 có phải sống chung không | Trước buổi dùng thử |

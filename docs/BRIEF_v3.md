@@ -1,7 +1,7 @@
 # Brief v3 — Invoice Reconciliation Agent
 
 > AI Agent đối soát hóa đơn ↔ PO ↔ phiếu nhập (3-way matching) với **Exception Intelligence**
-> Pilot: Doanh nghiệp X / Dịch vụ gọi xe X · Repo: `AI20K-Build-Phase-Cohort-4/P-143` · Framework: AI20K Agent Template
+> Pilot: Công ty X / Dịch vụ gọi xe X · Repo: `AI20K-Build-Phase-Cohort-4/P-143` · Framework: AI20K Agent Template
 > Ngày: 20/09/2026 · Trạng thái: v3 — hợp nhất đề bài cohort (v2) với định hướng sản phẩm thương mại
 > Tài liệu liên quan: `PRD.md` (yêu cầu chi tiết) · `WIREFRAME.md` (luồng và màn hình) · `BRIEF.md` (v2, đề bài gốc)
 
@@ -71,7 +71,7 @@ Ba thứ tạo khác biệt, xếp theo mức độ khó sao chép:
 
 Ngách hẹp trước, mở rộng sau — nhưng **schema và interface của chân trời 1 đã phải chứa sẵn chỗ cho chân trời 2**.
 
-| | H1 — Pilot Doanh nghiệp X (5 tuần, phạm vi MVP) | H2 — SME thương mại/dịch vụ dùng MISA/Fast (tháng 2–6) | H3 — Nền tảng (tháng 6+) |
+| | H1 — Pilot Công ty X (5 tuần, phạm vi MVP) | H2 — SME thương mại/dịch vụ dùng MISA/Fast (tháng 2–6) | H3 — Nền tảng (tháng 6+) |
 |---|---|---|---|
 | Khách hàng | 1 công ty gọi xe, đội kế toán nội bộ | Công ty thương mại / dịch vụ, 200–800 hóa đơn NCC/tháng | Mid-market, nhiều ngành, và dịch vụ kế toán làm cho nhiều khách |
 | Nguồn PO/GRN | Excel/CSV hoặc seed trong DB | MISA Open API; Fast qua file trung gian hoặc DB | Nhiều ERP qua connector registry |
@@ -90,7 +90,7 @@ Ngách hẹp trước, mở rộng sau — nhưng **schema và interface của c
 
 ## 4. Thực trạng và vấn đề
 
-- Kế toán Doanh nghiệp X đối soát hóa đơn với PO và phiếu nhập hàng **bằng tay**. Khối lượng dồn vào cuối tháng, dễ sai số liệu và làm chậm thanh toán cho nhà cung cấp.
+- Kế toán Công ty X đối soát hóa đơn với PO và phiếu nhập hàng **bằng tay**. Khối lượng dồn vào cuối tháng, dễ sai số liệu và làm chậm thanh toán cho nhà cung cấp.
 - Hóa đơn đến ở 3 dạng với độ khó và chi phí khác hẳn nhau:
 
 | Dạng | Cách đọc | Độ tin cậy | Chi phí | Ưu tiên |
@@ -101,7 +101,7 @@ Ngách hẹp trước, mở rộng sau — nhưng **schema và interface của c
 
 - Phần khó nhất **sau khi đọc được** là khớp dữ liệu: tên hàng trên hóa đơn khác tên trên PO, đơn vị tính khác nhau (thùng ↔ cái), giao hàng thiếu một phần, một PO nhận nhiều lần, một hóa đơn gộp nhiều PO, lệch do làm tròn VAT theo dòng hay theo tổng.
 
-**Giả định nghiệp vụ (cần xác nhận với Doanh nghiệp X):** nhóm hàng mua phổ biến là phụ tùng, lốp, ắc quy xe điện; dịch vụ bảo dưỡng, sửa chữa, vệ sinh xe; điện sạc; đồng phục tài xế; văn phòng phẩm. Dữ liệu mẫu sinh theo các nhóm này. Nếu Doanh nghiệp X xác nhận khác, chỉ cần sửa file cấu hình danh mục của bộ sinh dữ liệu.
+**Giả định nghiệp vụ (cần xác nhận với Công ty X):** nhóm hàng mua phổ biến là phụ tùng, lốp, ắc quy xe điện; dịch vụ bảo dưỡng, sửa chữa, vệ sinh xe; điện sạc; đồng phục tài xế; văn phòng phẩm. Dữ liệu mẫu sinh theo các nhóm này. Nếu Công ty X xác nhận khác, chỉ cần sửa file cấu hình danh mục của bộ sinh dữ liệu.
 
 ---
 
@@ -279,7 +279,7 @@ Mọi bảng nghiệp vụ mang `org_id`. Chi tiết trường ở `PRD.md` mụ
 
 ## 10. Bảo mật dữ liệu tài chính
 
-- **Live URL và demo chỉ dùng dữ liệu tổng hợp.** Hóa đơn thật (nếu Doanh nghiệp X cung cấp) chỉ chạy local, không commit, không deploy.
+- **Live URL và demo chỉ dùng dữ liệu tổng hợp.** Hóa đơn thật (nếu Công ty X cung cấp) chỉ chạy local, không commit, không deploy.
 - Mật khẩu băm bằng bcrypt; JWT hết hạn ngắn; phân quyền kiểm ở backend.
 - **Audit log không sửa được** cho mọi thao tác duyệt, sửa trường và cấu hình.
 - Chỉ gửi cho LLM những trường cần thiết; **che số tài khoản ngân hàng** và thông tin không liên quan.
@@ -345,7 +345,7 @@ Lý do đặt recall cao hơn precision: một chỗ lệch bị bỏ sót là t
 |---|---|---|---|---|
 | Document AI đọc hóa đơn tiếng Việt kém | Trung bình | Cao | Thử ngay tuần 1; phương án B là Enterprise Document OCR + LLM map | Tuần 1 thử 20 ảnh scan, F1 trường tiền < 0.9 |
 | Không có credit Google Cloud | Trung bình | Cao | Xin sớm; phương án B là chỉ hỗ trợ XML + PDF text cho demo, scan để "biết hạn chế" | Chưa có billing account hết tuần 1 |
-| Doanh nghiệp X không cung cấp dữ liệu thật | Cao | Trung bình | Bộ sinh dữ liệu tổng hợp là đường chính, không phải phương án dự phòng | Chưa nhận file mẫu hết tuần 2 |
+| Công ty X không cung cấp dữ liệu thật | Cao | Trung bình | Bộ sinh dữ liệu tổng hợp là đường chính, không phải phương án dự phòng | Chưa nhận file mẫu hết tuần 2 |
 | Dữ liệu tổng hợp quá "sạch", model ăn may | Cao | Cao | Generator phải cài nhiễu thật: nghiêng, bóng, mực nhòe, dấu mộc đè lên số, bảng gộp dòng | Độ chính xác scan xấp xỉ độ chính xác XML |
 | LangGraph interrupt + checkpointer khó | Trung bình | Trung bình | Làm đường xương sống ở tuần 2, đừng để tuần 3 | Chưa chạy được interrupt end-to-end hết tuần 2 |
 | Nhóm sa đà vào OCR, bỏ quên exception | Cao | **Rất cao** | Định vị ở mục 2 là để chống việc này. Taxonomy ngoại lệ phải xong ở tuần 2 | Hết tuần 3 vẫn chưa có bảng mã ngoại lệ |
@@ -359,19 +359,19 @@ Chia theo mức độ chặn.
 
 **Chặn việc phát triển — cần trả lời trong tuần 1:**
 
-- [x] Gọi thẳng Gemini API (chốt 27/09/2026). Còn hỏi: Doanh nghiệp X có cho gửi hóa đơn thật ra Google không, hay bắt buộc tự host?
+- [x] Gọi thẳng Gemini API (chốt 27/09/2026). Còn hỏi: Công ty X có cho gửi hóa đơn thật ra Google không, hay bắt buộc tự host?
 - [ ] Nhóm có mấy người, và có credit Google Cloud để dùng Document AI không?
-- [ ] Doanh nghiệp X có cung cấp mẫu hóa đơn, PO, phiếu nhập thật (đã che thông tin) không? Nhóm hàng mua chính là gì?
+- [ ] Công ty X có cung cấp mẫu hóa đơn, PO, phiếu nhập thật (đã che thông tin) không? Nhóm hàng mua chính là gì?
 
 **Chặn việc tinh chỉnh — cần trước tuần 3:**
 
 - [ ] Ngưỡng tiền cần KTT duyệt cấp 2 là bao nhiêu?
 - [ ] Dung sai chấp nhận được cho giá và số lượng (theo % hay số tuyệt đối)?
-- [ ] Hóa đơn của Doanh nghiệp X có bao nhiêu phần trăm là XML, bao nhiêu là PDF scan?
+- [ ] Hóa đơn của Công ty X có bao nhiêu phần trăm là XML, bao nhiêu là PDF scan?
 - [ ] Có hóa đơn ngoại tệ không? Nếu có, tỉ giá lấy ở đâu?
 
 **Không chặn MVP — cần trước H2:**
 
 - [ ] Khách hàng H2 đầu tiên dùng MISA hay Fast? Bản cloud hay bản cài đặt?
 - [ ] Mô hình giá: theo số hóa đơn xử lý, theo số người dùng, hay theo tenant?
-- [ ] Doanh nghiệp X hay khách H2 có sẵn quy trình phê duyệt điện tử nào đang chạy mà ta phải sống chung không?
+- [ ] Công ty X hay khách H2 có sẵn quy trình phê duyệt điện tử nào đang chạy mà ta phải sống chung không?

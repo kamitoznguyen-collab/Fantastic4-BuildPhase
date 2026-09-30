@@ -24,7 +24,7 @@ Mục lục gồm bốn phần.
 | | **Tầm nhìn** | |
 | 8 | PHÁP LÝ | Người ký duyệt, nhật ký không sửa được, luật thuế là cấu hình |
 | 9 | DỮ LIỆU | Tách dữ liệu từng công ty, không dùng để huấn luyện |
-| 10 | LỘ TRÌNH SẢN PHẨM | Doanh nghiệp X → doanh nghiệp vừa và nhỏ → nền tảng |
+| 10 | LỘ TRÌNH SẢN PHẨM | Công ty X → doanh nghiệp vừa và nhỏ → nền tảng |
 | | **Nhóm và tiến độ** | |
 | 11 | PHÂN CÔNG NHÓM | Bốn người, bốn vai |
 | 12 | TIẾN ĐỘ HIỆN TẠI | Đã có · Đang làm · Tiếp theo |
