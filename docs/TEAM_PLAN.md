@@ -126,14 +126,14 @@ Mỗi yêu cầu có tuần dự kiến và **điều kiện xong** — không �
 
 | # | Việc | Tuần | Điều kiện xong |
 |---|---|---|---|
-| F0 | Dựng khung React: đăng nhập, dashboard, danh sách hóa đơn | 2 | **Đã có** trên nhánh `feat/frontend-react` (30/09/2026); còn chờ gộp vào nhánh chính sau `integ/mvp-rules` |
+| F0 | Dựng khung React: đăng nhập, dashboard, danh sách hóa đơn | 2 | **Đã có** trên nhánh `feat/frontend-react` của P-143 (30/09/2026). Chờ PR bỏ bút toán (P-143 #3) được gộp, rồi mở PR vào `integ/mvp-rules` |
 | F1 | Đăng nhập thật bằng JWT, tự làm mới token khi hết hạn | 3 | Hai vai trò đăng nhập được; token hết hạn thì tự làm mới, không đẩy người dùng ra ngoài |
 | F2 | Thay dữ liệu mẫu bằng lời gọi API theo `PRD.md` §8: danh sách, so sánh ba chiều, xử lý ngoại lệ, duyệt, trả lại, từ chối, hàng đợi duyệt, nhà cung cấp | 3 | Đi hết kịch bản demo trên dữ liệu lấy từ API; bản chạy thật không còn dữ liệu mẫu |
 | F3 | Tải lên nhiều file và theo dõi tiến độ lô | 3 | Thấy từng file đổi trạng thái; file trùng và file vượt giới hạn hiện đúng thông báo |
 | F4 | Thông báo theo mã lỗi `401`, `403`, `404`, `409`, `413`, `429`; trạng thái đang tải và trạng thái rỗng | 4 | Mỗi mã lỗi có câu thông báo nói rõ chuyện gì xảy ra và làm gì tiếp |
 | F5 | Hóa đơn dài: mặc định chỉ hiện dòng lệch; chỉ tô vùng bằng chứng khi `bbox_verified` | 4 | Hóa đơn 200 dòng vẫn mở nhanh; vùng chưa xác minh không được tô — `RESEARCH.md` mục 3.5 |
 | F6 | Deploy giao diện, cấu hình CORS với API | 4 | Có live URL cho giao diện |
-| F7 | Chuyển nốt các màn hình còn lại từ prototype sang React: so sánh ba chiều, ngoại lệ, tóm tắt duyệt, hàng đợi duyệt, nhà cung cấp, cấu hình | 3–4 | Chạy đủ kịch bản demo 5 phút như bản prototype |
+| F7 | Chuyển nốt các màn hình còn lại từ prototype sang React: so sánh ba chiều, ngoại lệ, tóm tắt duyệt, hàng đợi duyệt, nhà cung cấp, cấu hình | 3–4 | Chạy đủ kịch bản demo 5 phút như bản prototype. **Đã có code** trên `feat/frontend-react` (01/10/2026), đã chạy trên mock; còn chạy lại trên API thật |
 
 Tách **lời gọi API**, **làm mới token** và **định dạng tiền** thành module riêng, không trộn vào component — để đổi API không phải sửa giao diện. Kiểu dữ liệu TypeScript lấy từ `openapi.json` của backend, không tự đặt tên trường riêng. Bộ màu lấy từ khối `:root` của prototype. Tiền nhận dạng chuỗi từ API, chỉ định dạng để hiển thị, không tính toán ở giao diện.
 
