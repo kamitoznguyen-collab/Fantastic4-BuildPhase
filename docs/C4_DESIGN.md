@@ -80,7 +80,7 @@ flowchart TB
 
     openai["☁️ OpenAI ⏳<br/><i>LLM gpt-4o-mini, embedding</i>"]
     docai["☁️ Google Document AI ⏳"]
-    langsmith["☁️ LangSmith ⏳<br/><i>theo dõi và đo chi phí</i>"]
+    langfuse["☁️ Langfuse Cloud ✅<br/><i>theo dõi và đo chi phí,<br/>nhánh mvp/demo</i>"]
 
     ktv & ktt -- "HTTPS" --> web
     web -- "REST + JSON, Bearer JWT" --> api
@@ -91,14 +91,14 @@ flowchart TB
     pipe -- "đọc file" --> files
     api -- "đọc lúc khởi động" --> yaml
     pipe -. "qua module gateway" .-> openai & docai
-    pipe -. "trace" .-> langsmith
+    pipe -. "trace, OpenTelemetry" .-> langfuse
 
     classDef person fill:#08427b,color:#fff,stroke:#052e56
     classDef container fill:#438dd5,color:#fff,stroke:#2e6295
     classDef external fill:#999,color:#fff,stroke:#6b6b6b
     class ktv,ktt person
     class web,api,pipe,db,files,yaml container
-    class openai,docai,langsmith external
+    class openai,docai,langfuse external
 ```
 
 | Khối | Công nghệ | Trạng thái | Ghi chú |
@@ -109,6 +109,8 @@ flowchart TB
 | Cơ sở dữ liệu | PostgreSQL 18 (dùng `uuidv7()` sẵn có), pgvector | ✅ | Migration SQL thuần ở `migrations/`, mỗi file có checksum |
 | Kho file gốc | `STORAGE_BACKEND=local` hoặc `s3` | ✅ | MinIO khi chạy cục bộ. Trùng `sha256` trong cùng tổ chức thì không lưu lại |
 | Cấu hình mặc định | YAML | ✅ | Kế toán trưởng sửa qua API thì lưu thành bản mới ở bảng `config_versions`, đè lên YAML. File YAML hỏng thì API không khởi động |
+
+**Theo dõi:** mỗi lượt pipeline chạy qua một hóa đơn là một trace trên Langfuse Cloud, mỗi bước (trích xuất, OCR, đối chiếu, chuyển duyệt) là một span, mỗi lời gọi model ghi model, token và chi phí. Không gửi ảnh hóa đơn, số tài khoản chỉ giữ 4 số cuối. Không có khóa `LANGFUSE_*` thì tắt. Chi tiết ở `P-143/docs/adr/0003-langfuse-tracing.md`.
 
 **Chạy cục bộ:** `docker compose` gồm `db`, `minio`, `minio-init`, `backend`. **Triển khai:** Render (Web Service cho API, Static Site cho web, PostgreSQL) theo `BRIEF_v3.md`.
 

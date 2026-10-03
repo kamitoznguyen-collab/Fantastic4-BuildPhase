@@ -879,7 +879,7 @@ queue_when_budget_exceeded: true
 | **Bảo mật** | Xem `BRIEF_v3.md` mục 10. Thêm: rate limit `/auth/login`; header bảo mật cơ bản; CORS chỉ cho domain frontend |
 | **Cách ly tenant** | Có test tự động: user tenant A gọi mọi endpoint với id của tenant B và phải nhận `404` |
 | **Giao diện** | Tiếng Việt toàn bộ. Responsive từ 360px. Dark mode. Định dạng số theo `vi-VN` (dấu chấm ngăn nghìn) |
-| **Khả năng quan sát** | Mọi lượt chạy graph có `thread_id` tra được trên LangSmith. Mỗi hóa đơn hiển thị được chi phí xử lý |
+| **Khả năng quan sát** | Mỗi lượt xử lý một hóa đơn là một trace tra được trên Langfuse (theo `invoice_id`), mỗi bước là một span, mỗi lời gọi model ghi token và chi phí. Không gửi ảnh hóa đơn; số tài khoản chỉ giữ 4 số cuối. Mỗi hóa đơn hiển thị được chi phí xử lý |
 | **Chất lượng mã** | Test coverage ≥ 60%, trong đó parser, rule engine thuế và dung sai phải ≥ 90% |
 | **Khả năng cấu hình** | Đổi ngưỡng dung sai và ngưỡng duyệt **không cần deploy lại** |
 
