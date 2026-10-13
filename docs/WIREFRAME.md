@@ -1,6 +1,8 @@
 # Wireframe & UI Flow — Invoice Reconciliation Agent
 
-> Luồng người dùng và phác thảo màn hình · Phiên bản 1.0 · Ngày 20/09/2026
+> Luồng người dùng và phác thảo màn hình · Phiên bản 1.1 · Cập nhật 13/10/2026 (bản 1.0 ngày 20/09/2026)
+> Bản 1.1 đối chiếu với giao diện thật ở `P-143/frontend` trên `main` tại `0ecb981` (10/10/2026): sửa sơ đồ trang (§2), thêm
+> các màn hình S14–S17 (§5b), bổ sung bản đồ API (§9) và trạng thái từng màn hình (§10).
 > Tài liệu liên quan: `BRIEF_v3.md` (định vị) · `PRD.md` (yêu cầu chức năng, mã ngoại lệ, API)
 > Đối tượng đọc: người làm frontend, người chấm Demo Day
 
@@ -13,7 +15,7 @@ Năm nguyên tắc, xếp theo thứ tự ưu tiên khi phải đánh đổi.
 1. **Giảm số lần phải chuyển ngữ cảnh.** Kế toán hiện phải mở ba file để so. Màn hình chính phải đặt hóa đơn, PO và phiếu nhập cạnh nhau, ngang hàng theo từng dòng.
 2. **Mỗi con số phải chỉ được về nguồn.** Rê chuột vào bất kỳ giá trị nào thì thấy nó đến từ đâu: đường dẫn XML, trang và vùng ảnh, hay ai đã sửa tay.
 3. **Nói lệch bao nhiêu, đừng chỉ nói "có lệch".** Mọi cảnh báo đi kèm số tiền và công thức.
-4. **Không chắc thì phải trông khác đi.** Trường tin cậy thấp có dấu hiệu thị giác riêng, không lẫn với trường bình thường.
+4. **Không chắc thì phải trông khác đi.** Trường tin cậy thấp có dấu hiệu thị giác riêng, không lẫn với trường bình thường. Từ 07/10/2026 dấu hiệu đó là nhãn **"Cần xem"** (kèm lý do), trường không còn câu hỏi mang nhãn **"Đạt"**; giao diện **không hiện con số** độ tin cậy (PRD §1.3).
 5. **Hành động nguy hiểm phải khó bấm nhầm.** Duyệt hóa đơn có ngoại lệ cần một bước xác nhận riêng nêu rõ đang chấp nhận lệch bao nhiêu tiền.
 
 ---
@@ -23,26 +25,33 @@ Năm nguyên tắc, xếp theo thứ tự ưu tiên khi phải đánh đổi.
 ```
 /login                              Đăng nhập
 
-/                                   Dashboard (mặc định sau khi đăng nhập)
-/upload                             Upload và theo dõi tiến độ lô
+/                                   Tổng quan (mặc định sau khi đăng nhập)
+/upload                             Tải hóa đơn lên, tiến độ, lịch sử tải lên
+/batches                            Lô tải lên + trạng thái đồng bộ ERP         (S14)
+/batches/:id                        Chi tiết một lô
 /invoices                           Danh sách hóa đơn
-/invoices/:id                       Chi tiết hóa đơn
-    ├── ?tab=compare                  So sánh 3 chiều          ← màn hình lõi
-    ├── ?tab=exceptions               Ngoại lệ và xử lý
-    ├── ?tab=summary                  Tóm tắt duyệt (không có bút toán)
-    └── ?tab=timeline                 Dòng thời gian / audit
+/invoices/:id                       Chi tiết hóa đơn; các tab:
+    ├── Nhập tay                      khi chưa trích xuất được              (S16)
+    ├── Xem bản đọc (n)               khi đồ thị dừng ở chỗ đọc             (S15)
+    ├── Chế độ thuế / Cơ sở giá       chỉ khi DOCUMENT_INTAKE bật           (S17)
+    ├── So sánh 3 chiều               ← màn hình lõi                        (S5)
+    ├── Ngoại lệ (n)                                                        (S6)
+    ├── Tóm tắt duyệt                 (không có bút toán)                   (S7)
+    └── Dòng thời gian                                                      (S12)
+/files/:fileId                      Một PDF nhiều hóa đơn, xác nhận cách cắt   (chỉ DOCUMENT_INTAKE)
 /approvals                          Hàng đợi chờ duyệt của tôi
 /vendors                            Danh sách NCC + readiness score
 /vendors/:id                        Chi tiết NCC: quy tắc memory + phân rã điểm
-/documents/purchase-orders          Danh sách và import PO
-/documents/goods-receipts           Danh sách và import phiếu nhập
-/exports                            Xuất danh sách hóa đơn đã duyệt và báo cáo
-/admin/config                       Cấu hình ngưỡng           [chỉ KTT]
-/admin/audit                        Nhật ký kiểm toán         [chỉ KTT]
-/admin/costs                        Chi phí xử lý             [chỉ KTT]
+/documents                          Đơn hàng & phiếu nhập: danh sách, import    (S18)
+/documents/:id                      Chi tiết một PO
+/config                             Cấu hình ngưỡng           [chỉ KTT]
+/audit                              Nhật ký kiểm toán         [chỉ KTT]
+/costs                              Chi phí xử lý             [chỉ KTT]
 ```
 
-Điều hướng chính đặt ở thanh bên trái, gom thành 3 nhóm: **Xử lý** (Dashboard, Upload, Hóa đơn, Chờ duyệt) · **Dữ liệu** (NCC, PO, Phiếu nhập) · **Quản trị** (Cấu hình, Nhật ký, Chi phí — ẩn với KTV).
+Xuất dữ liệu không có trang riêng: là hộp thoại mở từ danh sách hóa đơn (`ExportDialog`).
+
+Điều hướng chính đặt ở thanh bên trái, gom thành 3 nhóm: **Xử lý** (Tổng quan, Tải lên, Lô tải lên, Hóa đơn, Chờ duyệt) · **Dữ liệu** (Nhà cung cấp, Đơn hàng & phiếu nhập) · **Quản trị** (Cấu hình, Nhật ký, Chi phí — ẩn với KTV).
 
 ---
 
@@ -242,6 +251,15 @@ Thẻ 🔴 hiện **cả tổng tiền lệch**, không chỉ số lượng hóa
 
 Hiện **ngân sách đã dùng trong ngày** ngay trên vùng thả file — người dùng biết trước khi chạm giới hạn, không bị chặn bất ngờ.
 
+**Đã làm khác bản phác thảo (10/10/2026):**
+
+- Tiến độ từng file hiện theo **bước**: Tải lên → Đọc file → Đối chiếu → Xếp loại, kèm phần trăm và thời gian đã chạy.
+- Trên vùng thả file hiện **chi phí đọc ước tính mỗi trang** PDF / ảnh (`GET /invoices/reading-cost`); XML không tốn gì.
+- Chọn hơn 20 file thì giao diện tự chia thành nhiều lô 20 file.
+- Dưới tiến độ có bảng **Lịch sử tải lên** (`GET /invoices/uploads`): mọi file đã tải, kể cả file trùng và file bị từ chối, kèm kết quả và chi phí đọc.
+- Giới hạn trang mỗi file là 50, không phải 10 (PRD F16.1).
+- Thả zip, thả cả thư mục và nạp JSON PO / phiếu nhập ở trang này **chưa có trên `main`**: nằm ở PR #20.
+
 ### S4 — Danh sách hóa đơn
 
 ```
@@ -328,7 +346,14 @@ Bốn điều bắt buộc ở màn này:
 - **Hàng nào lệch thì cả hàng đổi nền**, không chỉ một ô — mắt bắt nhanh hơn.
 - **Ô có `confidence` thấp mang dấu `⚠`** và viền đứt nét, khác hẳn ô lệch (nền đỏ nhạt). Hai vấn đề khác nhau, không được trông giống nhau.
 - **Bấm một ô thì khung chứng từ bên phải cuộn và làm nổi đúng vùng** sinh ra giá trị đó.
-- **Cách khớp dòng được ghi rõ** ("mã hàng trùng (L0)", "memory NCC", "LLM tin cậy 0,86"). Kế toán cần biết máy tự tin đến đâu.
+- **Cách khớp dòng được ghi rõ** ("mã hàng trùng (L0)", "memory NCC", "LLM đề xuất"). Kế toán cần biết ai đề xuất cặp này.
+
+**Đã làm thêm (10/10/2026):**
+
+- Mỗi dòng có nút **[ Gán dòng PO ]** / **[ Đổi dòng PO ]**: mở danh sách dòng của các PO đang gắn, chọn một dòng hoặc "không thuộc PO nào", ghi lý do. Hóa đơn đối chiếu lại ngay (PRD F5.9).
+- Ô cần xem mang nhãn **"Cần xem"**, ô không còn câu hỏi mang nhãn **"Đạt"**; không hiện con số độ tin cậy. Ô người đã sửa ghi nguồn là "Sửa tay".
+- Khung **Chứng từ gốc** bên phải có [ Phóng to ] và [ Tải về ]; bấm một ô có dấu ⚠ thì khung hiện **cách đọc** và **vị trí** của giá trị đó.
+- Sửa một ô tiền thì các tổng **không tự đổi theo**; lệch giữa các ô sinh `INT-02` và chặn duyệt (PRD §4.6).
 
 ### S6 — tab Ngoại lệ và xử lý
 
@@ -614,6 +639,80 @@ Trên điện thoại **ưu tiên xem và duyệt**, không ưu tiên sửa trư
 
 ---
 
+## 5b. Màn hình thêm sau bản 1.0 *(theo `main`, 10/10/2026)*
+
+### S14 — Lô tải lên và đồng bộ ERP
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Lô tải lên                                                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Đồng bộ ERP · http-feed · 4 giờ một lần          [ Đồng bộ ngay ]  (KTT)   │
+│  Lần gần nhất 09:00 · Thành công · 12 sự kiện: 3 PO, 3 phiếu nhập, 6 hóa đơn│
+│  ▸ Các lần đồng bộ gần đây   Bắt đầu │ Kết quả │ Sự kiện                    │
+│                                                                             │
+│  Lô        Nguồn       Lúc     File  Xong  Lỗi  Trạng thái                  │
+│  #01a1…    Người dùng  10:42    20    20    0   ✓ Thành công         →      │
+│  #01a0…    ERP         09:00     6     5    1   ⚠ Lỗi  [ Chạy lại lỗi ]  →  │
+│  #019f…    Người dùng  08:15     3     3    0   ✓ Thành công         →      │
+│                                                       [ Tải thêm ]          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+- Một lô là một lần tải lên, hoặc một lần ERP kéo về (PRD F16.6). Bấm một lô → `/batches/:id`: danh sách hóa đơn của lô.
+- **[ Chạy lại lỗi ]** đưa mọi hóa đơn `FAILED` của lô vào pipeline lại. Không có hóa đơn lỗi thì báo "Không có hóa đơn lỗi nào để chạy lại".
+- Chưa khai báo nguồn ERP thì khối trên ghi "chỉ kéo khi bấm" hoặc "Chưa đồng bộ lần nào", không báo lỗi.
+
+### S15 — tab Xem bản đọc (chỗ dừng đọc)
+
+Hiện khi đồ thị dừng ở chỗ đọc (`READING_REVIEW`, hoặc hóa đơn chỉ đọc từ ảnh — PRD F2.14). Đầu trang chi tiết có dải báo "Hóa đơn đang chờ người xem bản đọc · [ Xem bản đọc ]".
+
+```
+┌────────────────────────────────────────────────────┬──────────────────────────┐
+│ Xem bản đọc (3)                                    │ Chứng từ gốc   [Phóng to]│
+├────────────────────────────────────────────────────┤ ┌──────────────────────┐ │
+│ Trường        Máy đọc     Vì sao phải xem     Đúng │ │                      │ │
+│                                              như in│ │  (ảnh trang 1,       │ │
+│ Ngày HĐ       12/08/2026  hai lần đọc khác     ☐   │ │   làm nổi vùng       │ │
+│                           nhau: 12/08 · 12/09      │ │   của trường đang    │ │
+│               Hoặc sửa thành [ 12/09/2026 ]        │ │   chọn)              │ │
+│ Tiền thuế     1.228.000   dưới ngưỡng          ☑   │ │                      │ │
+│ Dòng 3 · SL   1,250       hai lần đọc khác     ☐   │ │                      │ │
+│               Hoặc sửa thành [ 1250 ]              │ └──────────────────────┘ │
+│               Nhập số, ví dụ 1.450.000 hoặc 8,5.   │                          │
+│                                                    │                          │
+│                     [ Lưu và chạy tiếp ]           │                          │
+└────────────────────────────────────────────────────┴──────────────────────────┘
+```
+
+- Mỗi dòng một câu hỏi: tích **"Đúng như in"** hoặc gõ giá trị đúng. Bấm tên trường → khung bên phải mở đúng trang.
+- Lưu xong: "Đã lưu. Hệ thống chạy tiếp hóa đơn." Hóa đơn đi tiếp sang đối chiếu; tab biến mất khi hết câu hỏi.
+
+### S16 — tab Nhập tay
+
+Hiện khi PDF / ảnh không trích xuất được (không có khóa mô hình, trang trắng, file lạ). Form gồm các trường đầu hóa đơn (số, ký hiệu, ngày, MST người bán — "Dùng để gán nhà cung cấp trong danh mục", tổng tiền…) và bảng dòng hàng có **[ Thêm dòng ]**. Nút **[ Lưu và đối chiếu ]**. Nhập xong mà trùng hóa đơn đã có thì báo "Đã lưu, nhưng hóa đơn này trùng một hóa đơn đã có."
+
+### S17 — tab Chế độ thuế / Cơ sở giá *(chỉ khi `DOCUMENT_INTAKE` bật, hiện chỉ ở dev)*
+
+Đồ thị dừng hỏi khi chưa rõ hóa đơn thuộc chế độ thuế nào (GTGT trong nước, nước ngoài…) hoặc đơn giá in là giá trước hay sau thuế. Màn hiện **tín hiệu máy dùng để kết luận** và **vì sao từng cơ sở giá không khớp** (bảng đơn giá in · đơn giá chưa thuế), người chọn một phương án. Chọn "nằm ngoài phạm vi" thì hóa đơn dừng xử lý.
+
+### S18 — Đơn hàng & phiếu nhập
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Đơn hàng & phiếu nhập                   [ Import PO ] [ Import phiếu nhập ]│
+├─────────────────────────────────────────────────────────────────────────────┤
+│  [ Tìm số PO…        ]   Trạng thái ▼ Mọi trạng thái                        │
+│                                                                             │
+│  Số PO          Nhà cung cấp            Ngày        Giá trị      Trạng thái │
+│  PO-EV0000001   Cty TNHH Vật tư Nam Việt 28/08/2026 28.050.000   Đang mở  → │
+│  PO-EV0000002   Cty TNHH Lốp Việt       30/07/2026     185.000   Đang mở  → │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+- Import nhận `.xlsx`, `.xls`, `.csv` (cả file "Nhập kho" của MISA AMIS). Xong hiện "Import đơn hàng: tạo mới n, cập nhật m" và danh sách dòng lỗi nếu có.
+- `/documents/:id`: dòng hàng của PO (Đặt · Đã nhận · Đã có hóa đơn · Đơn giá · Thành tiền) và các phiếu nhập kho (Số phiếu · Ngày nhận · Kho · Hàng nhận). PO chưa có phiếu nhập thì ghi "Chưa có phiếu nhập nào cho PO này."
+
 ## 6. Thành phần dùng chung
 
 ### 6.1 Màu trạng thái
@@ -695,17 +794,23 @@ Phím `a` **không** duyệt ngay — nó mở hộp xác nhận. Không có ph�
 | Màn hình | Endpoint |
 |---|---|
 | S1 Đăng nhập | `POST /auth/login`, `GET /auth/me` |
-| S2 Dashboard | `GET /invoices?…` (đếm theo phân loại), `GET /admin/audit-logs?limit=10` |
-| S3 Upload | `POST /invoices/upload`, `GET /invoices/batches/{id}` |
+| S2 Dashboard | `GET /dashboard/summary`, `GET /invoices?…`, `GET /admin/audit-logs?limit=10` |
+| S3 Upload | `POST /invoices/upload` (hoặc `POST /invoices/uploads` + `…/complete`), `GET /invoices/batches/{id}`, `GET /invoices/uploads`, `GET /invoices/reading-cost` |
 | S4 Danh sách | `GET /invoices` |
-| S5 So sánh | `GET /invoices/{id}`, `GET /invoices/{id}/comparison`, `GET /invoices/{id}/file`, `PATCH /invoices/{id}/fields`, `POST /invoices/{id}/relink-po` |
+| S5 So sánh | `GET /invoices/{id}`, `GET /invoices/{id}/comparison`, `GET /invoices/{id}/file`, `PATCH /invoices/{id}/fields`, `POST /invoices/{id}/relink-po`, `PUT /invoices/{id}/lines/{line_id}/match`, `GET /invoices/{id}/workflow` |
 | S6 Ngoại lệ | `GET /invoices/{id}/discrepancies`, `POST /discrepancies/{id}/resolve` |
 | S7 Tóm tắt duyệt | `GET /invoices/{id}`, `POST /invoices/{id}/approve`, `POST /exports/approved-invoices` |
 | S8 Chờ duyệt | `GET /approvals/queue`, `POST /invoices/{id}/approve|reject|return` |
 | S9 NCC | `GET /vendors` |
-| S10 Chi tiết NCC | `GET /vendors/{id}/readiness`, `GET /vendors/{id}/rules`, `PATCH /vendors/rules/{id}` |
+| S10 Chi tiết NCC | `GET /vendors/{id}`, `GET /vendors/{id}/readiness`, `GET /vendors/{id}/rules`, `POST /vendors/{id}/rules`, `PATCH /vendors/rules/{id}`, `PUT /vendors/{id}/bank-account` |
 | S11 Cấu hình | `GET /admin/config`, `PUT /admin/config/{name}` |
-| S12 Dòng thời gian | `GET /admin/audit-logs?invoice_id=…` |
+| S12 Dòng thời gian | `GET /admin/audit-logs/invoice/{id}` |
+| S14 Lô tải lên | `GET /invoices/batches`, `GET /invoices/batches/{id}`, `POST /invoices/batches/{id}/retry-failed`, `GET /erp/sync-runs`, `POST /erp/sync` |
+| S15 Xem bản đọc | `GET /invoices/{id}/reading`, `POST /invoices/{id}/fields/confirm`, `PATCH /invoices/{id}/fields`, `POST /invoices/{id}/reading/complete` |
+| S16 Nhập tay | `POST /invoices/{id}/manual-extraction` |
+| S17 Chế độ thuế | `GET /invoices/{id}/tax-assessment`, `POST /invoices/{id}/tax-assessment` |
+| S18 Đơn hàng & phiếu nhập | `GET /purchase-orders`, `GET /purchase-orders/{id}`, `POST /purchase-orders/import`, `POST /goods-receipts/import` |
+| Hộp thoại xuất | `POST /exports/approved-invoices`, `POST /exports/reconciliation` |
 
 ---
 
@@ -722,3 +827,26 @@ Phím `a` **không** duyệt ngay — nó mở hộp xác nhận. Không có ph�
 **Nếu thiếu thời gian, cắt theo thứ tự:** S11 cấu hình (sửa file YAML tay) → S9/S10 readiness → S13 mobile (chỉ cần không vỡ layout) → S2 dashboard (vào thẳng danh sách).
 
 **Không bao giờ cắt:** S5 so sánh 3 chiều, S6 ngoại lệ, S7 xác nhận duyệt, S12 dòng thời gian. Bốn màn này là toàn bộ câu chuyện sản phẩm.
+
+### Trạng thái ngày 10/10/2026 (giao diện React trên `main`)
+
+| Màn hình | Trạng thái | Ghi chú |
+|---|:-:|---|
+| S1 Đăng nhập | ✅ | |
+| S2 Tổng quan | ✅ | Ba thẻ 🟢🟡🔴, chờ duyệt, danh sách cần xử lý trước |
+| S3 Tải lên | ✅ | Tiến độ theo bước, chi phí đọc, lịch sử tải lên. Zip / thư mục / JSON ở PR #20, chưa vào `main` |
+| S4 Danh sách | ✅ | Có hộp thoại xuất |
+| S5 So sánh 3 chiều | ✅ | Có gán dòng tay, khung chứng từ gốc phóng to |
+| S6 Ngoại lệ | ✅ | |
+| S7 Tóm tắt duyệt | ✅ | |
+| S8 Chờ duyệt | ✅ | |
+| S9 / S10 NCC | ✅ | |
+| S11 Cấu hình | ✅ | `/config`, chỉ KTT |
+| S12 Dòng thời gian | ✅ | Tab của chi tiết hóa đơn; nhật ký toàn hệ thống ở `/audit` |
+| S13 Điện thoại | ◐ | Có bố cục co giãn và chế độ tối; chưa kiểm lần lượt từng màn ở 375px |
+| S14 Lô tải lên + ERP | ✅ | |
+| S15 Xem bản đọc | ✅ | Bật ở stage, prod |
+| S16 Nhập tay | ✅ | |
+| S17 Chế độ thuế | ✅ | Chỉ dev (`DOCUMENT_INTAKE`) |
+| S18 Đơn hàng & phiếu nhập | ✅ | |
+| Chi phí `/costs` | ✅ | Chỉ KTT |

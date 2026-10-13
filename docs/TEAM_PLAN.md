@@ -1,6 +1,7 @@
 # Phân công — Invoice Reconciliation Agent
 
 > Yêu cầu công việc cho từng thành viên · 26/09/2026 · Trạng thái: **đã chốt vai trò** — tech lead, frontend, nơi để code chốt ngày 26/09
+> Cập nhật 13/10/2026: thêm tiến độ thật theo code `main` tại `0ecb981` (mục 6) và các quyết định mới (mục 5)
 > Dựa trên: `RESEARCH.md` (nghiên cứu kỹ thuật) · `PRD.md` (yêu cầu sản phẩm) · `BRIEF_v3.md` §12 (lộ trình 5 tuần) · `C4_DESIGN.md` (module)
 > Giả định lịch: tuần 1 là 20–26/09. Nếu lịch của chương trình khác, dịch các cột tuần tương ứng.
 
@@ -225,4 +226,70 @@ Mốc chung khớp với `BRIEF_v3.md` §12: deploy lần đầu ở tuần 2, x
 | 2 | Frontend | **Đã chốt: Huy, dùng React + TypeScript (Vite)** — đổi ngày 30/09/2026, bỏ bước HTML trung gian. Prototype HTML giữ làm bản mẫu giao diện và bản demo không cần cài đặt |
 | 3 | Nơi để code | **Linh hoạt.** Bản nộp và mọi deliverable nằm ở P-143 |
 | 4 | Dương và Hoàn nhận phần nào | Đề xuất như mục 3 — đổi cho nhau nếu thế mạnh ngược lại |
-| 5 | Bút toán | **Đã chốt: không làm.** Hệ thống dừng ở việc duyệt và xuất danh sách hóa đơn đã duyệt; kế toán tự hạch toán trong phần mềm kế toán (PRD F10). Theo góp ý của mentor. Module `ledger` trong code không còn cần — Giáp quyết gỡ hay đổi thành phần xuất file |
+| 5 | Bút toán | **Đã chốt: không làm.** Hệ thống dừng ở việc duyệt và xuất danh sách hóa đơn đã duyệt; kế toán tự hạch toán trong phần mềm kế toán (PRD F10). Theo góp ý của mentor. Module `ledger` đã gỡ ngày 02/10/2026 (migration `0012_drop_journal`), phần xuất file nằm ở module `export` |
+| 6 | Điều phối | **Đã chốt 07/10/2026: chỉ LangGraph.** Bỏ chế độ `inprocess`; mỗi hóa đơn một thread, checkpoint trong PostgreSQL |
+| 7 | Nhà cung cấp mô hình | **Đã chốt 09/10/2026: chỉ OpenRouter** (PR #22), thay quyết định 27/09 gọi thẳng Gemini API. Đọc ảnh bằng Gemini 3.1 Flash-Lite. Không làm so sánh với Document AI (D1) |
+| 8 | Nơi deploy | **Đã chốt 09/10/2026: Docker Compose + Cloudflare tunnel** (PR #23), thay kế hoạch Render. Ba môi trường dev / stage / prod; prod ở `*.fantasticfourr.stream` |
+| 9 | Bộ đọc ở server | **Stage và prod dùng `OCR_MODE=demo`** (đọc mỗi trang 2 lần, của Hoàn) và `READING_REVIEW=true`; dev dùng `OCR_MODE=graph` (đồ thị trích xuất, của Giáp) |
+
+---
+
+## 6. Tiến độ thật đến 10/10/2026
+
+Theo code trên `main` của P-143 tại `0ecb981`, không theo báo cáo miệng. ✅ có trong code và chạy được · ◐ làm một phần · ⏳ chưa làm · ? chưa kiểm được từ code.
+
+### 6.1 Huy
+
+| # | Trạng thái | Ghi chú |
+|---|:-:|---|
+| U1 | ✅ | PRD 1.1 (13/10/2026) theo `main`: mã mới `DOC-07`, `INT-07`, dung sai ngày, truy hồi B1 / B2, 31 endpoint mới |
+| U2 | ◐ | Phần lớn câu hỏi đã chốt theo luật và thông lệ (PRD §14.2). Còn mở: Công ty X có cho gửi hóa đơn thật ra dịch vụ ngoài không |
+| U3 | ⏳ | Chưa có buổi dùng thử với kế toán, chưa có số đo thời gian trước / sau |
+| F0–F3, F7 | ✅ | Giao diện React trên `main`: đăng nhập, tổng quan, tải lên theo bước, danh sách, chi tiết 7 tab, chờ duyệt, NCC, đơn hàng & phiếu nhập, cấu hình, nhật ký, chi phí, lô tải lên |
+| F4 | ◐ | Có thông báo theo mã lỗi; chưa kiểm lần lượt đủ sáu mã trên từng màn |
+| F5 | ? | Chưa kiểm ở hóa đơn 200 dòng |
+| F6 | ✅ | Giao diện chạy ở `https://c4-app-143.fantasticfourr.stream` (bản build sau nginx) |
+| — | ◐ | PR #20 (zip, thư mục, nạp JSON, sửa ô cạnh ảnh gốc, ước tính chi phí lô) đang mở, xung đột với `main` ở `CompareTab.tsx` |
+
+### 6.2 Dương
+
+| # | Trạng thái | Ghi chú |
+|---|:-:|---|
+| D1 | ⏳ | Không làm: nhóm chốt dùng Gemini 3.1 Flash-Lite qua OpenRouter (quyết định 7) |
+| D2 | ✅ | PDF và ảnh đã đọc được (hai bộ đọc `graph` và `demo`); người làm chính là Giáp và Hoàn |
+| D3 | ✅ | Đọc số kiểu Việt (PR #21, phần của Hoàn, sửa theo review) |
+| D4 | ◐ | Cắt một PDF thành nhiều hóa đơn đã có (`DOCUMENT_INTAKE`), chỉ bật ở dev |
+| D5, D6 | ◐ | Mỗi lần gọi đọc 1 trang, file tối đa 50 trang; ngưỡng tin cậy chưa hiệu chỉnh trên bộ đánh giá |
+| D7 | ⏳ | Không có xác minh bbox bằng Tesseract trong code |
+| D8 | ◐ | Có bộ sinh và công cụ đánh giá đọc (`eval/reading`) |
+| D9 | ⏳ | |
+| — | ✅ | Ngoài kế hoạch: script AI log, tài liệu luật khớp và thuế (nhánh `Duong`), cấu hình observability (`observability/`, 09/10) |
+
+### 6.3 Hoàn
+
+| # | Trạng thái | Ghi chú |
+|---|:-:|---|
+| — | ✅ | Ngoài kế hoạch: bộ đọc `OCR_demo_final` (đọc mỗi trang 2 lần, 02/10) — đang là bộ đọc của stage và prod; đọc số kiểu Việt (vào `main` qua PR #21 ngày 09/10, sau khi sửa 12 điểm review) |
+| H1 | ◐ | Có bộ sinh dữ liệu và ERP giả (`eval/erp_sim`); người làm chính là Giáp |
+| H2 | ✅ | Kiểm MST (`INT-05`) có trong code |
+| H3, H4 | ✅ | Khớp L0–L4 có trong code, luật ở `config/matching.yaml`; người làm chính là Giáp |
+| H5 | ✅ | `TAX-01`…`TAX-05`, `tax_groups.yaml` |
+| H6 | ✅ | Giải thích sinh từ dữ kiện có cấu trúc, có công thức |
+| H7 | ◐ | Có `FRD-01`…`FRD-07`; chưa đo recall gian lận |
+| H8 | ◐ | Học alias từ lần gán tay ở trạng thái `PROPOSED`, KTT duyệt mới dùng; chưa đo hóa đơn thứ tư khớp ở L1 |
+| H9 | ⏳ | |
+
+### 6.4 Giáp
+
+| # | Trạng thái | Ghi chú |
+|---|:-:|---|
+| G1 | ✅ | Hợp đồng bàn giao nằm trong code (`dto`, `domain/contracts` từng module) |
+| G2, G3 | ✅ | Toàn bộ luồng chạy bằng API, 65 endpoint |
+| G4 | ✅ | LangGraph + Postgres checkpointer, chỗ dừng chờ người là `interrupt` thật |
+| G5 | ◐ | Ngân sách ngày, cache, ghi chi phí có; chưa có `Embedder`, chưa có mô hình dự phòng |
+| G6 | ✅ | Langfuse trong code (`src/core/tracing.py`), bật khi có khóa; dùng Langfuse Cloud, không tự host |
+| G7 | ◐ | Có `eval/` và công cụ đánh giá đọc, khớp; chưa rõ bản 20 ca chạy trong CI. CI GitHub của org đang không chạy |
+| G8 | ✅ | Prod chạy ở `https://api.fantasticfourr.stream`, PostgreSQL 18 |
+| — | ✅ | Ngoài kế hoạch: luật truy hồi PO B1 và mô hình xem lại B2 (PR #24, tắt mặc định), kéo feed ERP, nhập file MISA AMIS, ba môi trường deploy |
+
+**Việc còn trống, nên giao lại.** Theo commit, phần lớn code backend trên `main` (kể cả phần đọc và phần đối chiếu) do Giáp viết, nên bảng trên ghi theo việc đã có, không theo người được giao ban đầu. Những việc chưa ai làm: U3 (buổi dùng thử, Huy), đo recall gian lận và alias L1 (H7, H8), hiệu chỉnh ngưỡng đọc (D6), merge PR #20, deck và video (P5).
