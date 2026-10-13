@@ -189,72 +189,71 @@ Mọi con số LLM trả về đều bị **đối chiếu lại với text gố
 
 ## 8. Kiến trúc và stack
 
+*(Cập nhật 13/10/2026 theo code `main` `0ecb981`. Bản trước là thiết kế ban đầu; chỗ nào đã đổi thì ghi ở cột "Ghi chú".)*
+
 ```mermaid
 graph LR
-    UI[Giao diện web] -->|REST + JWT| API[FastAPI]
-    API --> G[LangGraph Agent]
-    API --> Q[Queue nền<br/>xử lý theo lô]
-    G --> OCR[Gemini API<br/>đọc ảnh, gọi thẳng]
-    G --> LLM[Gemini API<br/>khớp L4, giải thích]
-    G --> R[Rule engine<br/>config YAML]
-    G --> DB[(PostgreSQL<br/>+ pgvector)]
-    G --> CN[ErpConnector<br/>Seed / ExcelCsv / MISA-H2]
+    UI[Giao diện React<br/>nginx ở prod] -->|REST + JWT| API[FastAPI]
+    API --> G[LangGraph<br/>đồ thị hóa đơn]
+    API --> W[Worker / hàng đợi<br/>xử lý theo lô]
+    G --> GW[gateway]
+    GW --> OR[OpenRouter<br/>Gemini 3.1 Flash-Lite đọc ảnh<br/>mô hình chữ khớp L4, truy hồi B2]
+    G --> R[Luật đối chiếu<br/>config YAML]
+    G --> DB[(PostgreSQL 18<br/>+ pgvector, checkpoint)]
+    ERP[ERP feed] -->|kéo theo lịch| API
     API --> DB
-    API --> FS[File storage]
+    API --> S3[MinIO<br/>file gốc]
     G -.trace.-> LS[Langfuse]
 ```
 
 | Thành phần | Công nghệ | Ghi chú |
 |---|---|---|
-| Agent | LangGraph + LangChain 0.3 | Có sẵn trong template; thêm Postgres checkpointer cho interrupt |
-| LLM | **Gemini 3.1 Flash-Lite qua Gemini API trực tiếp**, không qua OpenRouter | **`temperature=0`** cho mọi node (template đang để 0.7 — phải sửa). Chốt 27/09/2026, PRD F2.13 |
-| Parser XML | `lxml` + schema XML hóa đơn điện tử VN | Nguồn tin cậy nhất, ưu tiên hàng đầu |
-| PDF có text | `pdfplumber` | Không tốn tiền OCR |
-| OCR | **Gemini 3.1 Flash-Lite** đọc ảnh ra JSON (chính) + Tesseract kiểm lại vùng trường tiền · Document AI để so sánh ở D1 | Xem ghi chú bên dưới và RESEARCH 1.4 |
-| Rule engine | Python thuần + YAML | Dung sai, thuế suất, ngưỡng duyệt; có ngày hiệu lực |
-| Fuzzy | `rapidfuzz` | Lọc ứng viên trước khi gọi LLM |
-| Vector DB | **pgvector** trong cùng PostgreSQL | Không phải chạy thêm service; Render Postgres hỗ trợ |
-| Backend | FastAPI + SQLAlchemy + Alembic | Có sẵn khung |
+| Agent | LangGraph 1.2 + Postgres checkpointer | Là bộ điều phối duy nhất từ 07/10/2026 (bỏ chế độ `inprocess`). Hai đồ thị: hóa đơn (trích xuất → chỗ dừng đọc → đối chiếu → định tuyến duyệt) và tài liệu (cắt PDF nhiều hóa đơn) |
+| LLM | **Qua OpenRouter**, một khóa `OPENROUTER_API_KEY` | Đổi 09/10/2026 (PR #22), thay quyết định 27/09 gọi thẳng Gemini API. `temperature=0` cho mọi node |
+| Parser XML | `lxml` + schema XML hóa đơn điện tử VN (TT78) | Nguồn tin cậy nhất, ưu tiên hàng đầu |
+| PDF có text | `pdfplumber`, `pypdfium2` (lớp text, đếm trang) | Không tốn tiền OCR |
+| OCR | **Gemini 3.1 Flash-Lite** qua OpenRouter. `OCR_MODE=graph` (đồ thị trích xuất) ở dev; `OCR_MODE=demo` (đọc mỗi trang 2 lần) ở stage và prod | Không dùng Tesseract; hai lần đọc khác nhau thì trường thành "cần xem". PRD F2.13–F2.17 |
+| Rule engine | Python thuần + YAML | Dung sai, thuế suất, ngưỡng duyệt, luật khớp (`matching.yaml`); có ngày hiệu lực |
+| Fuzzy | `rapidfuzz` + BM25 3-gram, gộp RRF | Lọc ứng viên trước khi gọi LLM |
+| Vector DB | **pgvector** trong cùng PostgreSQL | Không phải chạy thêm service |
+| Backend | FastAPI + `psycopg` 3, migration SQL thuần (`migrations/0001…0016`) | Modular monolith: `src/module/*` (iam, invoice, extraction, reconciliation, approval, vendor, procurement, erp, export, audit, rules, gateway…) |
 | Auth | JWT + phân quyền theo vai trò | 2 vai trò KTV, KTT |
-| Frontend | **React + TypeScript (Vite)** — chốt 30/09/2026 | Đi tiếp từ `docs/prototype/`, đã có sẵn giao diện co giãn theo màn hình và chế độ tối. Chuyển sang React sau, thời điểm chưa chốt |
-| Deploy | Render: Web Service (API), Static Site (giao diện), PostgreSQL | Theo đề bài |
-| Tracing / chi phí | Langfuse qua OpenTelemetry | Deliverable #4, đo chi phí mỗi hóa đơn |
+| Frontend | **React + TypeScript (Vite)** — chốt 30/09/2026 | Bố cục, luồng, bộ màu lấy từ `docs/prototype/` |
+| Lưu file | MinIO (S3) ở stage và prod, URL ký sẵn | Dev dùng đĩa |
+| Deploy | Docker Compose, ba môi trường dev / stage / prod; prod ra internet qua Cloudflare tunnel | Đổi 09/10/2026 (PR #23), thay kế hoạch Render. Địa chỉ ở PRD §10.1 |
+| Tracing / chi phí | Langfuse (`src/core/tracing.py`), bật khi có khóa | Deliverable #4, đo chi phí mỗi hóa đơn. Số đo hệ thống: Prometheus, Loki, Alloy, Grafana (bật riêng ở prod) |
 
-**Ghi chú về OCR** *(ba ý dưới viết trước khi chốt Gemini; giữ lại vì Document AI vẫn là phương án so sánh)*:
+**Ghi chú về OCR** *(ba ý dưới viết trước khi chốt Gemini; giữ lại làm lịch sử lựa chọn, code hiện không dùng Document AI)*:
 
 - **Document AI** trả confidence cho từng token hoặc trường, đúng với yêu cầu N1. **Tuần 1 phải thử ngay** xem Invoice Parser có đọc tốt hóa đơn tiếng Việt không. Nếu không tốt thì dùng Enterprise Document OCR lấy text + confidence, rồi LLM map vào trường.
 - **VietOCR** chỉ nhận dạng từng dòng text, phải ghép với một bộ phát hiện vùng chữ (PaddleOCR detection). Giữ làm phương án khi dữ liệu không được gửi ra ngoài; không ưu tiên trong 5 tuần.
 - Confidence của một trường do LLM map = **confidence thấp nhất của các token OCR tạo ra giá trị đó**.
 
-### 8.1 Cấu trúc thư mục
+### 8.1 Cấu trúc thư mục *(theo `main`, 10/10/2026)*
 
 ```
 src/
-├── agents/
-│   ├── graph.py              # reconciliation graph
-│   ├── state.py              # ReconState
-│   ├── nodes/                # extract, verify_fields, retrieve_docs, match_lines, tax_check,
-│   │                         # fraud_check, classify, propose_action, approve, post, learn
-│   └── tools/                # find_po, find_grn, vector_search, vendor_memory, tax_lookup (mock)
-├── services/
-│   ├── llm.py
-│   ├── extraction/           # xml_invoice.py, pdf_text.py, ocr_gemini.py, ocr_verify.py, amount_in_words.py
-│   ├── rules/                # tolerance.py, vat.py, approval_policy.py, exception_codes.py
-│   ├── connectors/           # base.py (Protocol), seed.py, excel_csv.py   [misa.py o H2]
-│   ├── auth.py
-│   └── export.py             # danh sách hóa đơn đã duyệt, báo cáo Excel
-├── db/                       # SQLAlchemy models, Alembic migrations
-├── models/schemas.py         # Pydantic: Invoice, InvoiceLine, PurchaseOrder, GoodsReceipt,
-│                             # MatchResult, Discrepancy, Approval
-├── api/                      # auth.py, invoices.py, approvals.py, vendors.py, admin.py
-└── config.py
-config/                       # vat_rates.yaml, tolerances.yaml, approval_policy.yaml, limits.yaml
-samples/                      # dữ liệu mẫu tổng hợp (data/ bị gitignore)
-eval/
-├── generator/                # sinh XML, render PDF, ảnh scan có nhiễu
-├── datasets/                 # bộ test có đáp án chuẩn
-└── results/report.md
-frontend/                     # giao diện React + TypeScript (Vite); docs/prototype/ là bản mẫu
+├── core/                     # config, vocab (mã ngoại lệ), migrate, tracing, auth chung
+├── module/                   # mỗi module: domain/ service/ repository/ handler/ dto/, sở hữu bảng riêng
+│   ├── iam/ audit/ rules/    # đăng nhập và vai trò · nhật ký · cấu hình YAML theo tenant
+│   ├── invoice/              # hóa đơn, tải lên, lô, ghi kết quả trích xuất
+│   ├── extraction/ gateway/  # đọc XML / PDF / ảnh · cổng gọi mô hình qua OpenRouter
+│   ├── reconciliation/       # kiểm toàn vẹn, truy hồi PO / GRN, khớp dòng, dung sai, thuế, phân loại
+│   ├── approval/ export/     # duyệt 2 cấp · xuất Excel / CSV
+│   ├── procurement/ vendor/  # PO, phiếu nhập · NCC, memory quy tắc, readiness
+│   ├── erp/ semantic/        # kéo feed ERP · truy hồi ngữ nghĩa (pgvector)
+│   └── reporting/
+├── app/
+│   ├── graph/                # đồ thị LangGraph: invoice, extraction, reconciliation, document; sweeper, waker
+│   ├── wiring/ cli/ jobs/ integrations/
+│   └── factory.py
+└── main.py
+config/                       # vat_rates, tax_groups, tolerances, approval_policy, limits, matching (.yaml)
+migrations/                   # 0001…0016, SQL thuần
+eval/                         # bộ sinh dữ liệu, erp_sim, đánh giá đọc và khớp
+deploy/                       # compose dev / stage / prod, Dockerfile, Cloudflare tunnel
+observability/                # Prometheus, Loki, Alloy, Grafana
+frontend/                     # React + TypeScript (Vite)
 ```
 
 ### 8.2 Bảng dữ liệu chính
@@ -284,7 +283,7 @@ Mọi bảng nghiệp vụ mang `org_id`. Chi tiết trường ở `PRD.md` mụ
 - **Audit log không sửa được** cho mọi thao tác duyệt, sửa trường và cấu hình.
 - Chỉ gửi cho LLM những trường cần thiết; **che số tài khoản ngân hàng** và thông tin không liên quan.
 - Key và secret trong `.env` hoặc biến môi trường Render, không bao giờ commit.
-- Ghi rõ trong tài liệu: dùng Gemini API thì dữ liệu hóa đơn đi ra Google. Hóa đơn thật chỉ qua gói trả phí hoặc credit Google Cloud, không qua gói miễn phí. Muốn giữ nội bộ thì dùng mô hình tự host (việc D9).
+- Ghi rõ trong tài liệu: đọc scan qua OpenRouter thì ảnh hóa đơn đi qua OpenRouter tới nhà cung cấp mô hình (Google). Hóa đơn thật chỉ gửi đi khi chủ dữ liệu đồng ý, không qua gói miễn phí có thể dùng dữ liệu để huấn luyện. Muốn giữ nội bộ thì dùng mô hình tự host (việc D9).
 - **Cách ly tenant** kiểm bằng test: một test tự động cố đọc dữ liệu của tenant khác qua API và phải nhận 404.
 
 ---
@@ -359,7 +358,7 @@ Chia theo mức độ chặn.
 
 **Chặn việc phát triển — cần trả lời trong tuần 1:**
 
-- [x] Gọi thẳng Gemini API (chốt 27/09/2026). Còn hỏi: Công ty X có cho gửi hóa đơn thật ra Google không, hay bắt buộc tự host?
+- [x] Gọi mô hình qua OpenRouter (chốt 09/10/2026, thay quyết định 27/09 gọi thẳng Gemini API). Còn hỏi: Công ty X có cho gửi hóa đơn thật ra ngoài không, hay bắt buộc tự host?
 - [ ] Nhóm có mấy người, và có credit Google Cloud để dùng Document AI không?
 - [ ] Công ty X có cung cấp mẫu hóa đơn, PO, phiếu nhập thật (đã che thông tin) không? Nhóm hàng mua chính là gì?
 

@@ -1,7 +1,7 @@
 # Thiết kế C4 — Invoice Reconciliation Agent
 
-> Kiến trúc hệ thống theo mô hình C4, từ tổng quan tới code · Ngày 23/09/2026
-> Vẽ theo code thật ở repo `P-143` (nhánh `feat/module-api`), không theo ý định trên giấy
+> Kiến trúc hệ thống theo mô hình C4, từ tổng quan tới code · Ngày 23/09/2026, cập nhật Mức 1–3 ngày 13/10/2026
+> Vẽ theo code thật ở repo `P-143`: Mức 1–3 theo `main` tại `0ecb981` (10/10/2026); Mức 4 vẫn theo nhánh `feat/module-api` (23/09)
 > Tài liệu liên quan: `PRD.md` (yêu cầu) · `USER_STORIES.md` (tình huống nghiệp vụ) · `P-143/src/module/README.md` (quy tắc module)
 
 **C4 là gì.** Bốn mức phóng to dần, mỗi mức trả lời một câu hỏi:
@@ -27,23 +27,23 @@
 
 ```mermaid
 flowchart TB
-    ktv["👤 Kế toán viên<br/><i>Tải hóa đơn lên, xử lý chỗ lệch,<br/>duyệt cấp 1, xuất bút toán</i>"]
+    ktv["👤 Kế toán viên<br/><i>Tải hóa đơn, nhập PO và phiếu nhập,<br/>xử lý chỗ lệch, duyệt cấp 1, xuất kết quả</i>"]
     ktt["👤 Kế toán trưởng<br/><i>Duyệt cấp 2, cấu hình dung sai,<br/>duyệt quy tắc nhà cung cấp, xem nhật ký</i>"]
 
-    sys["<b>Hệ thống đối soát hóa đơn</b><br/><i>Đọc hóa đơn, tìm đơn đặt hàng và phiếu nhập kho,<br/>đối chiếu từng dòng, phân loại chỗ lệch,<br/>đề xuất cách xử lý, sinh bút toán</i>"]
+    sys["<b>Hệ thống đối soát hóa đơn</b><br/><i>Đọc hóa đơn, tìm đơn đặt hàng và phiếu nhập kho,<br/>đối chiếu từng dòng, phân loại chỗ lệch,<br/>đề xuất cách xử lý, chuyển duyệt</i>"]
 
     ncc["🏢 Nhà cung cấp<br/><i>Gửi hóa đơn điện tử qua email</i>"]
-    mh["🏢 Phòng mua hàng và kho<br/><i>Xuất file Excel đơn đặt hàng,<br/>phiếu nhập kho</i>"]
-    pmkt["🖥 Phần mềm kế toán<br/><i>MISA, Fast… — nhận file bút toán</i>"]
-    ai["☁️ Dịch vụ AI<br/><i>OpenAI: LLM, embedding<br/>Google Document AI: đọc ảnh</i>"]
-    thue["☁️ Tra cứu mã số thuế<br/><i>Giả lập trong bản MVP</i>"]
+    erp["🖥 ERP của khách<br/><i>Phát PO, phiếu nhập, file hóa đơn<br/>qua một feed tăng dần</i>"]
+    pmkt["🖥 Phần mềm kế toán<br/><i>MISA, Fast… — kế toán tự hạch toán</i>"]
+    ai["☁️ OpenRouter<br/><i>Gemini 3.1 Flash-Lite đọc ảnh,<br/>mô hình chữ khớp dòng khó</i>"]
+    thue["☁️ Tra cứu mã số thuế<br/><i>Giả lập bằng file YAML</i>"]
 
-    ncc -. "hóa đơn XML / PDF / ảnh<br/>(kế toán viên nhận rồi tải lên)" .-> ktv
-    mh -. "file Excel<br/>(kế toán viên nhập vào)" .-> ktv
-    ktv -- "tải hóa đơn, nhập chứng từ,<br/>đối soát, duyệt" --> sys
+    ncc -. "hóa đơn XML / PDF / ảnh<br/>(kế toán viên tải lên)" .-> ktv
+    ktv -- "tải hóa đơn, nhập Excel / CSV / JSON,<br/>đối soát, duyệt" --> sys
     ktt -- "duyệt cấp 2, cấu hình,<br/>tra nhật ký" --> sys
-    sys -- "file bút toán Excel / CSV" --> pmkt
-    sys -- "đọc chữ, xếp trường,<br/>khớp tên hàng khó, viết giải thích" --> ai
+    erp -- "kéo theo lịch hoặc khi bấm" --> sys
+    sys -- "file Excel / CSV hóa đơn đã duyệt" --> pmkt
+    sys -- "đọc ảnh hóa đơn,<br/>khớp tên hàng khó" --> ai
     sys -- "mã số thuế còn hoạt động?" --> thue
 
     classDef person fill:#08427b,color:#fff,stroke:#052e56
@@ -51,14 +51,16 @@ flowchart TB
     classDef external fill:#999,color:#fff,stroke:#6b6b6b
     class ktv,ktt person
     class sys system
-    class ncc,mh,pmkt,ai,thue external
+    class ncc,erp,pmkt,ai,thue external
 ```
 
 **Ranh giới cần nhớ**
 
-- Hệ thống **không nhận email trực tiếp** từ nhà cung cấp, và **không kết nối thẳng** với phần mềm kế toán ở bản MVP. Mọi thứ đi vào qua tay kế toán viên, đi ra dưới dạng file.
-- Hệ thống **không thanh toán**. Nó chỉ đưa hóa đơn tới trạng thái "đã chốt bút toán".
-- Dịch vụ AI chỉ được gọi ở 3 chỗ: đọc hóa đơn không phải XML, khớp tên hàng khó, viết câu giải thích. **Không có con số nào do AI quyết.**
+- Hệ thống **không nhận email trực tiếp** từ nhà cung cấp. Hóa đơn vào qua kế toán viên tải lên, hoặc qua feed ERP.
+- Hệ thống **không sinh bút toán và không ghi sổ** (PRD F10.1). Nó dừng ở hóa đơn đã duyệt và file xuất; hóa đơn đã xuất chuyển `EXPORTED`.
+- Hệ thống **không thanh toán**.
+- Dịch vụ AI chỉ được gọi ở các chỗ: đọc hóa đơn không phải XML, khớp tên hàng khó (bậc L4), và xem lại truy hồi PO khi bật `RETRIEVAL_LLM`. **Không có con số nào do AI quyết**: mọi cặp khớp do mô hình đề xuất đều cần người xác nhận.
+- Đi ra ngoài chỉ qua một cổng (`gateway`), một khóa `OPENROUTER_API_KEY`. Không có khóa thì PDF / ảnh chuyển sang nhập tay.
 
 ---
 
@@ -70,49 +72,51 @@ flowchart TB
     ktt["👤 Kế toán trưởng"]
 
     subgraph sys["Hệ thống đối soát hóa đơn"]
-        web["<b>Ứng dụng web</b> ⏳<br/><i>React + TypeScript (Vite)</i><br/>Danh sách hóa đơn, màn so sánh 3 chiều,<br/>hàng đợi duyệt, cấu hình"]
-        api["<b>API</b> ✅<br/><i>Python 3.11, FastAPI, uvicorn</i><br/>Toàn bộ nghiệp vụ, REST /api/v1,<br/>xác thực JWT, phân quyền"]
-        pipe["<b>Pipeline xử lý nền</b> 🚧<br/><i>InProcessPipeline, chạy chung tiến trình API</i><br/>trích xuất → đối chiếu → chờ duyệt<br/><i>Sẽ thay bằng LangGraph</i>"]
-        db[("<b>Cơ sở dữ liệu</b> ✅<br/><i>PostgreSQL 18 + pgvector</i><br/>Dữ liệu nghiệp vụ mọi tổ chức,<br/>nhật ký, cấu hình theo phiên bản")]
-        files[("<b>Kho file gốc</b> ✅<br/><i>Ổ đĩa cục bộ hoặc S3 / MinIO</i><br/>khóa org_id/sha256")]
-        yaml["<b>Cấu hình mặc định</b> ✅<br/><i>config/*.yaml, đóng gói cùng API</i><br/>dung sai, thuế suất, ngưỡng duyệt,<br/>giới hạn, sơ đồ tài khoản"]
+        web["<b>Ứng dụng web</b> ✅<br/><i>React + TypeScript (Vite)</i><br/>prod: bản build sau nginx"]
+        api["<b>API</b> ✅<br/><i>Python, FastAPI, uvicorn</i><br/>REST /api/v1, JWT, 14 module,<br/>đồ thị LangGraph"]
+        worker["<b>Worker</b> ✅<br/><i>cùng image, src.app.cli.worker</i><br/>chạy job khi QUEUE_BACKEND=postgres"]
+        db[("<b>Cơ sở dữ liệu</b> ✅<br/><i>PostgreSQL 18 + pgvector</i><br/>dữ liệu nghiệp vụ, jobs,<br/>checkpoint LangGraph")]
+        files[("<b>Kho file gốc</b> ✅<br/><i>MinIO (S3) ở stage / prod,<br/>ổ đĩa ở dev</i><br/>khóa org_id/sha256")]
+        yaml["<b>Cấu hình mặc định</b> ✅<br/><i>config/*.yaml trong image</i><br/>dung sai, thuế suất, ngưỡng duyệt,<br/>giới hạn, luật khớp"]
     end
 
-    openai["☁️ OpenAI ⏳<br/><i>LLM gpt-4o-mini, embedding</i>"]
-    docai["☁️ Google Document AI ⏳"]
-    langfuse["☁️ Langfuse Cloud ✅<br/><i>theo dõi và đo chi phí,<br/>nhánh mvp/demo</i>"]
+    tunnel["☁️ Cloudflare tunnel<br/><i>chỉ prod</i>"]
+    openrouter["☁️ OpenRouter ✅"]
+    erpfeed["🖥 Feed ERP<br/><i>erp_sim khi thử</i>"]
+    langfuse["☁️ Langfuse ✅<br/><i>bật khi có khóa</i>"]
 
-    ktv & ktt -- "HTTPS" --> web
+    ktv & ktt -- "HTTPS" --> tunnel --> web
     web -- "REST + JSON, Bearer JWT" --> api
-    api -- "xếp hóa đơn vào hàng đợi" --> pipe
+    web -- "URL ký sẵn: tải file lên / xuống" --> files
     api -- "SQL, psycopg 3 async" --> db
-    pipe -- "SQL" --> db
-    api -- "ghi / đọc file" --> files
-    pipe -- "đọc file" --> files
+    worker -- "SQL, LISTEN / NOTIFY" --> db
+    api & worker -- "ghi / đọc file" --> files
     api -- "đọc lúc khởi động" --> yaml
-    pipe -. "qua module gateway" .-> openai & docai
-    pipe -. "trace, OpenTelemetry" .-> langfuse
+    api & worker -. "qua module gateway" .-> openrouter
+    api -- "kéo theo lịch" --> erpfeed
+    api -. "trace" .-> langfuse
 
     classDef person fill:#08427b,color:#fff,stroke:#052e56
     classDef container fill:#438dd5,color:#fff,stroke:#2e6295
     classDef external fill:#999,color:#fff,stroke:#6b6b6b
     class ktv,ktt person
-    class web,api,pipe,db,files,yaml container
-    class openai,docai,langfuse external
+    class web,api,worker,db,files,yaml container
+    class tunnel,openrouter,erpfeed,langfuse external
 ```
 
 | Khối | Công nghệ | Trạng thái | Ghi chú |
 |---|---|:-:|---|
-| Ứng dụng web | React + TypeScript (Vite) | ⏳ | Khung đã có trên nhánh `feat/frontend-react` của `P-143`: đăng nhập, dashboard, danh sách hóa đơn. Các màn còn lại chuyển từ `docs/prototype/`. Màn hình theo `WIREFRAME.md` |
-| API | FastAPI, uvicorn, psycopg 3 async, SQL thuần, không ORM | ✅ | Mọi endpoint ở `PRD.md` mục 8. Swagger tại `/docs` |
-| Pipeline xử lý nền | `asyncio` task trong cùng tiến trình | 🚧 | `PIPELINE_MODE=background` cho API, `inline` cho test, `off` để giao cho worker riêng sau này. Chưa có LangGraph, chưa có checkpointer, nên hóa đơn đang chạy dở sẽ mất nếu khởi động lại |
-| Cơ sở dữ liệu | PostgreSQL 18 (dùng `uuidv7()` sẵn có), pgvector | ✅ | Migration SQL thuần ở `migrations/`, mỗi file có checksum |
-| Kho file gốc | `STORAGE_BACKEND=local` hoặc `s3` | ✅ | MinIO khi chạy cục bộ. Trùng `sha256` trong cùng tổ chức thì không lưu lại |
-| Cấu hình mặc định | YAML | ✅ | Kế toán trưởng sửa qua API thì lưu thành bản mới ở bảng `config_versions`, đè lên YAML. File YAML hỏng thì API không khởi động |
+| Ứng dụng web | React + TypeScript (Vite) | ✅ | Ở `frontend/`. Prod phục vụ bản build qua nginx |
+| API | FastAPI, uvicorn, psycopg 3 async, SQL thuần, không ORM | ✅ | 65 endpoint (PRD §8), Swagger tại `/docs`, `GET /health` |
+| Điều phối | LangGraph 1.2, checkpoint trong PostgreSQL | ✅ | Bộ điều phối duy nhất từ 07/10/2026 (bỏ `inprocess`). Mỗi hóa đơn một thread; dừng bằng `interrupt` ở chỗ chờ người (đọc, sửa, chờ phiếu nhập); sweeper đánh thức thread đang chờ |
+| Worker | cùng image | ✅ | Chỉ chạy khi `QUEUE_BACKEND=postgres`. Mặc định của server hiện là `inline`: đồ thị chạy trong tiến trình API |
+| Cơ sở dữ liệu | PostgreSQL 18 (`uuidv7()`), pgvector | ✅ | Migration SQL thuần `migrations/0001…0016`, mỗi file có checksum |
+| Kho file gốc | `STORAGE_BACKEND=s3` (MinIO) ở stage / prod, `local` ở dev | ✅ | Trùng `sha256` trong cùng tổ chức thì không lưu lại |
+| Cấu hình mặc định | YAML | ✅ | KTT sửa qua API thì lưu bản mới ở `config_versions`, đè lên YAML. File YAML hỏng thì API không khởi động |
 
-**Theo dõi:** mỗi lượt pipeline chạy qua một hóa đơn là một trace trên Langfuse Cloud, mỗi bước (trích xuất, OCR, đối chiếu, chuyển duyệt) là một span, mỗi lời gọi model ghi model, token và chi phí. Không gửi ảnh hóa đơn, số tài khoản chỉ giữ 4 số cuối. Không có khóa `LANGFUSE_*` thì tắt. Chi tiết ở `P-143/docs/adr/0003-langfuse-tracing.md`.
+**Theo dõi:** mỗi lượt pipeline chạy qua một hóa đơn là một trace Langfuse, mỗi bước (trích xuất, đọc ảnh, đối chiếu, chuyển duyệt) là một span, lời gọi mô hình đọc ảnh ghi token và chi phí. Không gửi ảnh hóa đơn, số tài khoản chỉ giữ 4 số cuối. Không có khóa `LANGFUSE_*` thì tắt. Số đo hệ thống (Prometheus, Loki, Alloy, Grafana) chạy riêng, chỉ mở trong mạng nội bộ của máy prod.
 
-**Chạy cục bộ:** `docker compose` gồm `db`, `minio`, `minio-init`, `backend`. **Triển khai:** Render (Web Service cho API, Static Site cho web, PostgreSQL) theo `BRIEF_v3.md`.
+**Môi trường:** ba môi trường dev / stage / prod chạy bằng Docker Compose (`deploy/`), mỗi môi trường một database. Prod ra internet qua Cloudflare tunnel ở `c4-app-143.`, `api.`, `erp.fantasticfourr.stream`. Chi tiết ở PRD §10.1.
 
 **Đa tổ chức** được đảm bảo ở khối API, không ở cơ sở dữ liệu: mọi bảng nghiệp vụ có `org_id`, mọi repository nhận `org_id` từ token và tự thêm điều kiện lọc vào câu SQL. Bản ghi của tổ chức khác trả `404`, không bao giờ trả `403`.
 
@@ -122,85 +126,84 @@ flowchart TB
 
 ### 3.1 Bản đồ module
 
-API là một **modular monolith**: một tiến trình, chia thành các module có ranh giới cứng. Mũi tên `A → B` nghĩa là A đọc hoặc ghi dữ liệu của B **qua interface của B**, không bao giờ query thẳng vào bảng của B.
+API là một **modular monolith**: một tiến trình, chia thành 14 module có ranh giới cứng. Mũi tên `A → B` nghĩa là A đọc hoặc ghi dữ liệu của B **qua interface của B**, không bao giờ query thẳng vào bảng của B. Sơ đồ lấy bằng cách quét import trong `repository/acl` của từng module trên `main` ngày 13/10/2026; `tests/test_architecture.py` kiểm các luật này, kể cả "không có vòng phụ thuộc".
 
 ```mermaid
 flowchart LR
-    subgraph platform["Nền tảng"]
-        core["<b>core</b><br/>DB pool, unit of work theo tổ chức,<br/>bảo mật, tiền Decimal, lỗi"]
-        app["<b>app</b><br/>wiring: ráp mọi module<br/>pipeline: chạy nền"]
-    end
-
     subgraph admin["Quản trị"]
-        iam["<b>iam</b> ✅<br/>đăng nhập, token, khóa tài khoản"]
-        rules["<b>rules</b> ✅<br/>cấu hình theo tổ chức,<br/>danh mục mã ngoại lệ, tiền bằng chữ"]
+        iam["<b>iam</b> ✅<br/>đăng nhập, token"]
+        rules["<b>rules</b> ✅<br/>cấu hình theo tổ chức,<br/>danh mục mã ngoại lệ"]
         audit["<b>audit</b> ✅<br/>nhật ký chỉ-thêm"]
     end
 
     subgraph master["Danh mục"]
         vendor["<b>vendor</b> ✅<br/>nhà cung cấp, quy tắc nhớ"]
-        procurement["<b>procurement</b> ✅<br/>đơn đặt hàng, phiếu nhập kho,<br/>số lượng đã hóa đơn"]
-        erp["<b>erp</b> 🚧<br/>cổng phần mềm kế toán"]
+        procurement["<b>procurement</b> ✅<br/>PO, phiếu nhập,<br/>số lượng lũy kế"]
+        erp["<b>erp</b> ◐<br/>kéo feed ERP"]
     end
 
     subgraph intake["Tiếp nhận"]
-        invoice["<b>invoice</b> ✅<br/>tải lên, trạng thái, sửa trường"]
-        extraction["<b>extraction</b> 🚧<br/>đọc file thành trường<br/>(mới có XML)"]
+        invoice["<b>invoice</b> ✅<br/>tải lên, lô, trạng thái,<br/>sửa trường"]
+        extraction["<b>extraction</b> ✅<br/>XML, PDF text, ảnh"]
     end
 
     subgraph match["Đối chiếu"]
-        reconciliation["<b>reconciliation</b> ✅<br/>tìm chứng từ, khớp dòng,<br/>kiểm tra, phân loại"]
+        reconciliation["<b>reconciliation</b> ✅<br/>truy hồi, khớp dòng,<br/>kiểm tra, phân loại"]
     end
 
     subgraph after["Sau đối chiếu"]
-        approval["<b>approval</b> ✅<br/>duyệt cấp 1, cấp 2"]
-        ledger["<b>ledger</b> ✅<br/>bút toán, xuất file"]
-        reporting["<b>reporting</b> ✅<br/>danh sách, tổng quan,<br/>điểm sẵn sàng nhà cung cấp"]
+        approval["<b>approval</b> ◐<br/>duyệt cấp 1, cấp 2"]
+        export["<b>export</b> ✅<br/>xuất Excel / CSV"]
+        reporting["<b>reporting</b> ✅<br/>danh sách, tổng quan,<br/>điểm sẵn sàng NCC"]
     end
 
     subgraph aimods["AI"]
-        gateway["<b>gateway</b> 🚧<br/>LLM, OCR, embedding,<br/>ngân sách, cache"]
-        semantic["<b>semantic</b> 🚧<br/>tìm theo vector"]
+        gateway["<b>gateway</b> ◐<br/>OpenRouter, ngân sách,<br/>cache, chi phí"]
+        semantic["<b>semantic</b> ⬜<br/>tìm theo vector"]
     end
 
     invoice --> extraction --> gateway
+    extraction --> rules
+    gateway --> rules
     semantic --> gateway
     invoice --> rules & vendor
     procurement --> vendor
-    erp --> procurement & vendor
-    reconciliation --> invoice & procurement & vendor & rules
-    approval --> invoice & reconciliation & procurement & ledger & rules & vendor
-    ledger --> invoice & reconciliation & procurement & rules & vendor
+    erp --> invoice & procurement & vendor
+    reconciliation --> invoice & procurement & vendor & rules & gateway
+    approval --> invoice & reconciliation & procurement & rules & vendor
+    export --> approval & iam & invoice & procurement & reconciliation & vendor
     reporting --> invoice & reconciliation & approval & vendor
 
     classDef done fill:#438dd5,color:#fff,stroke:#2e6295
     classDef wip fill:#f0ad4e,color:#000,stroke:#b7832f
-    classDef base fill:#6c757d,color:#fff,stroke:#495057
-    class iam,rules,audit,vendor,procurement,invoice,reconciliation,approval,ledger,reporting done
-    class erp,extraction,gateway,semantic wip
-    class core,app base
+    classDef todo fill:#999,color:#fff,stroke:#6b6b6b
+    class iam,rules,audit,vendor,procurement,invoice,extraction,reconciliation,export,reporting done
+    class erp,approval,gateway wip
+    class semantic todo
 ```
 
-*Không vẽ các mũi tên tới `audit` cho đỡ rối: mọi module có ghi dữ liệu đều ghi nhật ký qua `audit` trong cùng transaction. Không vẽ mũi tên tới `core`: mọi module đều dùng nó. `app` biết mọi module; không module nào biết `app`.*
+*Ký hiệu theo `P-143/src/module/ENTITIES.md`: ✅ đủ các tầng; ◐ thiếu một phần implement; ⬜ mới có domain và interface. Không vẽ mũi tên tới `audit`: mọi module có ghi dữ liệu đều ghi nhật ký qua `audit` trong cùng transaction. `src/app` (wiring, đồ thị LangGraph, worker) biết mọi module; không module nào biết `app`.*
 
 ### 3.2 Từng module làm gì
 
 | Module | Trách nhiệm | Bảng sở hữu | Endpoint chính | Trạng thái |
 |---|---|---|---|:-:|
 | **iam** | Đăng nhập, cấp và thu hồi token, khóa tài khoản sau 5 lần sai | `orgs`, `users`, `sessions`, `revoked_access_tokens`, `login_attempts` | `/auth/*` | ✅ |
-| **audit** | Ghi nhật ký cho mọi module, lọc và xuất cho kiểm toán | `audit_logs` (chỉ `INSERT`, `SELECT`) | `/admin/audit-logs`, `/exports/audit` | ✅ |
+| **audit** | Ghi nhật ký cho mọi module, lọc và xuất cho kiểm toán | `audit_logs` (chỉ `INSERT`, `SELECT`) | `/admin/audit-logs*`, `/exports/audit` | ✅ |
 | **rules** | Cấu hình theo tổ chức (YAML + bản mới nhất trong DB, có cache), danh mục mã ngoại lệ, đọc tiền bằng chữ | `config_versions` | `/admin/config*` | ✅ |
-| **vendor** | Nhà cung cấp, quy tắc nhớ (tên hàng, quy đổi đơn vị, dung sai riêng) | `vendors`, `vendor_rules` | `/vendors*` | ✅ |
-| **procurement** | Nhập đơn đặt hàng và phiếu nhập kho từ Excel/CSV; sổ số lượng đã hóa đơn theo từng dòng đơn đặt hàng | `purchase_orders`, `po_lines`, `goods_receipts`, `grn_lines`, `po_line_invoicings` | `/purchase-orders*`, `/goods-receipts/import` | ✅ |
-| **erp** | Interface `ErpConnector` để sau này nối MISA | `sync_runs` | — | 🚧 |
-| **invoice** | Tải lên, chống trùng theo `sha256`, lưu file, máy trạng thái hóa đơn, ghi kết quả trích xuất, sửa trường | `files`, `upload_batches`, `invoices`, `invoice_lines`, `extraction_fields` | `/invoices/upload`, `/invoices/{id}`, `PATCH …/fields`, `…/reprocess`, `…/file` | ✅ |
-| **extraction** | Chọn cách đọc rẻ nhất cho từng file | — | — | 🚧 mới có XML |
-| **reconciliation** | Tìm chứng từ, khớp dòng, kiểm dung sai, thuế, toàn vẹn, phân loại; xử lý ngoại lệ; gán lại đơn đặt hàng thủ công | `invoice_po_links`, `line_matches`, `discrepancies` | `…/comparison`, `…/discrepancies`, `/discrepancies/{id}/resolve`, `…/relink-po` | ✅ không LLM |
-| **approval** | Duyệt, từ chối, trả lại; quyết định có cần cấp 2; ghi số lượng đã hóa đơn khi duyệt xong | `approvals` | `…/approve`, `…/reject`, `…/return`, `/approvals/queue` | ✅ |
-| **ledger** | Sinh bút toán đề xuất, sửa tài khoản, xuất file (xuất là bước chốt: `APPROVED → POSTED`) | `journal_entries`, `journal_lines` | `…/journal`, `/exports/journal` | ✅ |
-| **reporting** | Danh sách công việc, tổng quan, điểm sẵn sàng tự động hóa của nhà cung cấp, chi phí, báo cáo đối soát | — (chỉ đọc qua module khác) | `GET /invoices`, `/dashboard/summary`, `/vendors/{id}/readiness`, `/admin/costs`, `/exports/reconciliation` | ✅ |
-| **gateway** | Cổng duy nhất ra dịch vụ AI: `StructuredLlm`, `OcrEngine`, `Embedder`, `BudgetGuard`; ghi chi phí, cache | `ai_calls`, `ai_cache` | — | 🚧 chỉ có interface |
-| **semantic** | `SemanticIndex`: đánh chỉ mục và tìm theo vector | `embeddings` | — | 🚧 chỉ có interface |
+| **vendor** | Nhà cung cấp, quy tắc nhớ (tên hàng, quy đổi đơn vị, dung sai riêng), học alias từ lần gán tay, tài khoản ngân hàng đã xác minh | `vendors`, `vendor_rules` | `/vendors*` | ✅ |
+| **procurement** | Nhập PO và phiếu nhập từ Excel / CSV / JSON / MISA AMIS; sổ số lượng đã nhận và đã hóa đơn theo dòng PO | `purchase_orders`, `po_lines`, `goods_receipts`, `grn_lines`, `po_line_invoicings` | `/purchase-orders*`, `/goods-receipts*` | ✅ |
+| **erp** | Kéo PO, phiếu nhập, file hóa đơn từ feed ERP theo con trỏ; lưu mỗi lần đồng bộ | `sync_runs` | `/erp/sync`, `/erp/sync-runs` | ◐ chưa đẩy ngược sang ERP |
+| **invoice** | Tải lên (thường và qua URL ký sẵn), lô, chống trùng theo `sha256`, máy trạng thái hóa đơn, ghi kết quả trích xuất, sửa và xác nhận trường | `files`, `upload_sessions`, `upload_batches`, `invoices`, `invoice_lines`, `extraction_fields` | `/invoices/upload*`, `/invoices/batches*`, `/invoices/{id}`, `…/fields*`, `…/reading*`, `…/reprocess` | ✅ |
+| **extraction** | Chọn cách đọc rẻ nhất: XML TT78 → PDF có text → ảnh (`OCR_MODE` graph hoặc demo) | — | — | ✅ |
+| **reconciliation** | Truy hồi PO (bậc 1–2, B1 / B2 theo cờ), khớp dòng theo `matching.yaml`, kiểm dung sai, thuế, toàn vẹn, phân loại; xử lý ngoại lệ; gán PO và gán dòng bằng tay | `invoice_po_links`, `line_matches`, `line_match_overrides`, `discrepancies`, `invoice_tax_assessments` | `…/comparison`, `…/discrepancies`, `/discrepancies/{id}/resolve`, `…/relink-po`, `…/lines/{line_id}/match`, `/reconciliation/invoices/{id}/run` | ✅ |
+| **approval** | Duyệt, từ chối, trả lại; quyết định có cần cấp 2; tách quyền; ghi số lượng đã hóa đơn khi duyệt xong | `approvals` | `…/approve`, `…/reject`, `…/return`, `/approvals/queue` | ◐ |
+| **export** | Xuất hóa đơn đã duyệt và báo cáo đối soát ra Excel / CSV; hóa đơn đã xuất chuyển `EXPORTED`. Không sinh bút toán | — (chỉ đọc) | `/exports/*` | ✅ |
+| **reporting** | Danh sách công việc, tổng quan, điểm sẵn sàng tự động hóa của NCC, chi phí | — (chỉ đọc) | `GET /invoices`, `/dashboard/summary`, `/vendors/{id}/readiness`, `/admin/costs` | ✅ |
+| **gateway** | Cổng duy nhất ra dịch vụ AI qua OpenRouter: mô hình chữ có structured output, mô hình đọc ảnh; kiểm ngân sách ngày, cache, ghi chi phí | `ai_calls`, `ai_cache` | — | ◐ chưa có `Embedder` |
+| **semantic** | Tìm PO theo vector (truy hồi bậc 3) | `embeddings` | — | ⬜ |
+
+*Module `ledger` (bút toán) có ở bản 23/09 đã bị bỏ ngày 02/10/2026 (migration `0012_drop_journal`): trạng thái `POSTED` thành `EXPORTED`, bảng `journal_entries`, `journal_lines` bị xóa.*
 
 ### 3.3 Một hóa đơn đi qua các module thế nào
 
@@ -210,40 +213,41 @@ sequenceDiagram
     actor KTV as Kế toán viên
     participant INV as invoice
     participant ST as Kho file gốc
-    participant P as app.pipeline
+    participant G as app.graph (LangGraph)
     participant EX as extraction
     participant REC as reconciliation
     participant APR as approval
-    participant LED as ledger
+    participant EXP as export
 
     KTV->>INV: POST /invoices/upload (nhiều file)
     INV->>ST: lưu file theo org_id/sha256
-    INV->>INV: tạo hóa đơn UPLOADED
-    INV->>P: enqueue(ids)
+    INV->>INV: tạo hóa đơn UPLOADED trong một lô
+    INV->>G: mở thread cho từng hóa đơn
     INV-->>KTV: 202 + batch_id
 
-    P->>INV: InvoiceExtractionStep
-    INV->>EX: StrategyExtractionRouter (XML trước, rồi PDF, rồi OCR)
-    EX-->>INV: các trường + confidence + bằng chứng
-    INV->>INV: ghi dòng, extraction_fields → EXTRACTED
+    G->>EX: trích xuất (XML trước, rồi PDF text, rồi ảnh)
+    EX-->>INV: trường + confidence + bằng chứng → EXTRACTED
+    opt READING_REVIEW bật, hoặc hóa đơn chỉ đọc từ ảnh
+        G-->>KTV: dừng ở chỗ đọc: GET /invoices/{id}/reading
+        KTV->>INV: xác nhận hoặc sửa trường, POST …/reading/complete
+    end
 
-    P->>REC: ReconcileInvoiceService.run
-    REC->>REC: tìm chứng từ → khớp dòng → kiểm tra → phân loại 🟢🟡🔴
-    REC->>INV: mark_matched → MATCHED
-    P->>INV: → PENDING_L1
+    G->>REC: đối chiếu: truy hồi PO / GRN → khớp dòng → kiểm tra → phân loại 🟢🟡🔴
+    REC->>INV: → MATCHED → PENDING_L1
 
-    KTV->>REC: POST /discrepancies/{id}/resolve (nếu có lệch)
+    KTV->>REC: sửa trường, gán PO, gán dòng, xử lý ngoại lệ (đối chiếu lại ngay)
     KTV->>APR: POST /invoices/{id}/approve
-    APR->>APR: cần cấp 2? (ngưỡng tiền, lệch được chấp nhận, cờ gian lận)
-    APR->>LED: soạn bút toán
-    APR->>INV: → APPROVED (hoặc PENDING_L2)
-    KTV->>LED: POST /exports/journal
-    LED->>INV: → POSTED
+    APR->>APR: cần cấp 2? (ngưỡng tiền, NCC mới, lệch được chấp nhận, cờ gian lận)
+    APR->>INV: → APPROVED (hoặc PENDING_L2, KTT khác người cấp 1 duyệt)
+    KTV->>EXP: POST /exports/approved-invoices
+    EXP->>INV: → EXPORTED
 ```
 
 ---
 
 ## Mức 4 — Code
+
+> Mức này viết theo code ngày 23/09/2026. Cách tổ chức một module và lớp `reconciliation` vẫn đúng; tên và số service đã đổi nhiều. Bản mới nhất của từng module: `P-143/src/module/<module>/README.md`.
 
 ### 4.1 Giải phẫu một module
 

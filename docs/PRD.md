@@ -1,9 +1,29 @@
 # PRD — Invoice Reconciliation Agent
 
-> Tài liệu yêu cầu sản phẩm · Phiên bản 1.0 · Ngày 20/09/2026
-> Pilot: Công ty X · Repo `AI20K-Build-Phase-Cohort-4/P-143`
+> Tài liệu yêu cầu sản phẩm · Phiên bản 1.1 · Cập nhật 13/10/2026 (bản 1.0 ngày 20/09/2026)
+> Pilot: Công ty X · Repo `AI20K-Build-Phase-Cohort-4/P-143`, đối chiếu với `main` tại `0ecb981` (PR #24, 10/10/2026)
 > Tài liệu liên quan: `BRIEF_v3.md` (định vị, lộ trình, rủi ro) · `WIREFRAME.md` (màn hình và luồng người dùng)
 > Đối tượng đọc: kỹ sư trong nhóm, người chấm Demo Day, khách hàng pilot
+
+### Thay đổi ở bản 1.1
+
+Bản này ghi lại những gì code trên `main` đã làm khác hoặc làm thêm so với bản 1.0, từ 03/10 đến 10/10/2026.
+
+| Phần | Thay đổi | Mục |
+|---|---|---|
+| Đọc hóa đơn | Chỉ dùng OpenRouter (bỏ gọi thẳng Gemini). Hai bộ đọc PDF / ảnh, chọn bằng `OCR_MODE`. Đọc số kiểu Việt, trường không đọc được để trống | F2.13–F2.17 |
+| Chỗ dừng đọc | `READING_REVIEW`: sau khi đọc, trường đáng ngờ chờ người xem rồi mới đối chiếu. Bản quét luôn qua người | F2.14 |
+| Hiển thị độ tin cậy | Giao diện hiện nhãn "cần xem" / "Đạt", không hiện con số `confidence` | §1.3, F3.5 |
+| Mã mới | `DOC-07` (hóa đơn xuất trước ngày nhập kho), `INT-07` (hồ sơ thiếu hoặc rách trang) | §4.1, §4.6 |
+| Truy hồi PO | Luật truy hồi cải tiến (B1) và mô hình xem lại (B2), cả hai **tắt mặc định** | F4.11, F4.12 |
+| Khớp dòng | Gán dòng tay từ màn so sánh; luật khớp trong `config/matching.yaml` | F5.9, F5.10 |
+| Dung sai ngày | `date_tolerance_days` 3 → 14 | F6.3, §9 |
+| Lô và ERP | Danh sách lô, chạy lại hóa đơn lỗi của lô; kéo PO, phiếu nhập, hóa đơn từ feed ERP theo lịch | F16, F17 |
+| Giới hạn | `max_pages_per_file` 10 → 50 | F16.1, §9 |
+| API | Thêm 31 endpoint đã chạy trên prod | §8 |
+| Triển khai | Ba môi trường dev / stage / prod; prod mở ra internet qua Cloudflare tunnel | §10.1 |
+
+**Chưa vào `main`, nên prod chưa có:** PR #20 (nhánh `demo/2026-10-09`, đang mở): thả file zip và cả thư mục, nạp nhiều file JSON PO / phiếu nhập một lần, sửa ô đọc sai ngay cạnh ảnh gốc, ước tính thời gian và chi phí cho cả lô khi tải lên, cột "đã đọc" trong lịch sử tải lên. Khi PR này được merge thì cập nhật các mục F2, F16 cho khớp.
 
 ---
 
@@ -38,7 +58,7 @@ Tài liệu này **không** bàn về định vị thị trường, lộ trình 
 1. Mọi giá trị tiền và số lượng dùng `Decimal`. **`float` bị cấm** trong mọi đường đi của số liệu, kể cả tạm thời.
 2. Tiền lưu `NUMERIC(18,4)`, hiển thị làm tròn đến đồng. Số lượng lưu `NUMERIC(18,4)`.
 3. Mọi timestamp lưu UTC, hiển thị theo `Asia/Ho_Chi_Minh`.
-4. Mọi trường trích xuất mang kèm `confidence` và `evidence`. Không có ngoại lệ.
+4. Mọi trường trích xuất mang kèm `confidence` và `evidence`. Không có ngoại lệ. Giao diện **không hiện con số** `confidence`: mỗi trường mang nhãn "cần xem" khi còn câu hỏi cho người, "Đạt" khi không (chốt 07/10/2026). Con số vẫn lưu và vẫn quyết định `INT-01` (F3.5).
 5. Mọi thay đổi trạng thái và mọi lần sửa trường đều ghi `audit_logs`.
 6. Không có API nào đổi trạng thái hóa đơn mà không có người dùng đứng sau (không có job tự duyệt).
 
@@ -104,7 +124,7 @@ Ký hiệu: **[M]** bắt buộc cho MVP · **[S]** nên có · **[H2]** để c
 |---|---|---|
 | `.xml` | `xml_invoice.py` — parse theo schema hóa đơn điện tử VN | `1.0` cho mọi trường |
 | `.pdf` có lớp text | `pdf_text.py` (`pdfplumber`) → LLM map trường | `0.95` cho trường trích trực tiếp bằng regex; theo LLM cho phần còn lại |
-| `.pdf` scan hoặc ảnh | `ocr_gemini.py` — Gemini 3.1 Flash-Lite đọc ảnh ra JSON theo schema, mức `MEDIUM` (F2.13) | Theo F3.5; trường tiền phải qua Tesseract đọc lại vùng (RESEARCH 1.4) |
+| `.pdf` scan hoặc ảnh | Theo `OCR_MODE` (F2.13): `graph` — mẫu bố cục đã biết, không thì mô hình thị giác; `demo` — `OCR_demo_final` đọc ảnh mỗi trang **2 lần** bằng Gemini 3.1 Flash-Lite | `demo`: 0,96 khi hai lần đọc trùng nhau, 0,60 khi khác nhau; `graph`: theo F3.5 |
 
 - F2.4 PDF được thử `pdfplumber` trước; nếu tỉ lệ ký tự trích được trên mỗi trang dưới ngưỡng `min_chars_per_page` (mặc định 200) thì coi là scan và chuyển sang OCR.
 - F2.5 Trường phải trích cho **đầu hóa đơn**: `invoice_number`, `invoice_series` (ký hiệu), `invoice_date`, `vendor_name`, `vendor_tax_code`, `buyer_name`, `buyer_tax_code`, `currency`, `exchange_rate`, `subtotal`, `tax_amount`, `total_amount`, `amount_in_words`, `po_reference` (nếu có in trên hóa đơn), `payment_bank_account`.
@@ -118,10 +138,22 @@ Ký hiệu: **[M]** bắt buộc cho MVP · **[S]** nên có · **[H2]** để c
 - F2.10 Cache kết quả OCR và kết quả LLM map theo `sha256` file, TTL 30 ngày.
 - F2.11 **Trường ngoài schema** — thông tin in trên hóa đơn mà không thuộc F2.5, F2.6 (số hợp đồng, biển số xe, mã khách hàng, ghi chú…) **không được bỏ đi**. Lưu vào `extras` gồm `label` như in trên hóa đơn, `value` dạng chữ, `evidence`. Với XML, toàn bộ khối `TTKhac` đi vào `extras`. `extras` hiển thị trên màn hình chi tiết nhưng **không dùng để đối chiếu hay tính tiền**. Nhãn nào xuất hiện ở nhiều nhà cung cấp thì cân nhắc nâng thành trường chính thức.
 - F2.12 **Trường có trong schema mà hóa đơn không in:** `value = null`, không suy đoán. Trường tùy chọn (`po_reference`, `item_code`, `exchange_rate` khi `currency = VND`) để trống vẫn chạy tiếp. Trường bắt buộc còn lại trống thì `confidence = 0` và sinh `INT-01`.
-- F2.13 **Nhà cung cấp mô hình đọc** *(chốt 27/09/2026)*:
-  - Đường chính: **Gemini 3.1 Flash-Lite, gọi thẳng Gemini API** của Google. **Không đi qua OpenRouter** hay cổng trung gian: giá gốc, dùng được credit Google Cloud và credit của chương trình, dữ liệu chỉ đi qua một bên.
-  - **Hóa đơn thật chỉ gửi qua gói trả phí hoặc credit Google Cloud.** Gói miễn phí của AI Studio có thể dùng dữ liệu để huấn luyện, nên chỉ nhận dữ liệu tổng hợp và dữ liệu cào.
-  - Mọi lời gọi đi qua `gateway`; đổi nhà cung cấp là đổi cấu hình, không sửa code phần đọc. Document AI giữ làm phương án so sánh ở việc D1; mô hình mở (DeepSeek-OCR 2, Qwen3-VL, PaddleOCR-VL) chỉ thử ở việc D9 trên dữ liệu tổng hợp.
+- F2.13 **Nhà cung cấp mô hình và bộ đọc** *(chốt lại 09/10/2026, PR #22; thay quyết định 27/09 gọi thẳng Gemini API)*:
+  - Mọi lời gọi mô hình đi qua **OpenRouter**, một khóa `OPENROUTER_API_KEY`, qua `gateway`. Không còn đường gọi thẳng nhà cung cấp. Không có khóa thì PDF / ảnh thành `FAILED` `UNSUPPORTED_FORMAT` để nhập tay; XML vẫn chạy.
+  - Mô hình đọc ảnh: `OCR_MODEL`, mặc định `google/gemini-3.1-flash-lite` (bản 2.5 từng bịa dòng tiền bằng chữ không có trên trang). Mô hình chữ: `MODEL_NAME`.
+  - Hai bộ đọc PDF / ảnh, chọn bằng `OCR_MODE`:
+
+| `OCR_MODE` | Bộ đọc | Dùng ở |
+|---|---|---|
+| `graph` | Đồ thị trích xuất trong `src/app/graph`: mẫu bố cục đã biết (không tốn tiền), không thì mô hình thị giác; hỏi người phần đáng ngờ. Bật thêm `DOCUMENT_INTAKE` thì một PDF được cắt thành nhiều hóa đơn và có bước chốt chế độ thuế | dev |
+| `demo` | `OCR_demo_final`: đọc ảnh mỗi trang 2 lần, so hai bản đọc. Không đi cùng `DOCUMENT_INTAKE` | stage, prod |
+
+  - Mỗi lần gọi đọc 1 trang (`VISION_CHUNK_PAGES=1`): đọc nhiều trang một lúc làm mất dòng ở bảng dài.
+  - Hóa đơn thật chỉ gửi đi khi chủ dữ liệu đồng ý. Chi phí đọc ước tính hiện **trước khi tải lên** (`GET /invoices/reading-cost`).
+- F2.14 **Chỗ dừng đọc** (`READING_REVIEW`, bật ở stage và prod). Sau khi đọc, trường dưới ngưỡng hoặc trường bắt buộc còn trống thì đồ thị **dừng chờ người** (`GET /invoices/{id}/reading`). Người xác nhận "đúng như in" (`POST /invoices/{id}/fields/confirm`) hoặc sửa, rồi bấm xong (`POST /invoices/{id}/reading/complete`); hóa đơn mới đi tiếp sang đối chiếu. **Hóa đơn chỉ đọc từ ảnh luôn qua bước này.**
+- F2.15 **Số kiểu Việt.** `1.234.567` là một triệu hai trăm ba mươi tư nghìn năm trăm sáu mươi bảy, không phải số thập phân. Cách đọc này chỉ áp cho trường tiền; số lượng theo đúng dấu in trên hóa đơn. Không đọc lại số qua `float`.
+- F2.16 **Không đọc được thì để trống.** Trường mô hình không đọc được giữ `null` và sinh `INT-01`. Không tự điền thuế suất `0%`, không gán độ tin cậy cao cho trường trống. Mỗi dòng giữ thuế suất và tiền thuế in trên chính dòng đó.
+- F2.17 **Xử lý lại không ghi đè chỉnh sửa tay.** `POST /invoices/{id}/reprocess` giữ giá trị đã lưu, kể cả trường người đã sửa (`source_type = manual`). Trang trắng đi thẳng sang nhập tay, không gọi mô hình. Một file tối đa 50 trang (F16.1). Bộ đọc báo hồ sơ thiếu trang, rách hoặc không đọc được thì sinh `INT-07`.
 
 ### F3 — Kiểm tra toàn vẹn trường (N1) **[M]**
 
@@ -136,7 +168,7 @@ Chạy ngay sau trích xuất, trước khi khớp.
   - Sai định dạng hoặc sai chữ số kiểm tra thì `INT-05`, và trường MST có `confidence = 0`.
   - Áp dụng cho **cả MST người bán lẫn MST người mua**. MST người mua phải có **MST gốc** (10 số đầu) bằng MST của tổ chức — hóa đơn đứng tên chi nhánh `…-001` của tổ chức vẫn hợp lệ (§7.2.2). Mã ngoại lệ riêng cho trường hợp này chưa chốt (việc U1).
 - F3.4 **Kiểm ngày:** `invoice_date` không ở tương lai, không quá `max_invoice_age_days` (mặc định 400). Sai thì `INT-04`. `signed_at` cách `invoice_date` quá 7 ngày thì hiện ghi chú INFO — không chặn, vì luật cho phép.
-- F3.5 **Ngưỡng confidence:** trường nào có `confidence < field_confidence_threshold` (mặc định 0.85, riêng trường tiền 0.95) thì sinh `INT-01` và **chặn hóa đơn đạt trạng thái 🟢** dù mọi thứ khác khớp.
+- F3.5 **Ngưỡng confidence:** trường nào có `confidence < field_confidence_threshold` (mặc định 0.85, riêng trường tiền 0.95) thì sinh `INT-01` và **chặn hóa đơn đạt trạng thái 🟢** dù mọi thứ khác khớp. Trên giao diện, trường đó mang nhãn "cần xem" thay cho con số (§1.3).
 - F3.6 Người dùng sửa trường thì `source_type = manual`, `confidence = 1.0`, ngoại lệ `INT-01` tương ứng đóng lại, và pipeline chạy lại từ node `retrieve_docs`.
 
 ### F4 — Truy hồi chứng từ liên quan (N4) **[M]** *(bậc 3 là **[S]**)*
@@ -153,6 +185,9 @@ Bậc thang, dừng ngay khi tìm đủ chứng từ tin cậy:
 - F4.8 **Tự đối chiếu lại khi có phiếu nhập mới** (RESEARCH §8.3). Mỗi lần nhập hoặc đồng bộ phiếu nhập, hệ thống tìm hóa đơn chưa duyệt có `DOC-02` hoặc có ngoại lệ chọn `WAIT_GRN` trên cùng PO, rồi chạy lại từ bước khớp dòng. Ngoại lệ không còn đúng thì **máy đóng**, ghi audit "đóng tự động do phiếu nhập …". Hóa đơn **không tự chuyển trạng thái duyệt** — người vẫn phải bấm. Người đang xem hóa đơn đó được báo có kết quả mới.
 - F4.9 **Dịch vụ không có phiếu nhập kho** (RESEARCH §8.4, câu hỏi Q7 ở USER_STORIES). Dòng PO có `line_type` là `GOODS` hoặc `SERVICE`. Với dòng `SERVICE`, **xác nhận hoàn thành dịch vụ** đóng vai phiếu nhập: người được giao (ví dụ quản lý đội xe) bấm xác nhận trên hệ thống, ghi khối lượng hoặc kỳ dịch vụ, có thể đính kèm biên bản nghiệm thu. Xác nhận là một bản ghi `service_confirmations`; hệ thống coi nó như một dòng phiếu nhập `CONFIRMED` khi khớp dòng. Dòng dịch vụ chưa có xác nhận → `DOC-02`, giống thiếu phiếu nhập. Ai được xác nhận là câu hỏi Q7.
 - F4.10 **Hóa đơn điều chỉnh, thay thế** (Nghị định 123/2020, sửa đổi bởi Nghị định 70/2025). Hóa đơn điều chỉnh phải ghi "Điều chỉnh cho hóa đơn Mẫu số… ký hiệu… số… ngày…"; hóa đơn thay thế ghi "Thay thế cho hóa đơn…". Hệ thống đọc dòng này, tìm hóa đơn gốc theo khóa tự nhiên (§7.2.2) và lưu quan hệ ở `invoice_adjustments`. Một hóa đơn điều chỉnh có thể điều chỉnh **nhiều** hóa đơn trong cùng tháng của cùng người mua. Khi hóa đơn điều chỉnh giảm được duyệt, ngoại lệ đang chọn `REQUEST_CREDIT_NOTE` của hóa đơn gốc được đề xuất đóng — **người xác nhận** mới đóng. Không tìm thấy hóa đơn gốc → `DOC-01` kèm ghi chú "không tìm thấy hóa đơn gốc".
+- F4.11 **Luật truy hồi cải tiến (B1)** — cờ `RETRIEVAL_RULES`, **tắt mặc định** (PR #24). Khi bật: số PO in trên hóa đơn được chuẩn hóa rồi kiểm lại với NCC và các dòng; sai đúng một ký tự thì sửa; không thấy PO thì nới khoảng `lookback_days` một lần; các PO điểm ngang nhau được phân định bằng phần còn lại chưa hóa đơn. Không dùng mô hình. Tắt thì chạy đúng F4.1–F4.6.
+- F4.12 **Mô hình xem lại truy hồi (B2)** — cờ `RETRIEVAL_LLM`, **tắt mặc định**, cần `OPENROUTER_API_KEY`. Khi bật: mô hình xếp thứ tự các PO đưa cho người chọn trong bằng chứng của `DOC-01` / `DOC-06`, **không tự gắn PO**; và xem lại liên kết chỉ dựa vào NCC + ngày (bậc 2), không đồng ý thì gỡ liên kết và sinh `DOC-06`. Mô hình từ chối trả lời thì không đổi gì.
+- F4.13 **Gán lại PO bằng tay:** `POST /invoices/{id}/relink-po` với danh sách số PO và lý do; hóa đơn đối chiếu lại.
 
 ### F5 — Khớp dòng hàng **[M]**
 
@@ -175,6 +210,10 @@ Bậc thang từ rẻ đến đắt. Mỗi dòng hóa đơn chỉ đi xuống b�
 - F5.6 Với mỗi cặp dòng đã khớp, tính và lưu: `qty_delta`, `price_delta`, `price_delta_pct`, `amount_delta`, kèm công thức dạng chuỗi để hiển thị cho người dùng.
 - F5.7 **Một dòng hóa đơn nhiều lần giao.** Hóa đơn gộp cuối kỳ thì một dòng hóa đơn ứng với **nhiều** dòng phiếu nhập (hoặc nhiều xác nhận dịch vụ) của cùng dòng PO. Lưu ở `line_match_receipts`; số lượng so sánh là **tổng** số nhận của các phiếu đó, trừ phần đã được hóa đơn khác dùng.
 - F5.8 **Bảng kê kèm theo hóa đơn.** Hóa đơn ghi "theo bảng kê số…" thì khớp theo **từng dòng của bảng kê**; dòng tổng trên hóa đơn chỉ dùng để kiểm cộng dồn. Trang bảng kê được nhận ra ở bước tách (RESEARCH §2.1).
+- F5.9 **Gán dòng bằng tay** (07/10/2026). Từ màn so sánh 3 chiều, người gán một dòng hóa đơn đang `ITM-01` / `ITM-02` vào một dòng PO, hoặc ghi "không thuộc PO nào" (`PUT /invoices/{id}/lines/{line_id}/match`, kèm lý do). Hóa đơn đối chiếu lại ngay. Lần gán này được học thành alias ở trạng thái `PROPOSED`, KTT duyệt mới dùng (F12).
+- F5.10 **Luật khớp nằm trong `config/matching.yaml`** (§9). Hai điểm đổi so với bảng trên:
+  - L2: tên hàng trùng **nhiều** dòng PO thì không tự nhận dòng đầu. Đơn giá + số lượng + ĐVT trùng đúng một dòng thì **đề xuất** (`ITM-02`), không thì người chọn.
+  - Đơn giá trùng chính xác với ≤ 5 dòng PO được đưa vào danh sách ứng viên làm bằng chứng. Mọi cặp do mô hình hoặc do đơn giá đề xuất đều thành `ITM-02`, và câu giải thích ghi rõ ai đề xuất. Mô hình không thấy giá và số lượng.
 
 ### F6 — Kiểm dung sai **[M]**
 
@@ -182,7 +221,7 @@ Bậc thang từ rẻ đến đắt. Mỗi dòng hóa đơn chỉ đi xuống b�
 
 - F6.1 **Giá:** `|price_delta_pct| ≤ price_tolerance_pct` (mặc định 2%) **và** `|amount_delta| ≤ price_tolerance_abs_vnd` (mặc định 50.000). Phải thỏa **cả hai**, để một lô hàng lớn lệch 1% không lọt.
 - F6.2 **Số lượng lũy kế:** `qty_invoiced_to_date ≤ qty_received_to_date × (1 + qty_tolerance_pct)` (mặc định 0%). Vượt → `QTY-01`.
-- F6.3 **Ngày:** `invoice_date` phải ≥ ngày GRN sớm nhất tương ứng, trừ dung sai `date_tolerance_days` (mặc định 3, để xử lý trường hợp hóa đơn xuất trước khi nhập kho ghi sổ).
+- F6.3 **Ngày:** `invoice_date` phải ≥ ngày GRN sớm nhất tương ứng, trừ dung sai `date_tolerance_days` (mặc định **14**, để xử lý trường hợp hóa đơn xuất trước khi nhập kho ghi sổ). Vượt thì sinh `DOC-07` (REVIEW). Bản 1.0 ghi 3 ngày; nâng lên 14 ngày từ 02/10/2026 vì với 3 ngày, khoảng 1/5 số dòng bị gắn cờ, còn với 14 ngày chỉ khoảng 2%. Số đo trên log mua hàng công khai BPI 2019, trong đó 61,5% hóa đơn lập trước phiếu nhập (ghi chú trong `config/tolerances.yaml`).
 - F6.4 Giá hóa đơn **thấp hơn** PO không được tự động cho qua im lặng: sinh `PRC-02` mức INFO, vì thường là chiết khấu chưa khai báo hoặc nhầm dòng.
 - F6.5 **Dung sai nhiều tầng** (RESEARCH §8.3). Mỗi tham số trong `tolerances.yaml` lấy theo thứ tự ưu tiên, gặp tầng nào có thì dừng: `by_vendor_item` (MST gốc + mã hàng) → `by_vendor` (MST gốc) → `by_item` (mã hàng) → `by_category` → `defaults`. Mỗi ngoại lệ ghi rõ **dung sai lấy từ tầng nào**, để kế toán biết vì sao lệch này cho qua.
 - F6.6 **Đơn giá đã gồm thuế** (hay gặp ở hóa đơn từ máy tính tiền, cây xăng, bán lẻ). Nhận ra bằng số học: nếu `quantity × unit_price` xấp xỉ **thành tiền đã gồm thuế** của dòng mà không xấp xỉ `line_net`, thì đơn giá đã gồm thuế. Khi đó quy về giá chưa thuế `unit_price / (1 + rate)` rồi mới so với PO; câu giải thích ghi rõ đã quy đổi. NCC có cờ `prices_include_tax` thì không phải đoán lại. PO ghi giá trước hay sau thuế là câu hỏi Q8.
@@ -281,11 +320,12 @@ Bậc thang từ rẻ đến đắt. Mỗi dòng hóa đơn chỉ đi xuống b�
 
 ### F16 — Giới hạn và hàng đợi (N2) **[S]**
 
-- F16.1 Giới hạn theo `limits.yaml`: `max_files_per_upload` (20), `max_pages_per_file` (10), `max_file_size_mb` (20), `daily_ocr_pages` (500), `daily_llm_usd` (5.0).
+- F16.1 Giới hạn theo `limits.yaml`: `max_files_per_upload` (20), `max_pages_per_file` (**50**, bản 1.0 ghi 10; có hóa đơn thật dài 25 trang), `max_file_size_mb` (20), `daily_ocr_pages` (500), `daily_llm_usd` (5.0). Người dùng chọn hơn 20 file thì giao diện tự chia thành nhiều lô 20 file.
 - F16.2 Vượt giới hạn thì **từ chối rõ ràng** với thông điệp nêu giới hạn nào và giá trị hiện tại — không âm thầm cắt bớt.
 - F16.3 Xử lý chạy nền theo hàng đợi. API upload trả ngay `202` kèm `batch_id`; frontend hỏi tiến độ qua polling.
 - F16.4 Chạm ngân sách LLM/OCR trong ngày thì hóa đơn mới xếp hàng chờ, trạng thái hiển thị `QUEUED` kèm thời điểm dự kiến xử lý.
 - F16.5 Mọi lệnh gọi LLM và OCR ghi lại `tokens`, `cost_usd`, `duration_ms` để dựng bảng chi phí mỗi hóa đơn.
+- F16.6 **Lô tải lên** (07/10/2026). Mỗi lần tải lên, hoặc mỗi lần ERP kéo về, là một lô. `GET /invoices/batches` liệt kê các lô, mới nhất trước. `POST /invoices/batches/{id}/retry-failed` đưa mọi hóa đơn `FAILED` của lô trở lại pipeline. `GET /invoices/uploads` là lịch sử tải lên, kể cả file trùng và file bị từ chối. Tải file lớn đi thẳng từ trình duyệt vào kho lưu trữ qua URL ký sẵn (`POST /invoices/uploads` rồi `…/complete`).
 
 ### F17 — Cổng ERP **[M cho interface, H2 cho implementation thật]**
 
@@ -305,6 +345,8 @@ class ErpConnector(Protocol):
 - F17.3 `capabilities` khai báo connector hỗ trợ gì (`can_push`, `supports_incremental`, `has_grn`). UI ẩn nút "Đẩy sang ERP" khi `can_push = False`.
 - F17.4 `push_approved_invoices` của MVP **chỉ sinh file**, không gọi mạng. Ở H2, `MisaConnector` đẩy hóa đơn đã duyệt sang MISA ở dạng chứng từ chờ kế toán hạch toán — **không đẩy bút toán**.
 - F17.5 Mọi lần đồng bộ ghi `sync_runs` với số bản ghi lấy về, số lỗi, thời gian.
+- F17.6 **Đã làm đến đâu** (10/10/2026). Đã có `HttpFeedConnector`: kéo PO, phiếu nhập và file hóa đơn từ một feed ERP tăng dần, theo lịch (`ERP_PULL_INTERVAL_SECONDS`, prod 4 giờ một lần) hoặc ngay khi bấm (`POST /erp/sync`). Lịch sử xem ở `GET /erp/sync-runs`. Dữ liệu kéo về đi cùng đường ghi với người dùng nhập: cùng giới hạn, cùng chống trùng `sha256`. Lần sau đọc tiếp từ con trỏ của lần trước. ERP để thử là `eval/erp_sim`, cứ 5 phút sinh một giao dịch mua mới. **Chưa có** `SeedConnector`, `ExcelCsvConnector` (F17.2) và `push_approved_invoices` (F17.4); kế toán dùng file xuất ở F15.
+- F17.7 **Nhập file từ phần mềm kế toán.** File "Nhập kho" theo mẫu import của MISA AMIS (tiêu đề cột tiếng Việt) được đọc thành phiếu nhập kho. PO và phiếu nhập cũng nhập được từng cái bằng JSON (`POST /purchase-orders`, `POST /goods-receipts`), cùng đường ghi với import Excel / CSV.
 
 ---
 
@@ -323,7 +365,8 @@ class ErpConnector(Protocol):
 | `DOC-03` | Phiếu nhập về muộn | GRN có ngày > `invoice_date + grn_late_days` | REVIEW | `ACCEPT` nếu kho xác nhận |
 | `DOC-04` | PO đã đóng | PO ở trạng thái `CLOSED` hoặc `CANCELLED` | BLOCK | `REJECT` hoặc mở lại PO |
 | `DOC-05` | Hóa đơn gộp nhiều PO | Các dòng khớp vào ≥ 2 PO khác nhau | INFO | Không cần hành động, chỉ hiển thị rõ |
-| `DOC-06` | PO nhập nhằng | ≥ 2 ứng viên PO chênh điểm < 10% | REVIEW | Người dùng chọn PO đúng |
+| `DOC-06` | PO nhập nhằng | ≥ 2 ứng viên PO chênh điểm < 10%; hoặc mô hình xem lại không đồng ý với liên kết theo NCC + ngày (F4.12) | REVIEW | Người dùng chọn PO đúng |
+| `DOC-07` | Hóa đơn xuất trước ngày nhập kho | `invoice_date` sớm hơn ngày GRN sớm nhất quá `date_tolerance_days` (F6.3) | REVIEW | `ACCEPT` nếu kho xác nhận ngày nhập |
 
 ### 4.2 Nhóm QTY — số lượng
 
@@ -368,11 +411,12 @@ class ErpConnector(Protocol):
 | Mã | Tên | Tín hiệu | Mức | Đề xuất mặc định |
 |---|---|---|---|---|
 | `INT-01` | Trường tin cậy thấp | `confidence` dưới ngưỡng | REVIEW | Người dùng xác nhận hoặc sửa |
-| `INT-02` | Cộng dồn không khớp | `Σ line_net ≠ subtotal`, hoặc `subtotal + tax ≠ total` | BLOCK | Kiểm tra lại trích xuất |
+| `INT-02` | Cộng dồn không khớp | `Σ line_net ≠ subtotal`, hoặc `subtotal + tax ≠ total` | BLOCK | Kiểm tra lại trích xuất. Sửa một ô tiền thì các tổng **không tự đổi theo**: người đối chiếu bản gốc rồi sửa ô sai |
 | `INT-03` | Tiền bằng chữ không khớp tiền bằng số | So sánh chuỗi đã chuẩn hóa | BLOCK | Kiểm tra lại — dấu hiệu OCR sai chữ số |
 | `INT-04` | Ngày không hợp lệ | Tương lai, hoặc quá cũ | REVIEW | Sửa tay |
 | `INT-05` | Mã số thuế sai định dạng | Không phải dạng 10, 13 hoặc 12 số; hoặc sai chữ số kiểm tra (F3.3) | REVIEW | Sửa tay — thường do OCR đọc sai một chữ số |
 | `INT-06` | Giá trị không tìm thấy trong nguồn | LLM trả số không có trong text gốc | BLOCK | Nhập tay — **không bao giờ dùng số của LLM** |
+| `INT-07` | Hồ sơ thiếu hoặc rách trang | Bộ đọc báo file thiếu trang, rách hoặc không đọc được (F2.17) | BLOCK | Lấy lại bản quét đủ trang rồi tải lên, hoặc nhập tay |
 
 ### 4.7 Nhóm FRD — trùng lặp và bất thường
 
@@ -685,15 +729,32 @@ Tiền tố `/api/v1`. Mọi endpoint trừ `/auth/*` cần `Authorization: Bear
 | Method | Path | Vai trò | Mô tả |
 |---|---|---|---|
 | POST | `/invoices/upload` | mọi | Multipart, nhiều file. Trả `202` + `batch_id` |
+| POST | `/invoices/uploads` | mọi | Tải lên hai bước, bước 1: xin URL ký sẵn, file đi thẳng vào kho lưu trữ (F16.6) |
+| POST | `/invoices/uploads/{id}/complete` | mọi | Bước 2: server kiểm từng file đã lên kho và tạo hóa đơn |
+| GET | `/invoices/uploads` | mọi | Lịch sử tải lên, kể cả file trùng và file bị từ chối |
+| GET | `/invoices/reading-cost` | mọi | Token và chi phí ước tính để đọc một trang PDF / ảnh, hiện trước khi tải lên |
+| GET | `/invoices/batches` | mọi | Danh sách lô: lô người dùng tải lên và lô ERP kéo về |
 | GET | `/invoices/batches/{id}` | mọi | Tiến độ xử lý lô |
+| POST | `/invoices/batches/{id}/retry-failed` | mọi | Chạy lại mọi hóa đơn `FAILED` của lô |
 | GET | `/invoices` | mọi | Danh sách, lọc theo `status`, `classification`, `vendor_id`, `date_from`, `date_to`, `q`; phân trang cursor |
 | GET | `/invoices/{id}` | mọi | Chi tiết đầy đủ: trường + confidence + dòng + chứng từ liên quan |
 | GET | `/invoices/{id}/comparison` | mọi | Dữ liệu cho màn so sánh 3 chiều, đã ghép dòng |
 | GET | `/invoices/{id}/discrepancies` | mọi | Danh sách ngoại lệ kèm giải thích và đề xuất |
 | PATCH | `/invoices/{id}/fields` | mọi | Sửa một hoặc nhiều trường; kích hoạt chạy lại |
-| POST | `/invoices/{id}/relink-po` | mọi | Gán lại PO thủ công |
-| POST | `/invoices/{id}/reprocess` | mọi | Chạy lại pipeline |
+| POST | `/invoices/{id}/fields/confirm` | mọi | Xác nhận trường đúng như in (`"subtotal"`, `"lines[3].unit_price"`); tối đa 500 trường một lần |
+| GET | `/invoices/{id}/reading` | mọi | Các trường người phải xem ở chỗ dừng đọc (F2.14). Chỉ có khi `READING_REVIEW` hoặc `DOCUMENT_INTAKE` bật |
+| POST | `/invoices/{id}/reading/complete` | mọi | Người xem xong bản đọc; hóa đơn đi tiếp sang đối chiếu |
+| POST | `/invoices/{id}/manual-extraction` | mọi | Nhập tay hóa đơn PDF / ảnh chưa trích xuất được |
+| POST | `/invoices/{id}/relink-po` | mọi | Gán lại PO thủ công (F4.13) |
+| PUT | `/invoices/{id}/lines/{line_id}/match` | mọi | Gán một dòng hóa đơn vào dòng PO, hoặc `null` = không thuộc PO nào (F5.9) |
+| POST | `/reconciliation/invoices/{id}/run` | mọi | Chạy đối chiếu ngay cho hóa đơn `EXTRACTED` / `MATCHED`; hóa đơn đang chờ duyệt → `409` |
+| POST | `/invoices/{id}/reprocess` | mọi | Chạy lại pipeline; giữ giá trị đã lưu và chỉnh sửa tay (F2.17) |
+| GET | `/invoices/{id}/workflow` | mọi | Chỗ dừng hiện tại của hóa đơn trong đồ thị (chỉ đọc) |
 | GET | `/invoices/{id}/file` | mọi | Tải file gốc (stream, có kiểm tenant) |
+| GET / POST | `/invoices/{id}/tax-assessment` | mọi | Chế độ thuế và cơ sở giá; người quyết khi đồ thị dừng hỏi. Chỉ có khi `DOCUMENT_INTAKE` bật |
+| GET | `/dashboard/summary` | mọi | Ba thẻ 🟢 / 🟡 / 🔴, số chờ duyệt từng cấp, tổng tiền lệch chưa xử lý |
+
+Chế độ tài liệu (`DOCUMENT_INTAKE` bật, chỉ ở dev): `GET /documents`, `GET /documents/{file_id}`, `GET /documents/{file_id}/file`, `GET /documents/{file_id}/workflow`, `POST /documents/{file_id}/segments` (người xác nhận hoặc sửa cách cắt một PDF thành nhiều hóa đơn).
 
 ### 8.3 Ngoại lệ và duyệt
 
@@ -710,9 +771,16 @@ Tiền tố `/api/v1`. Mọi endpoint trừ `/auth/*` cần `Authorization: Bear
 | Method | Path | Vai trò | Mô tả |
 |---|---|---|---|
 | POST | `/purchase-orders/import` | mọi | Excel/CSV |
+| POST | `/purchase-orders` | mọi | Tạo hoặc cập nhật một PO bằng JSON, cùng đường ghi với import |
 | GET | `/purchase-orders` | mọi | Danh sách, tìm kiếm |
-| POST | `/goods-receipts/import` | mọi | Excel/CSV |
+| GET | `/purchase-orders/{id}` | mọi | Một PO kèm dòng hàng (số đã nhận / đã hóa đơn lũy kế) và phiếu nhập |
+| POST | `/goods-receipts/import` | mọi | Excel/CSV, hoặc file "Nhập kho" của MISA AMIS (F17.7) |
+| POST | `/goods-receipts` | mọi | Tạo hoặc cập nhật một phiếu nhập bằng JSON |
+| POST | `/erp/sync` | KTT | Kéo ngay những gì ERP đã phát từ lần trước (F17.6). Đang có lần đồng bộ khác → `409 SYNC_RUNNING`; chưa khai báo nguồn ERP → `409 ERP_NOT_CONFIGURED` |
+| GET | `/erp/sync-runs` | mọi | Nguồn ERP đang dùng và các lần đồng bộ gần nhất |
 | GET | `/vendors` | mọi | Danh sách kèm `readiness_score` |
+| GET | `/vendors/{id}` | mọi | Chi tiết một NCC |
+| PUT | `/vendors/{id}/bank-account` | KTT | Đặt tài khoản nhận tiền đã xác minh của NCC (F8.5) |
 | GET | `/vendors/{id}/readiness` | mọi | Chi tiết điểm và khuyến nghị |
 | GET | `/vendors/{id}/rules` | mọi | Quy tắc memory |
 | POST | `/vendors/{id}/rules` | KTT | Tạo quy tắc |
@@ -725,6 +793,8 @@ Tiền tố `/api/v1`. Mọi endpoint trừ `/auth/*` cần `Authorization: Bear
 | GET | `/admin/config` | KTT | Cấu hình hiện hành |
 | PUT | `/admin/config/{name}` | KTT | Cập nhật, ghi audit, có phiên bản |
 | GET | `/admin/audit-logs` | KTT | Lọc và phân trang |
+| GET | `/admin/audit-logs/{entity_type}/{entity_id}` | KTT | Toàn bộ lịch sử của một đối tượng, cũ nhất trước |
+| POST | `/admin/readiness/recompute` | KTT | Tính lại điểm readiness của mọi NCC (worker chạy hằng đêm; gọi tay khi cần) |
 | GET | `/admin/costs` | KTT | Chi phí theo ngày, theo loại hóa đơn |
 | POST | `/exports/approved-invoices` | mọi | Xuất danh sách hóa đơn đã duyệt (F15.1) |
 | POST | `/exports/reconciliation` | mọi | Xuất báo cáo đối soát |
@@ -760,7 +830,7 @@ defaults:
   price_tolerance_pct: 2.0
   price_tolerance_abs_vnd: 50000
   qty_tolerance_pct: 0.0
-  date_tolerance_days: 3
+  date_tolerance_days: 14       # bản 1.0 ghi 3; đổi 02/10/2026, lý do ở F6.3
   grn_late_days: 30
   sum_tolerance_vnd: 10
   tax_rounding_per_line_vnd: 1
@@ -858,13 +928,37 @@ reject_reason_min_length: 10
 ```yaml
 version: 1
 max_files_per_upload: 20
-max_pages_per_file: 10
+max_pages_per_file: 50          # bản 1.0 ghi 10
 max_file_size_mb: 20
 allowed_extensions: [xml, pdf, png, jpg, jpeg]
 daily_ocr_pages: 500
 daily_llm_usd: 5.0
 queue_when_budget_exceeded: true
 ```
+
+### `config/matching.yaml` *(mới, 07/10/2026)*
+
+Luật khớp dòng F5: cách sinh ứng viên, thông số, giá, dòng không phải hàng, cách hỏi mô hình. Mỗi luật có một mục `evidence`: vấn đề nó sửa, thước đo, đã thấy ở đâu, trạng thái (`seen` / `partial` / `untested`). Phần lớn số đo trong `evidence` đo trên bộ eval do nhóm sinh ra, nên cho biết luật chạy đúng, **chưa** cho biết độ chính xác trên chứng từ thật. Tenant ghi đè cả file qua `PUT /admin/config/matching`. Trích phần chính:
+
+```yaml
+version: 1
+ladder:
+  fuzzy_margin: 10        # L3 chỉ tự nhận khi dòng PO tốt nhất hơn dòng thứ hai ≥ 10 điểm
+  name_ties: true         # L2: tên trùng nhiều dòng PO thì không tự nhận (F5.10)
+candidates:
+  top_k: 10               # BM25 3-gram và token_set_ratio, mỗi bên 10 dòng PO, gộp bằng RRF
+  max_offered_to_llm: 5
+  open_po_max_lines: 40
+  numeric:
+    max_matches: 5        # đơn giá trùng ≤ 5 dòng PO thì đưa vào ứng viên
+    propose_unique: true  # đơn giá + SL + ĐVT trùng đúng một dòng thì đề xuất (ITM-02)
+```
+
+Bất biến không đổi được qua file này: cặp do mô hình hoặc do đơn giá chọn luôn thành `ITM-02` và người xác nhận; mô hình không thấy giá và số lượng; mức và hành động của mã ngoại lệ do bảng mã quyết định.
+
+### `config/mock/tax_lookup.yaml` *(mới)*
+
+Giả lập tra cứu MST của cơ quan thuế cho F8.6. MST nằm trong `inactive` sinh `FRD-06` (BLOCK, `REJECT`); MST không có trong file là `UNKNOWN`. Bản demo có `0399999999` là công ty đã ngừng hoạt động.
 
 ---
 
@@ -879,9 +973,22 @@ queue_when_budget_exceeded: true
 | **Bảo mật** | Xem `BRIEF_v3.md` mục 10. Thêm: rate limit `/auth/login`; header bảo mật cơ bản; CORS chỉ cho domain frontend |
 | **Cách ly tenant** | Có test tự động: user tenant A gọi mọi endpoint với id của tenant B và phải nhận `404` |
 | **Giao diện** | Tiếng Việt toàn bộ. Responsive từ 360px. Dark mode. Định dạng số theo `vi-VN` (dấu chấm ngăn nghìn) |
-| **Khả năng quan sát** | Mỗi lượt xử lý một hóa đơn là một trace tra được trên Langfuse (theo `invoice_id`), mỗi bước là một span, mỗi lời gọi model ghi token và chi phí. Không gửi ảnh hóa đơn; số tài khoản chỉ giữ 4 số cuối. Mỗi hóa đơn hiển thị được chi phí xử lý |
+| **Khả năng quan sát** | Mỗi lượt xử lý một hóa đơn là một trace tra được trên Langfuse (theo `invoice_id`), mỗi bước là một span, mỗi lời gọi model ghi token và chi phí. Không gửi ảnh hóa đơn; số tài khoản chỉ giữ 4 số cuối. Mỗi hóa đơn hiển thị được chi phí xử lý. **Đã có trong code** (`src/core/tracing.py`), chỉ bật khi đặt `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY`. Số đo hệ thống (Prometheus, Loki, Alloy, Grafana) có PRD riêng ở `observability/PRD_observability.md` của repo P-143, bật riêng ở prod |
 | **Chất lượng mã** | Test coverage ≥ 60%, trong đó parser, rule engine thuế và dung sai phải ≥ 90% |
 | **Khả năng cấu hình** | Đổi ngưỡng dung sai và ngưỡng duyệt **không cần deploy lại** |
+
+### 10.1 Môi trường chạy *(09/10/2026, PR #23)*
+
+| | dev | stage | prod |
+|---|---|---|---|
+| Lệnh | `just up` | `just stage-up` | `just prod-up` |
+| Cấu hình | `.env` | `.env` rồi `.env.stage` | `.env` rồi `.env.prod` |
+| Ra internet | không | không, cổng chỉ mở ở `127.0.0.1` | qua Cloudflare tunnel |
+| Đọc PDF / ảnh | `OCR_MODE=graph`, `DOCUMENT_INTAKE=true` | `OCR_MODE=demo`, `READING_REVIEW=true` | như stage |
+| Lưu file | đĩa (`local`) | MinIO (`s3`) | MinIO, URL ký sẵn qua `s3.fantasticfourr.stream` |
+| Giao diện | `npm run dev` | như dev | bản build sau nginx |
+
+Địa chỉ prod: giao diện `https://c4-app-143.fantasticfourr.stream`, API `https://api.fantasticfourr.stream`, ERP giả `https://erp.fantasticfourr.stream`. Kiểm ngày 13/10/2026: API trả `/health` = `ok`, `env` = `production`, và danh sách API khớp code `main` (trừ `/download`, `/seed` chỉ có ở dev). Hai cờ của PR #24 tắt mặc định nên từ bên ngoài không xác định được prod đã chạy bản có PR #24 hay chưa. Mỗi môi trường có database riêng, nên ba môi trường chạy cùng lúc trên một máy được. `deploy/check_env.py` từ chối khởi động stage / prod khi còn giá trị mặc định của dev (`JWT_SECRET`, `SEED_PASSWORD`, token tunnel).
 
 ---
 
@@ -1077,5 +1184,5 @@ Một buổi với 2 kế toán, 20 hóa đơn, đo bằng đồng hồ: thời 
 | Dung sai giá và số lượng thực tế? | `tolerances.yaml`, F6 | Tuần 3 |
 | Tỉ lệ XML so với scan trong thực tế? | Ưu tiên công sức giữa parser và OCR | Tuần 2 |
 | Có hóa đơn ngoại tệ không? | F2.5 `exchange_rate` | Tuần 3 |
-| Được gửi dữ liệu ra dịch vụ ngoài không? | Toàn bộ lựa chọn OCR và LLM | **Đã chốt một phần (27/09/2026):** gọi thẳng Gemini API, không qua OpenRouter (F2.13). Còn chốt: hóa đơn thật dùng gói trả phí hay credit Google Cloud |
+| Được gửi dữ liệu ra dịch vụ ngoài không? | Toàn bộ lựa chọn OCR và LLM | **Đã chốt một phần:** 27/09/2026 chọn gọi thẳng Gemini API; **09/10/2026 đổi sang chỉ dùng OpenRouter** (F2.13). Còn chốt với Công ty X: có cho gửi hóa đơn thật qua OpenRouter ra nhà cung cấp mô hình không, hay bắt buộc tự host |
 | Công ty X có sẵn quy trình duyệt điện tử nào? | F11 có phải sống chung không | Trước buổi dùng thử |
