@@ -4,6 +4,8 @@
 > Vẽ theo code thật ở repo `P-143`: Mức 1–3 theo `main` tại `0ecb981` (10/10/2026); Mức 4 vẫn theo nhánh `feat/module-api` (23/09)
 > Tài liệu liên quan: `PRD.md` (yêu cầu) · `USER_STORIES.md` (tình huống nghiệp vụ) · `P-143/src/module/README.md` (quy tắc module)
 
+**Bản tương tác:** cùng mô hình viết bằng Structurizr DSL ở `docs/c4/workspace.dsl`, có thêm góc nhìn triển khai prod. Xem: `cd docs/c4 && docker compose up -d` rồi mở `http://localhost:8080`.
+
 **C4 là gì.** Bốn mức phóng to dần, mỗi mức trả lời một câu hỏi:
 
 | Mức | Tên | Câu hỏi |
