@@ -641,6 +641,7 @@ Với nhóm, "không phải xử lý tay" nghĩa là **chỉ cần một cú b�
 - Không có phân hệ Đơn mua hàng.
 - Mua hàng có: nhận hóa đơn, xử lý hóa đơn đầu vào (phải kết nối meInvoice), bù trừ công nợ.
 - Mục AI có: rà soát chứng từ đầu vào, rà soát thuế suất, tra mặt hàng giảm thuế, đối chiếu sao kê ngân hàng.
+- Form đăng ký dùng thử: điền **CCCD** vào ô "CCCD/Mã số thuế" thì sản phẩm "Kế toán" (bản doanh nghiệp) bị bỏ chọn, chỉ còn "Kế toán HKD". Muốn dùng thử bản doanh nghiệp phải có mã số thuế doanh nghiệp. MISA tách hẳn hai tệp khách: cá nhân và hộ kinh doanh một bên, doanh nghiệp một bên (quan sát ngày 18/10/2026).
 
 **Rút ra**
 
