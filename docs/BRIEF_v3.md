@@ -44,10 +44,13 @@ Nguyên tắc thứ tư, thêm ở v3:
 | Nhóm | Ví dụ | Mạnh | Yếu |
 |---|---|---|---|
 | AP automation toàn cầu | Coupa, Ariba, Tipalti | Đầy đủ, chuẩn kiểm toán | Nặng, đắt, triển khai hàng quý, không hiểu hóa đơn điện tử VN |
-| Nền tảng kế toán VN có module AI | MISA AMIS + AVA, ASOFT | Sẵn dữ liệu trong hệ thống, sẵn tệp khách hàng | Chỉ phục vụ khách của chính nền tảng đó; ngoại lệ vẫn đẩy về người |
-| OCR/IDP + RPA | Bizzi, akaBot, và nhóm tool nhỏ | Trích xuất nhanh, rẻ | Dừng ở "đọc được"; khớp cứng theo `po_number`; ngoại lệ không được phân loại |
+| Phần mềm kế toán VN | MISA AMIS + AVA, Fast Accounting, ASOFT | Sẵn dữ liệu và tệp khách hàng; có đơn mua hàng; lấy hóa đơn điện tử đầu vào thành chứng từ | Đơn mua hàng chỉ để chép dữ liệu và theo dõi đã nhận. Tài liệu không nói tới việc đối chiếu hóa đơn với đơn mua và phiếu nhập, nên phần này vẫn do người làm |
+| Tự động hóa hóa đơn đầu vào VN | Bizzi | Nhận hóa đơn từ email, kiểm hợp lệ, có quảng cáo đối chiếu 3 bên bằng RPA | Không thấy công bố luật khớp và dung sai. Tự nhận các ca tên hàng khác, không có PO, một PO nhiều hóa đơn phải chuyển người |
+| OCR/IDP + RPA | akaBot và nhóm tool nhỏ | Trích xuất nhanh, rẻ | Mạnh ở đọc và nhập liệu; phần xử lý ngoại lệ ít được nói tới |
 
-**Khoảng trống chung của cả ba nhóm:** phần khó không nằm ở OCR mà ở **ngoại lệ**. Khảo sát ngành 2024 cho thấy hơn nửa đội AP coi xử lý ngoại lệ là nút thắt lớn nhất, không phải trích xuất dữ liệu. Các engine hiện tại khớp cứng nên chỉ tự động được khoảng một phần ba số hóa đơn; phần còn lại rơi xuống hàng đợi thủ công và người vẫn phải ngồi so từng dòng.
+So sánh từng tính năng với MISA, Fast, Bizzi và nguồn: `RESEARCH.md` §8.5.
+
+**Khoảng trống chung của các nhóm trên:** phần khó không nằm ở OCR mà ở **ngoại lệ**. Khảo sát ngành 2024 cho thấy hơn nửa đội AP coi xử lý ngoại lệ là nút thắt lớn nhất, không phải trích xuất dữ liệu. Các engine hiện tại khớp cứng nên chỉ tự động được khoảng một phần ba số hóa đơn; phần còn lại rơi xuống hàng đợi thủ công và người vẫn phải ngồi so từng dòng.
 
 ### 2.2 Một câu định vị
 

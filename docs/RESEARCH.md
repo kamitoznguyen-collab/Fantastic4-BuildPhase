@@ -569,7 +569,7 @@ Có người duyệt đã là nguyên tắc cứng số một của nhóm. Nghi�
 | **ERP lớn — SAP, Oracle** | Chặn hóa đơn khi lệch vượt dung sai, mỗi loại lệch một mã chặn. SAP có mã chặn riêng khi dòng PO chưa có phiếu nhập, và một tác vụ chạy định kỳ **tự gỡ chặn** khi lý do không còn — ví dụ phiếu nhập đã về. Oracle cũng tự gỡ khi ngoại lệ đã được sửa | Hóa đơn chờ phiếu nhập không nên nằm im chờ người nhớ ra |
 | **Phần mềm AP nước ngoài — Sage Intacct, Stampli, Tipalti, Coupa** | Dung sai đặt theo công ty, NCC, mặt hàng, và từng cặp NCC–mặt hàng. Đưa ngoại lệ đến đúng người duyệt. AI học từ những lần người sửa | Dung sai nhiều tầng. Học từ chỗ sửa |
 | **Thực hành chống gian lận** | NCC đổi tài khoản thì gọi lại **số điện thoại đã lưu từ trước**, không dùng số trong yêu cầu đổi; không nhận thay đổi thanh toán chỉ qua email. Phát hiện trùng bằng so gần đúng, vì hóa đơn gửi lại thường chỉ khác chút ít ở số hoặc định dạng | FRD-05 cần quy trình xác minh; FRD-02 cần so số hóa đơn đã chuẩn hóa |
-| **Việt Nam — MISA meInvoice, AMIS Kế toán** | Tự nhận hóa đơn đầu vào, kiểm **tính hợp lệ**: so thông tin người bán với trang tra cứu của cơ quan thuế, khác cả khoảng trắng cũng cảnh báo. Có AI Agent làm chuỗi tiếp nhận → kiểm tra → tổng hợp → báo cáo. Trợ lý AVA tự hạch toán | MISA kiểm **hóa đơn có hợp lệ về thuế không**, **không đối chiếu với PO và phiếu nhập** — chỗ trống của nhóm |
+| **Việt Nam — MISA meInvoice, AMIS Kế toán** | Tự nhận hóa đơn đầu vào, kiểm **tính hợp lệ**: so thông tin người bán với trang tra cứu của cơ quan thuế, khác cả khoảng trắng cũng cảnh báo. Có AI Agent làm chuỗi tiếp nhận → kiểm tra → tổng hợp → báo cáo. Trợ lý AVA tự hạch toán | MISA kiểm **hóa đơn có hợp lệ về thuế không**. Đơn mua hàng chỉ dùng để chép dữ liệu sang chứng từ; tài liệu không nói tới việc đối chiếu hóa đơn với PO và phiếu nhập — chỗ trống của nhóm. So sánh đầy đủ ở mục 8.5 |
 
 Cách **trả tiền theo phiếu nhập, không cần hóa đơn** (Evaluated Receipt Settlement của SAP) **không áp dụng được ở Việt Nam**, vì cần hóa đơn để khấu trừ thuế GTGT.
 
@@ -615,6 +615,46 @@ Với nhóm, "không phải xử lý tay" nghĩa là **chỉ cần một cú b�
 | **Thuế GTGT xăng dầu** | Không kê khai, tính nộp thuế đến hết 30/9/2026 (Nghị quyết 34/2026/NQ-CP kéo dài Nghị quyết 19/2026); 8% từ 01/10/2026 đến hết 2026 — theo bài tổng hợp, **phải đối chiếu văn bản gốc** | F7.11, `tax_groups.yaml` |
 
 **Không học theo:** AI tự học quy tắc mà không ai duyệt. Nhóm giữ nguyên tắc quy tắc học được chỉ có hiệu lực khi KTT duyệt — an toàn hơn với bài toán liên quan tới tiền, và là điểm khác biệt khi trình bày.
+
+---
+
+### 8.5 So với phần mềm trong nước: MISA AMIS, Fast, Bizzi
+
+*Bổ sung ngày 18/10/2026. Đọc từ tài liệu chính thức của từng hãng. Chưa thử trên phần mềm bản doanh nghiệp.*
+
+Đây là bảng so sánh duy nhất của nhóm. BRIEF §2.1 và slide lấy số liệu từ đây.
+
+**Cách đọc:** "Không thấy" nghĩa là tài liệu chính thức không nói tới. Chưa có nghĩa là đã xác nhận phần mềm không làm được.
+
+| Việc | MISA AMIS Kế toán | Fast Accounting Online | Bizzi | Nhóm |
+|---|---|---|---|---|
+| Quản lý đơn mua hàng | **Có.** Xem từng mặt hàng đã nhận bao nhiêu, còn bao nhiêu, theo từng đơn | **Có.** Cập nhật, duyệt và đóng đơn; báo cáo tình trạng đơn; so sánh kế hoạch với thực hiện | Không rõ | Không quản lý. Đọc PO từ ERP hoặc file Excel — PRD F17 |
+| Lập chứng từ từ đơn mua hàng | **Có.** Bật "Lập từ Đơn mua hàng", tích chọn đơn, phần mềm chép thông tin sang chứng từ | Không thấy nói rõ | — | Không lập chứng từ — PRD F10 |
+| Lấy hóa đơn điện tử đầu vào | **Có.** File XML (VNPT, Viettel, BKAV, Softdream, Thái Sơn, EasyInvoice), mã tra cứu, hoặc kết nối meInvoice | **Có.** Chuyển dữ liệu từ tệp hóa đơn điện tử vào chứng từ hạch toán | **Có.** Nhận hóa đơn từ email, lưu trữ tập trung | XML, PDF có chữ, ảnh scan — PRD F1, F2 |
+| Kiểm hóa đơn hợp lệ | **Có**, qua meInvoice: so người bán với trang tra cứu của cơ quan thuế (mục 8.1) | Chặn trùng số hóa đơn ở phân hệ bán hàng. Đầu vào: không thấy | Có (theo quảng cáo) | MST, trùng hóa đơn, số học. Tra trạng thái trên cơ quan thuế để sau — PRD F3, F8 |
+| Tên hàng trên hóa đơn khác danh mục | Báo **"Không tìm thấy Hàng hóa"**, người dùng tự chọn lại. Số lượng, đơn giá, thuế suất giữ theo hóa đơn | Không thấy | Bizzi tự nhận đây là ca cần người xử lý | Ghép theo mã, tên gần đúng, đơn giá, rồi tới AI. Không chắc thì đề xuất cho người xác nhận — PRD F5 |
+| **Đối chiếu hóa đơn với PO và phiếu nhập, báo lệch giá và số lượng** | **Không thấy** | **Không thấy** | **Có quảng cáo** "đối chiếu 3 bên" bằng RPA. Không thấy công bố luật khớp và dung sai. Tự nhận các ca *một PO nhiều hóa đơn*, *không có PO*, *tên hàng khác* phải chuyển người | **Có.** 37 mã ngoại lệ, dung sai nhiều tầng, xanh / vàng / đỏ, giải thích lệch bao nhiêu và vì sao — PRD §4, F5–F7 |
+| Duyệt | Duyệt đề nghị mua và đơn mua ở **AMIS Mua hàng** (sản phẩm riêng); đơn đã duyệt tự đồng bộ sang kế toán | Luồng trạng thái chứng từ: lập, chờ duyệt, chuyển kế toán tổng hợp, chuyển sổ cái | Không rõ | Duyệt **hóa đơn** hai cấp, người duyệt cấp 2 khác người duyệt cấp 1 — PRD F11 |
+| Hạch toán, sổ sách | **Có**, là việc chính | **Có**, là việc chính | — | Không. Chỉ xuất kết quả đối soát — PRD F10 |
+
+**Bản AMIS Kế toán HKD (hộ kinh doanh).** Nhóm quan sát trong tài khoản dùng thử ngày 17/10/2026:
+- Không có phân hệ Đơn mua hàng.
+- Mua hàng có: nhận hóa đơn, xử lý hóa đơn đầu vào (phải kết nối meInvoice), bù trừ công nợ.
+- Mục AI có: rà soát chứng từ đầu vào, rà soát thuế suất, tra mặt hàng giảm thuế, đối chiếu sao kê ngân hàng.
+
+**Rút ra**
+
+1. **MISA và Fast là phần mềm kế toán.** Đơn mua hàng trong đó dùng để chép dữ liệu và theo dõi đã nhận, còn lại. Việc kiểm *hóa đơn có khớp đơn mua và phiếu nhập không, lệch bao nhiêu* thì tài liệu không nói tới, tức là vẫn do kế toán làm. Nhóm đứng trước phần mềm kế toán, không thay nó. Đây là định vị đã có ở BRIEF §2.2 và mục 8.3 số 7.
+2. **Bizzi là đối thủ trực tiếp, không được coi nhẹ.** Không có nguồn nào cho nhận định "Bizzi khớp cứng theo số PO", nên không dùng câu đó. Điểm khác nhóm nói được, có bằng chứng:
+   - luật khớp, mã ngoại lệ và dung sai được công bố, đo được bằng bộ đánh giá;
+   - mỗi lệch có giải thích bằng số;
+   - ghép tên hàng khác nhau bằng đề xuất có người xác nhận, không để người tự tìm.
+3. **Hộ kinh doanh:** MISA đã có bản riêng, kèm AI rà soát chứng từ và đối chiếu sao kê ngân hàng. Mở rộng sang nhóm này thì phải cạnh tranh trực diện với MISA.
+
+**Còn phải làm**
+- Thử AMIS Kế toán bản doanh nghiệp bằng bộ 12 ca dữ liệu giả của nhóm: khớp đủ, giá cao, giao thiếu, tên hàng khác, nhận hai lần, không số PO, hóa đơn trùng, khuyến mại và chiết khấu, sai thuế suất, hộ kinh doanh, thành tiền in sai, khác đơn vị tính.
+- Xin Bizzi một buổi demo để so trên cùng bộ ca.
+- Hỏi Fast về phân hệ mua hàng của Fast Business Online (bản ERP).
 
 ---
 
@@ -674,6 +714,7 @@ Kiểm chứng ngày 26/09/2026.
 - [SAP Ariba — Two-way invoice matching](https://help.sap.com/docs/buying-invoicing/invoicing-and-payment-process-guide/two-way-invoice-matching-in-sap-ariba-invoice-management) · [Peeriosity — Receipt verification for services](https://www.peeriosity.com/shared-services/articles/2013/12/receipt-verification-for-services-purchased-using-a-purchase-order/)
 - [Microsoft Learn — Combine receipts on a single invoice](https://learn.microsoft.com/en-us/dynamics365/business-central/purchasing-how-to-combine-receipts)
 - [Thư viện Pháp luật — Khấu trừ thuế GTGT từ 01/7/2025](https://thuvienphapluat.vn/chinh-sach-phap-luat-moi/vn/ho-tro-phap-luat/chinh-sach-moi/83531/tu-01-07-2025-khau-tru-thue-gtgt-cho-hoa-don-bao-nhieu-phai-co-chung-tu-thanh-toan-khong-dung-tien-mat) · [ihoadon — Nghị định 181/2025](https://ihoadon.vn/hddt/thanh-toan-khong-dung-tien-mat-tu-01-7-2025-tai-nghi-dinh-181-2025-nd-cp.html)
+- So sánh trong nước (mục 8.5): [MISA — Lập chứng từ mua hàng từ Đơn mua hàng](https://helpact.misa.vn/?p=1285) · [MISA — Lập chứng từ từ hóa đơn điện tử](https://helpact.misa.vn/kb/lap_chung_tu_tu_hoa_don_dien_tu/) · [AMIS Kế toán — Mua hàng](https://amis.misa.vn/amis-ke-toan/mua-hang/) · [AMIS Kế toán và AMIS Mua hàng](https://amis.misa.vn/gioi-thieu-giai-phap-hop-nhat-amis-ke-toan-amis-mua-hang/) · [Fast Accounting Online — tài liệu giới thiệu 2026, trang 5 và 12](https://faonline.vn/wp-content/uploads/2023/09/2026-Tai-lieu-gioi-thieu-FAO-full.pdf) · [Bizzi — xử lý hóa đơn đầu vào](https://bizzi.vn/en/bizzi-phan-mem-tien-phong-xu-ly-hoa-don-dau-vao-toan-dien/amp)
 - [MISA meInvoice — Hóa đơn điện tử xăng dầu, thời điểm lập](https://www.meinvoice.vn/tin-tuc/13180/hoa-don-dien-tu-xang-dau/)
 - [Chính phủ — Nghị định 70/2025/NĐ-CP](https://vanban.chinhphu.vn/?pageid=27160&docid=213179) · [Luật Minh Khuê — Hóa đơn điều chỉnh, thay thế](https://luatminhkhue.vn/hoa-don-dieu-chinh-thay-the-2026.aspx)
 - Xăng dầu: [Thư viện Pháp luật — không kê khai đến 30/09/2026](https://thuvienphapluat.vn/ma-so-thue/phap-luat-thue/tiep-tuc-khong-ke-khai-thue-gtgt-xang-dau-den-30092026-theo-nghi-quyet-34-2026-227420.html) · [Thư viện Pháp luật — từ tháng 10/2026](https://thuvienphapluat.vn/phap-luat/ho-tro-phap-luat/thue-gtgt-xang-dau-tu-thang-102026-thoi-han-giam-thue-xuat-hoa-don-xang-dau-nhu-the-nao-291260.html)

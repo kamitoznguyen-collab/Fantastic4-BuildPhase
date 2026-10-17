@@ -439,6 +439,39 @@ Chị Hà gửi đề nghị cho garage. Tháng sau phần lớn hóa đơn củ
 | Q5 | **Cần hỏi Công ty X:** người duyệt thứ hai là ai. Cách thị trường làm: người ngoài phòng kế toán (giám đốc) duyệt khoản trên ngưỡng — RESEARCH §8.4 |
 | Q6 | **Cần hỏi Công ty X:** trả trước phần đúng hay chờ cả hóa đơn. Nếu trả trước thì phần lệch vào `ON_HOLD` |
 | Q7–Q10 | **Cần hỏi Công ty X.** Nên hỏi Q7 và Q8 trước — ảnh hưởng luồng chính |
+| Q11–Q13 | **Mới, 18/10/2026**, từ buổi khảo sát kế toán ở mục 4.1 |
+
+### 4.1 Khảo sát người dùng: một kế toán doanh nghiệp (tháng 10/2026)
+
+Phỏng vấn trực tiếp một kế toán đang làm ở doanh nghiệp. Người được hỏi xin giấu tên và tên công ty. **Mới có một người**, nên đây là tín hiệu, chưa đủ để kết luận cho cả thị trường.
+
+**Người được hỏi nói** (ghi lại theo ý, không phải nguyên văn):
+
+| # | Ý chính |
+|---|---|
+| K1 | Nhập liệu và so sánh **"chưa bao giờ là nỗi đau"** |
+| K2 | Việc tốn thời gian và làm lo nhất là **chuyển đổi giữa nhiều loại tiền tệ và nhiều loại tài khoản**: nhiều khi không biết lúc nào nên dùng tài khoản nào |
+| K3 | Có chuyện **công nợ**. Công ty thường **duyệt thanh toán theo đợt**, không duyệt từng hóa đơn như hệ thống của nhóm |
+| K4 | Khuyên nhóm tìm hiểu **chế độ kế toán doanh nghiệp theo Thông tư 99/2025/TT-BTC** và **hệ thống tài khoản theo chuẩn mực kế toán Việt Nam (VAS)** |
+
+**Nhóm hiểu thế nào** (suy luận, cần kiểm lại):
+
+- **K1 khớp với RESEARCH §8.5.** Phần mềm kế toán đã tự lấy hóa đơn điện tử vào chứng từ, nên phần gõ lại không còn đau. Còn "so sánh" không đau có thể vì ba lý do: công ty không có quy trình PO và phiếu nhập chặt; số hóa đơn ít; hoặc người được hỏi chỉ so tổng tiền, không so từng dòng. Cần hỏi lại: *mỗi tháng bao nhiêu hóa đơn, có PO và phiếu nhập không, có so từng dòng không.*
+- **K2 nằm ngoài phạm vi hiện tại.** PRD F10 đã chốt hệ thống không đề xuất tài khoản. Nếu làm gì thì chỉ ở mức *trích dẫn điều khoản Thông tư 99 để kế toán tự quyết*, và phải hỏi mentor trước (Q13).
+- **K3 là khoảng trống thật trong luồng.** Hiện mỗi hóa đơn đi một mình tới `EXPORTED`. Duyệt theo đợt cần thêm hai thứ:
+  - một **đợt thanh toán** gom nhiều hóa đơn đã duyệt, theo NCC hoặc theo hạn trả;
+  - **màn hình công nợ theo NCC**: đã duyệt, chưa trả, sắp đến hạn.
+  Đây là thay đổi luồng trạng thái, chưa đưa vào PRD (Q11).
+
+**Câu hỏi mới**
+
+| # | Câu hỏi | Vì sao quan trọng |
+|---|---|---|
+| **Q11** | Công ty X duyệt thanh toán **từng hóa đơn hay theo đợt**? Nếu theo đợt: gom theo NCC hay theo hạn trả, bao lâu một đợt, ai duyệt đợt? | Quyết định có thêm "đợt thanh toán" và màn hình công nợ sau trạng thái `APPROVED` không |
+| **Q12** | Hóa đơn **ngoại tệ** chiếm bao nhiêu? Tỷ giá lấy theo ngày nào: ngày hóa đơn, ngày nhận hàng hay ngày thanh toán? | So tiền giữa PO và hóa đơn khác loại tiền thì cần luật tỷ giá rõ ràng |
+| **Q13** | Có nên **gợi ý tài khoản kèm trích dẫn Thông tư 99** không, khi PRD F10 đang cấm đề xuất tài khoản? | Đúng nỗi đau K2, nhưng chạm vào trách nhiệm của kế toán. **Hỏi mentor.** Mặc định: không làm |
+
+**Lần khảo sát tới:** hỏi thêm 3–5 kế toán, gồm cả người ở công ty có quy trình PO. Dùng cùng một bộ câu hỏi: số hóa đơn mỗi tháng; có PO và phiếu nhập không; so tới mức dòng hay mức tổng; việc gì mất thời gian nhất cuối tháng; duyệt thanh toán thế nào.
 
 ---
 
